@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <meta name="description" content="EvalEPS — Carnet d'évaluation pour éducateurs physiques. zonetotalsport.ca" />
+  <meta name="description" content="EvalEPS — Carnet d'évaluation complet pour éducateurs physiques. zonetotalsport.ca" />
   <meta name="theme-color" content="#0077CC" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -27,10 +27,12 @@
     <div class="toolbar-center">
       <button class="tool-btn" onclick="createGroup()" title="Nouveau groupe">➕ Groupe</button>
       <button class="tool-btn" onclick="openLexiqueModal()" title="Critères PFEQ">📚 PFEQ</button>
-      <button class="tool-btn" onclick="addColumnPrompt()" title="Ajouter critère">📝 Critère</button>
+      <button class="tool-btn" onclick="openAddCriterionModal()" title="Ajouter critère">📝 Critère</button>
       <span class="toolbar-sep"></span>
-      <button class="tool-btn" onclick="exportPDF()" title="Exporter PDF">📄 PDF</button>
-      <button class="tool-btn" onclick="exportCSV()" title="Exporter CSV">📊 CSV</button>
+      <button class="tool-btn chrono-btn" onclick="toggleChronoPanel()" title="Chronos & Scores">⏱️ Chrono</button>
+      <span class="toolbar-sep"></span>
+      <button class="tool-btn" onclick="exportPDF()" title="PDF">📄 PDF</button>
+      <button class="tool-btn" onclick="exportCSV()" title="CSV">📊 CSV</button>
       <button class="tool-btn" onclick="printResults()" title="Imprimer">🖨️</button>
     </div>
     <div class="toolbar-right">
@@ -52,6 +54,7 @@
         <span class="sh-num">#</span>
         <span class="sh-photo"></span>
         <span class="sh-name">ÉLÈVE</span>
+        <span class="sh-voice">🎙️</span>
       </div>
       <div class="student-list" id="student-list">
         <!-- Filled by JS -->
@@ -78,6 +81,73 @@
       <button class="group-tab-add" onclick="createGroup()" title="Nouveau groupe">+</button>
     </div>
 
+  </div>
+
+  <!-- CHRONO & SCORES PANEL -->
+  <div class="chrono-panel hidden" id="chrono-panel">
+    <div class="chrono-header">
+      <span class="chrono-title">⏱️ CHRONOS & SCORES</span>
+      <button class="modal-close" onclick="toggleChronoPanel()">✕</button>
+    </div>
+    <div class="chrono-body">
+      <!-- Individual chrono -->
+      <div class="chrono-section">
+        <div class="chrono-label">CHRONO INDIVIDUEL</div>
+        <div class="chrono-display" id="chrono-indiv-display">00:00.0</div>
+        <div class="chrono-btns">
+          <button class="chrono-action start" onclick="chronoIndivStart()">▶</button>
+          <button class="chrono-action stop" onclick="chronoIndivStop()">⏸</button>
+          <button class="chrono-action reset" onclick="chronoIndivReset()">↺</button>
+        </div>
+      </div>
+      <!-- Group timer -->
+      <div class="chrono-section">
+        <div class="chrono-label">MINUTEUR DE GROUPE</div>
+        <div class="chrono-display big" id="chrono-group-display">05:00</div>
+        <div class="chrono-btns">
+          <button class="chrono-action" onclick="chronoGroupAdjust(-60)">-1m</button>
+          <button class="chrono-action" onclick="chronoGroupAdjust(-10)">-10s</button>
+          <button class="chrono-action start" onclick="chronoGroupStart()">▶</button>
+          <button class="chrono-action stop" onclick="chronoGroupStop()">⏸</button>
+          <button class="chrono-action" onclick="chronoGroupAdjust(10)">+10s</button>
+          <button class="chrono-action" onclick="chronoGroupAdjust(60)">+1m</button>
+        </div>
+      </div>
+      <!-- Engagement chrono -->
+      <div class="chrono-section">
+        <div class="chrono-label">TEMPS D'ENGAGEMENT MOTEUR</div>
+        <div class="chrono-display" id="chrono-engage-display">00:00</div>
+        <div class="chrono-btns">
+          <button class="chrono-action start" onclick="chronoEngageToggle()" id="chrono-engage-btn">▶ EN MOUVEMENT</button>
+          <button class="chrono-action reset" onclick="chronoEngageReset()">↺</button>
+        </div>
+        <div class="engage-stats" id="engage-stats">Actif: 0% — Inactif: 0%</div>
+      </div>
+      <!-- Team Scores -->
+      <div class="chrono-section">
+        <div class="chrono-label">SCORES D'ÉQUIPES</div>
+        <div class="score-board">
+          <div class="score-team team-a">
+            <input type="text" class="score-team-name" id="team-a-name" value="Équipe A" />
+            <div class="score-counter">
+              <button class="score-btn minus" onclick="teamScore('a',-1)">−</button>
+              <span class="score-num" id="team-a-score">0</span>
+              <button class="score-btn plus" onclick="teamScore('a',1)">+</button>
+            </div>
+          </div>
+          <div class="score-vs">VS</div>
+          <div class="score-team team-b">
+            <input type="text" class="score-team-name" id="team-b-name" value="Équipe B" />
+            <div class="score-counter">
+              <button class="score-btn minus" onclick="teamScore('b',-1)">−</button>
+              <span class="score-num" id="team-b-score">0</span>
+              <button class="score-btn plus" onclick="teamScore('b',1)">+</button>
+            </div>
+          </div>
+        </div>
+        <button class="chrono-action reset" onclick="teamScoreReset()" style="margin-top:8px;">↺ Réinitialiser</button>
+      </div>
+    </div>
   </div>
 
   <!-- EMPTY STATE (no groups yet) -->
@@ -120,6 +190,47 @@
           <button class="btn-secondary" onclick="importStudentList()">📥 IMPORTER</button>
           <button class="btn-secondary" onclick="closeGroupModal()">ANNULER</button>
           <button class="btn-danger" id="delete-group-btn" onclick="deleteCurrentGroup()" style="display:none;">🗑️ SUPPRIMER</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD CRITERION -->
+  <div id="criterion-modal" class="modal hidden">
+    <div class="modal-backdrop" onclick="closeCriterionModal()"></div>
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2>📝 AJOUTER UN CRITÈRE</h2>
+        <button class="modal-close" onclick="closeCriterionModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-field">
+          <label>NOM DU CRITÈRE</label>
+          <input type="text" id="criterion-name-input" class="form-input" placeholder="Ex: Lancer avec précision" />
+        </div>
+        <div class="form-field">
+          <label>TYPE DE SAISIE</label>
+          <div class="type-picker" id="type-picker">
+            <button class="type-option active" data-type="grade" onclick="pickCritType('grade')">
+              <span class="type-icon">🔤</span><span class="type-label">Note A-E</span>
+            </button>
+            <button class="type-option" data-type="check" onclick="pickCritType('check')">
+              <span class="type-icon">✅</span><span class="type-label">Cocher</span>
+            </button>
+            <button class="type-option" data-type="rating" onclick="pickCritType('rating')">
+              <span class="type-icon">⭐</span><span class="type-label">Étoiles 1-5</span>
+            </button>
+            <button class="type-option" data-type="badge" onclick="pickCritType('badge')">
+              <span class="type-icon">🏷️</span><span class="type-label">Badge +/-</span>
+            </button>
+            <button class="type-option" data-type="counter" onclick="pickCritType('counter')">
+              <span class="type-icon">🔢</span><span class="type-label">Compteur</span>
+            </button>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-primary" onclick="saveCriterion()">💾 AJOUTER</button>
+          <button class="btn-secondary" onclick="closeCriterionModal()">ANNULER</button>
         </div>
       </div>
     </div>
