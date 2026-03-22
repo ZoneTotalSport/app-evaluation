@@ -114,13 +114,18 @@ function t(k) { return (I18N[_lang] && I18N[_lang][k]) || (I18N.fr[k]) || k; }
 function setLang(lang) {
   _lang = lang;
   localStorage.setItem('evaleps-lang', lang);
-  document.getElementById('lang-select').value = lang;
+  var langSel = document.getElementById('lang-select');
+  if (langSel) langSel.value = lang;
   document.documentElement.lang = lang;
   document.querySelectorAll('[data-i18n]').forEach(function(el) {
     var v = t(el.getAttribute('data-i18n'));
     if (v) el.innerHTML = v;
   });
-  renderGrid();
+  // Only render if notebook is visible
+  if (document.getElementById('notebook') && !document.getElementById('notebook').classList.contains('hidden')) {
+    renderGroupTabs();
+    renderGrid();
+  }
 }
 
 // ─── LEXIQUE PFEQ ───
@@ -244,9 +249,17 @@ function openNotebook() {
   document.getElementById('hero-section').classList.add('hidden');
   document.getElementById('notebook').classList.remove('hidden');
   restoreScale();
-  // Auto-select last used group
+  // Auto-select last used group (verify it still exists)
   var lastGroup = localStorage.getItem('evaleps-lastgroup');
-  if (lastGroup) _groupId = lastGroup;
+  var groups = getGroups();
+  if (lastGroup && groups.some(function(g) { return g.id === lastGroup; })) {
+    _groupId = lastGroup;
+  } else if (groups.length > 0) {
+    _groupId = groups[0].id;
+    localStorage.setItem('evaleps-lastgroup', _groupId);
+  } else {
+    _groupId = null;
+  }
   renderGroupTabs();
   populateDateSelect();
   renderGrid();
@@ -255,6 +268,7 @@ function openNotebook() {
 // ─── GROUP TABS ───
 function renderGroupTabs() {
   var container = document.getElementById('group-tabs');
+  if (!container) return;
   var groups = getGroups();
   var html = '';
 
@@ -284,6 +298,7 @@ function selectGroup(id) {
 // ─── DATE SELECT ───
 function populateDateSelect() {
   var sel = document.getElementById('date-select');
+  if (!sel) return;
   var evals = getEvals();
   var groupEvals = _groupId ? (evals[_groupId] || {}) : {};
   var dates = Object.keys(groupEvals).sort().reverse();
@@ -326,7 +341,7 @@ function setScale(val) {
 // ─── THE GRID — heart of the notebook ───
 function renderGrid() {
   var wrapper = document.getElementById('grid-wrapper');
-  var empty = document.getElementById('grid-empty');
+  if (!wrapper) return;
 
   if (!_groupId) {
     wrapper.innerHTML = '<p class="grid-empty">' + t('gridEmpty') + '</p>';
