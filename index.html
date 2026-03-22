@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <meta name="description" content="Outil d'evaluation en education physique — Grille d'observation simple et rapide, conforme au PFEQ." />
+  <meta name="description" content="Carnet d'evaluation — Education physique. Simple comme un cahier papier." />
   <meta name="theme-color" content="#0077CC" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -40,159 +40,89 @@
       </div>
     </header>
 
-    <!-- HERO -->
-    <section class="hero">
+    <!-- HERO (landing page) -->
+    <section class="hero" id="hero-section">
       <div class="hero-content">
         <h1 class="hero-title" data-i18n="heroTitle">
-          OUTIL D'EVALUATION<br />
+          CARNET D'EVALUATION<br />
           <span class="hero-accent" data-i18n="heroAccent">EDUCATION PHYSIQUE</span>
         </h1>
         <p class="hero-desc" data-i18n="heroDesc">
-          Observe, evalue et suis la progression de tes eleves en un clic
+          Simple comme un cahier papier. Tape pour noter.
         </p>
         <div class="hero-features">
           <div class="hero-feature">
             <span class="hf-icon">📋</span>
-            <span data-i18n="feat1">Grille d'observation <strong>tactile et rapide</strong></span>
+            <span data-i18n="feat1">Grille tactile — <strong>tape pour noter</strong></span>
           </div>
           <div class="hero-feature">
-            <span class="hf-icon">🎯</span>
-            <span data-i18n="feat2"><strong>Lexique PFEQ</strong> integre et cliquable</span>
+            <span class="hf-icon">📚</span>
+            <span data-i18n="feat2"><strong>Lexique PFEQ</strong> integre</span>
           </div>
           <div class="hero-feature">
             <span class="hf-icon">📱</span>
-            <span data-i18n="feat3">Fonctionne sur <strong>tablette et ordinateur</strong></span>
+            <span data-i18n="feat3"><strong>Tablette et ordinateur</strong></span>
           </div>
           <div class="hero-feature">
             <span class="hf-icon">📄</span>
-            <span data-i18n="feat4"><strong>Exporte en PDF</strong> ou imprime en un clic</span>
+            <span data-i18n="feat4"><strong>PDF et impression</strong> en un clic</span>
           </div>
         </div>
         <div class="hero-cta">
-          <button class="btn-primary" onclick="showPanel('groups')" data-i18n="ctaStart">Commencer</button>
+          <button class="btn-primary" onclick="openNotebook()" data-i18n="ctaStart">Ouvrir mon carnet</button>
         </div>
       </div>
     </section>
 
-    <!-- MAIN PANELS -->
-    <main class="main-content hidden" id="main-content">
+    <!-- NOTEBOOK (main view — single screen) -->
+    <main class="notebook hidden" id="notebook">
 
-      <!-- SIDEBAR NAV -->
-      <nav class="sidebar" id="sidebar">
-        <button class="sidebar-btn active" data-panel="groups" onclick="showPanel('groups')">
-          <span class="sb-icon">👥</span>
-          <span class="sb-label" data-i18n="navGroups">Groupes</span>
-        </button>
-        <button class="sidebar-btn" data-panel="criteria" onclick="showPanel('criteria')">
-          <span class="sb-icon">🎯</span>
-          <span class="sb-label" data-i18n="navCriteria">Criteres</span>
-        </button>
-        <button class="sidebar-btn" data-panel="evaluate" onclick="showPanel('evaluate')">
-          <span class="sb-icon">📋</span>
-          <span class="sb-label" data-i18n="navEvaluate">Evaluer</span>
-        </button>
-        <button class="sidebar-btn" data-panel="results" onclick="showPanel('results')">
-          <span class="sb-icon">📊</span>
-          <span class="sb-label" data-i18n="navResults">Resultats</span>
-        </button>
-      </nav>
-
-      <!-- PANELS CONTAINER -->
-      <div class="panels-container">
-
-        <!-- PANEL: GROUPES -->
-        <div class="panel" id="panel-groups">
-          <div class="panel-header">
-            <h2 class="panel-title" data-i18n="groupsTitle">👥 Mes groupes</h2>
-            <button class="btn-add" onclick="createGroup()">
-              <span>+</span> <span data-i18n="groupsAdd">Nouveau groupe</span>
-            </button>
-          </div>
-          <div id="groups-list" class="groups-list">
-            <!-- Filled by JS -->
-          </div>
-        </div>
-
-        <!-- PANEL: CRITERES -->
-        <div class="panel hidden" id="panel-criteria">
-          <div class="panel-header">
-            <h2 class="panel-title" data-i18n="criteriaTitle">🎯 Criteres d'evaluation</h2>
-            <button class="btn-add" onclick="openLexiqueModal()">
-              <span>📚</span> <span data-i18n="criteriaLexique">Lexique PFEQ</span>
-            </button>
-          </div>
-          <p class="panel-hint" data-i18n="criteriaHint">Selectionne tes criteres depuis le lexique PFEQ ou ajoute-les manuellement.</p>
-
-          <!-- Active criteria -->
-          <div id="active-criteria" class="active-criteria">
-            <!-- Filled by JS -->
+      <!-- TOOLBAR — like the top of a paper notebook -->
+      <div class="toolbar">
+        <div class="toolbar-row">
+          <!-- Group selector -->
+          <div class="toolbar-group">
+            <select id="group-select" class="toolbar-select" onchange="onGroupChange()">
+              <option value="" data-i18n="selectGroup">-- Groupe --</option>
+            </select>
+            <button class="toolbar-btn" onclick="createGroup()" title="Nouveau groupe">+</button>
+            <button class="toolbar-btn" onclick="editCurrentGroup()" title="Modifier">✏️</button>
           </div>
 
-          <!-- Add custom -->
-          <div class="add-custom-criteria">
-            <input type="text" id="custom-criteria-input" class="input" data-i18n-placeholder="criteriaCustomPh" placeholder="Ajouter un critere personnalise..." />
-            <button class="btn-small" onclick="addCustomCriteria()">+</button>
+          <!-- Date -->
+          <div class="toolbar-group">
+            <select id="date-select" class="toolbar-select" onchange="onDateChange()">
+              <option value="today" data-i18n="today">Aujourd'hui</option>
+            </select>
           </div>
 
-          <!-- Scale selector -->
-          <div class="scale-config">
-            <h3 class="sub-title" data-i18n="scaleTitle">Echelle de notation</h3>
-            <div class="scale-options">
-              <label class="scale-option">
-                <input type="radio" name="scale" value="ABCDE" onchange="setScale(this.value)" checked />
-                <span>A B C D E</span>
-              </label>
-              <label class="scale-option">
-                <input type="radio" name="scale" value="12345" onchange="setScale(this.value)" />
-                <span>1 2 3 4 5</span>
-              </label>
-              <label class="scale-option">
-                <input type="radio" name="scale" value="symbols" onchange="setScale(this.value)" />
-                <span>++ + = - --</span>
-              </label>
-              <label class="scale-option">
-                <input type="radio" name="scale" value="check" onchange="setScale(this.value)" />
-                <span>✓ ~  ✗</span>
-              </label>
-            </div>
+          <!-- Scale -->
+          <div class="toolbar-group">
+            <select id="scale-select" class="toolbar-select" onchange="setScale(this.value)">
+              <option value="ABCDE">A B C D E</option>
+              <option value="12345">1 2 3 4 5</option>
+              <option value="symbols">++ + = - --</option>
+              <option value="check">&#10003; ~ &#10007;</option>
+            </select>
+          </div>
+
+          <!-- Actions -->
+          <div class="toolbar-group toolbar-actions">
+            <button class="toolbar-btn" onclick="openLexiqueModal()">📚 <span data-i18n="pfeq">PFEQ</span></button>
+            <button class="toolbar-btn" onclick="addColumnPrompt()">+ <span data-i18n="addCol">Colonne</span></button>
+            <button class="toolbar-btn" onclick="exportPDF()">📄 PDF</button>
+            <button class="toolbar-btn" onclick="exportCSV()">📊 CSV</button>
           </div>
         </div>
+      </div>
 
-        <!-- PANEL: EVALUER -->
-        <div class="panel hidden" id="panel-evaluate">
-          <div class="panel-header">
-            <h2 class="panel-title" data-i18n="evalTitle">📋 Grille d'evaluation</h2>
-            <div class="eval-header-actions">
-              <select id="eval-group-select" class="select-sm" onchange="onEvalGroupChange()">
-                <option value="" data-i18n="evalSelectGroup">-- Choisir un groupe --</option>
-              </select>
-              <select id="eval-date-select" class="select-sm" onchange="onEvalDateChange()">
-                <option value="today" data-i18n="evalToday">Aujourd'hui</option>
-              </select>
-            </div>
-          </div>
+      <!-- THE GRID — the notebook page -->
+      <div class="grid-wrapper" id="grid-wrapper">
+        <p class="grid-empty" id="grid-empty" data-i18n="gridEmpty">
+          Choisis un groupe pour ouvrir ton carnet.
+        </p>
+      </div>
 
-          <!-- Grid container -->
-          <div id="eval-grid-container" class="eval-grid-container">
-            <p class="panel-hint" data-i18n="evalHint">Selectionne un groupe pour commencer l'evaluation.</p>
-          </div>
-        </div>
-
-        <!-- PANEL: RESULTATS -->
-        <div class="panel hidden" id="panel-results">
-          <div class="panel-header">
-            <h2 class="panel-title" data-i18n="resultsTitle">📊 Resultats</h2>
-            <div class="results-actions">
-              <button class="btn-small" onclick="exportResults()">📄 PDF</button>
-              <button class="btn-small" onclick="printResults()">🖨️ <span data-i18n="resultsPrint">Imprimer</span></button>
-            </div>
-          </div>
-          <div id="results-container" class="results-container">
-            <p class="panel-hint" data-i18n="resultsHint">Les resultats de tes evaluations apparaitront ici.</p>
-          </div>
-        </div>
-
-      </div><!-- /panels-container -->
     </main>
 
     <!-- FOOTER -->
@@ -209,7 +139,7 @@
     <div class="modal-backdrop" onclick="closeLexiqueModal()"></div>
     <div class="modal-box">
       <div class="modal-box-header">
-        <h2 data-i18n="lexiqueTitle">📚 Lexique PFEQ — Education physique</h2>
+        <h2 data-i18n="lexiqueTitle">📚 Lexique PFEQ</h2>
         <button class="modal-close" onclick="closeLexiqueModal()">✕</button>
       </div>
       <div id="lexique-content" class="lexique-content">
@@ -218,25 +148,26 @@
     </div>
   </div>
 
-  <!-- MODAL CREATE GROUP -->
+  <!-- MODAL CREATE/EDIT GROUP -->
   <div id="group-modal" class="modal hidden">
     <div class="modal-backdrop" onclick="closeGroupModal()"></div>
     <div class="modal-box modal-box-sm">
       <div class="modal-box-header">
-        <h2 data-i18n="groupModalTitle">👥 Nouveau groupe</h2>
+        <h2 id="group-modal-title" data-i18n="newGroup">👥 Nouveau groupe</h2>
         <button class="modal-close" onclick="closeGroupModal()">✕</button>
       </div>
       <div class="modal-box-body">
         <div class="form-field">
           <label data-i18n="groupName">Nom du groupe</label>
-          <input type="text" id="group-name-input" class="input" data-i18n-placeholder="groupNamePh" placeholder="Ex: 3e annee Groupe A" />
+          <input type="text" id="group-name-input" class="input" placeholder="Ex: 3e annee Groupe A" />
         </div>
         <div class="form-field">
           <label data-i18n="groupStudents">Eleves (un par ligne)</label>
-          <textarea id="group-students-input" class="textarea" rows="10" data-i18n-placeholder="groupStudentsPh" placeholder="Alexis B.&#10;Camille D.&#10;Emile F.&#10;..."></textarea>
+          <textarea id="group-students-input" class="textarea" rows="10" placeholder="Alexis B.&#10;Camille D.&#10;Emile F.&#10;..."></textarea>
         </div>
         <div class="form-actions">
-          <button class="btn-primary" onclick="saveGroup()" data-i18n="groupSave">Sauvegarder</button>
+          <button class="btn-primary" onclick="saveGroup()" data-i18n="save">Sauvegarder</button>
+          <button class="btn-secondary" onclick="importStudentList()" data-i18n="import">📥 Importer</button>
           <button class="btn-secondary" onclick="closeGroupModal()" data-i18n="cancel">Annuler</button>
         </div>
       </div>
