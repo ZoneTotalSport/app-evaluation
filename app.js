@@ -1,545 +1,351 @@
 /* ============================================================
-   EvalEPS — Pop Art Comic Book Edition
-   4 modules: Hub, Plan de classe, Carnet, Resultats
+   EvalEPS — Carnet de Notes (Notebook Style)
+   zonetotalsport.ca
    ============================================================ */
 'use strict';
 
 // ─── i18n ───
-const I18N = {
+var I18N = {
   fr: {
     greeting: 'BONJOUR COACH!',
-    groups: 'Groupes', students: 'Eleves', evals: 'Evaluations',
-    myGroups: 'MES GROUPES', newGroup: 'NOUVEAU GROUPE',
-    startClass: 'COMMENCER LE COURS', editGroup: 'MODIFIER LE GROUPE',
-    selectGroup: '-- Groupe --', today: 'Aujourd\'hui', session: 'Seance',
+    groups: 'Groupes', students: 'Élèves', evals: 'Évaluations',
+    newGroup: 'NOUVEAU GROUPE', editGroup: 'MODIFIER LE GROUPE',
+    selectGroup: '-- Groupe --', today: "Aujourd'hui", session: 'Séance',
     save: 'SAUVEGARDER', cancel: 'ANNULER', import: 'IMPORTER',
     delete: 'SUPPRIMER', deleteConfirm: 'Supprimer ce groupe ?',
-    saved: 'SAUVEGARDE!', deleted: 'SUPPRIME!', exported: 'PDF GENERE!',
-    addCriteria: 'Nom du critere :', noCriteria: 'Ajoute des criteres pour evaluer',
-    prev: 'PRECEDENT', next: 'SUIVANT', comment: 'Ajouter une note...',
-    noData: 'Aucune donnee',
+    saved: 'SAUVEGARDÉ!', deleted: 'SUPPRIMÉ!', exported: 'PDF GÉNÉRÉ!',
+    addCriteria: 'Nom du critère :', noCriteria: 'Ajoute des critères (📚 PFEQ ou 📝 Critère)',
+    comment: 'Note...', noData: 'Aucune donnée',
+    emptyCreate: 'Crée ton premier groupe pour commencer',
+    namePN: 'P.N', nameNP: 'N.P',
   },
   en: {
     greeting: 'HELLO COACH!',
     groups: 'Groups', students: 'Students', evals: 'Assessments',
-    myGroups: 'MY GROUPS', newGroup: 'NEW GROUP',
-    startClass: 'START CLASS', editGroup: 'EDIT GROUP',
+    newGroup: 'NEW GROUP', editGroup: 'EDIT GROUP',
     selectGroup: '-- Group --', today: 'Today', session: 'Session',
     save: 'SAVE', cancel: 'CANCEL', import: 'IMPORT',
     delete: 'DELETE', deleteConfirm: 'Delete this group?',
     saved: 'SAVED!', deleted: 'DELETED!', exported: 'PDF GENERATED!',
-    addCriteria: 'Criterion name:', noCriteria: 'Add criteria to start grading',
-    prev: 'PREVIOUS', next: 'NEXT', comment: 'Add a note...',
-    noData: 'No data',
+    addCriteria: 'Criterion name:', noCriteria: 'Add criteria (📚 PFEQ or 📝 Criterion)',
+    comment: 'Note...', noData: 'No data',
+    emptyCreate: 'Create your first group to start',
+    namePN: 'F.L', nameNP: 'L.F',
   }
 };
-let _lang = 'fr';
+var _lang = 'fr';
 function t(k) { return (I18N[_lang] && I18N[_lang][k]) || I18N.fr[k] || k; }
 function setLang(l) {
   _lang = l; localStorage.setItem('evaleps-lang', l);
   var s = document.getElementById('lang-select'); if (s) s.value = l;
-  refreshAll();
+  renderAll();
 }
 
 // ─── LEXIQUE PFEQ ───
-const LEXIQUE_PFEQ = [
+var LEXIQUE_PFEQ = [
   { competence: 'Comp. 1 — Agir', competence_en: 'Comp. 1 — To act', composantes: [
     { nom: 'Actions motrices', nom_en: 'Motor actions', criteres: [
-      { fr: 'Courir a differentes vitesses', en: 'Run at different speeds' },
-      { fr: 'Sauter de differentes facons', en: 'Jump in different ways' },
-      { fr: 'Lancer avec precision', en: 'Throw accurately' },
+      { fr: 'Courir à différentes vitesses', en: 'Run at different speeds' },
+      { fr: 'Sauter de différentes façons', en: 'Jump in different ways' },
+      { fr: 'Lancer avec précision', en: 'Throw accurately' },
       { fr: 'Attraper un objet en mouvement', en: 'Catch a moving object' },
       { fr: 'Frapper avec main/pied/outil', en: 'Strike with hand/foot/tool' },
-      { fr: 'Dribler de facon controlee', en: 'Dribble in controlled way' },
-      { fr: 'Maintenir son equilibre', en: 'Maintain balance' },
+      { fr: 'Dribler de façon contrôlée', en: 'Dribble in controlled way' },
+      { fr: 'Maintenir son équilibre', en: 'Maintain balance' },
       { fr: 'Roulades et rotations', en: 'Rolls and rotations' },
-      { fr: 'Se recevoir securitairement', en: 'Land safely' },
+      { fr: 'Se recevoir sécuritairement', en: 'Land safely' },
     ]},
-    { nom: 'Planification et evaluation', nom_en: 'Planning and evaluation', criteres: [
-      { fr: 'Choisit les actions appropriees', en: 'Chooses appropriate actions' },
+    { nom: 'Planification et évaluation', nom_en: 'Planning and evaluation', criteres: [
+      { fr: 'Choisit les actions appropriées', en: 'Chooses appropriate actions' },
       { fr: 'Identifie ses ajustements', en: 'Identifies adjustments needed' },
-      { fr: 'Reconnait reussites et difficultes', en: 'Recognizes successes and difficulties' },
+      { fr: 'Reconnaît réussites et difficultés', en: 'Recognizes successes and difficulties' },
     ]},
   ]},
   { competence: 'Comp. 2 — Interagir', competence_en: 'Comp. 2 — To interact', composantes: [
-    { nom: 'Cooperation et opposition', nom_en: 'Cooperation and opposition', criteres: [
+    { nom: 'Coopération et opposition', nom_en: 'Cooperation and opposition', criteres: [
       { fr: 'Synchronise avec partenaires', en: 'Synchronizes with partners' },
-      { fr: 'Se demarque pour recevoir', en: 'Gets open to receive' },
+      { fr: 'Se démarque pour recevoir', en: 'Gets open to receive' },
       { fr: 'Utilise des feintes', en: 'Uses feints' },
-      { fr: 'Anticipe l\'adversaire', en: 'Anticipates opponent' },
-      { fr: 'Passe avec precision', en: 'Passes accurately' },
-      { fr: 'Pression defensive', en: 'Defensive pressure' },
+      { fr: "Anticipe l'adversaire", en: 'Anticipates opponent' },
+      { fr: 'Passe avec précision', en: 'Passes accurately' },
+      { fr: 'Pression défensive', en: 'Defensive pressure' },
     ]},
-    { nom: 'Ethique sportive', nom_en: 'Sports ethics', criteres: [
-      { fr: 'Accepte victoire et defaite', en: 'Accepts victory and defeat' },
+    { nom: 'Éthique sportive', nom_en: 'Sports ethics', criteres: [
+      { fr: 'Accepte victoire et défaite', en: 'Accepts victory and defeat' },
       { fr: 'Respecte les adversaires', en: 'Respects opponents' },
-      { fr: 'Joue selon les regles', en: 'Plays within rules' },
+      { fr: 'Joue selon les règles', en: 'Plays within rules' },
       { fr: 'Encourage ses partenaires', en: 'Encourages partners' },
     ]},
   ]},
   { competence: 'Comp. 3 — Mode de vie sain', competence_en: 'Comp. 3 — Healthy lifestyle', composantes: [
     { nom: 'Habitudes', nom_en: 'Habits', criteres: [
-      { fr: 'S\'engage activement', en: 'Actively engages' },
-      { fr: 'Echauffement et retour au calme', en: 'Warm-up and cool-down' },
-      { fr: 'Securite', en: 'Safety' },
+      { fr: "S'engage activement", en: 'Actively engages' },
+      { fr: 'Échauffement et retour au calme', en: 'Warm-up and cool-down' },
+      { fr: 'Sécurité', en: 'Safety' },
       { fr: 'Hydratation', en: 'Hydration' },
     ]},
   ]},
 ];
-const QUICK_ASSESS = [
+var QUICK_ASSESS = [
   { fr: 'Comportement', en: 'Behavior' },
   { fr: 'Effort', en: 'Effort' },
   { fr: 'Participation', en: 'Participation' },
-  { fr: 'Ecoute', en: 'Listening' },
+  { fr: 'Écoute', en: 'Listening' },
   { fr: 'Respect des pairs', en: 'Peer respect' },
   { fr: 'Esprit sportif', en: 'Sportsmanship' },
-  { fr: 'Securite', en: 'Safety' },
+  { fr: 'Sécurité', en: 'Safety' },
   { fr: 'Autonomie', en: 'Autonomy' },
 ];
 
 // ─── SCALES ───
-const SCALE = ['A', 'B', 'C', 'D', 'E'];
-const SCALE_COLORS = { A: 'grade-a', B: 'grade-b', C: 'grade-c', D: 'grade-d', E: 'grade-e' };
+var SCALE = ['A', 'B', 'C', 'D', 'E'];
+var SCALE_BG = { A: '#2E7D32', B: '#66BB6A', C: '#FFD600', D: '#FF8C00', E: '#D32F2F' };
 
 // ─── STATE ───
-let _groupId = null;
-let _sessionDate = todayStr();
-let _carnetIdx = 0;
-let _carnetCritIdx = 0;
-let _selectedColor = 'cyan-blue';
+var _groupId = null;
+var _sessionDate = todayStr();
+var _selectedColor = 'c-blue';
+var _nameOrder = 'pn'; // 'pn' = Prénom Nom, 'np' = Nom Prénom
 
 function todayStr() { return new Date().toISOString().slice(0, 10); }
 
 // ─── STORAGE ───
-function getGroups() { try { return JSON.parse(localStorage.getItem('evaleps-groups') || '[]'); } catch { return []; } }
+function getGroups() { try { return JSON.parse(localStorage.getItem('evaleps-groups') || '[]'); } catch(e) { return []; } }
 function setGroups(g) { localStorage.setItem('evaleps-groups', JSON.stringify(g)); }
-function getCriteria() { try { return JSON.parse(localStorage.getItem('evaleps-criteria') || '[]'); } catch { return []; } }
+function getCriteria() { try { return JSON.parse(localStorage.getItem('evaleps-criteria') || '[]'); } catch(e) { return []; } }
 function setCriteria(c) { localStorage.setItem('evaleps-criteria', JSON.stringify(c)); }
-function getEvals() { try { return JSON.parse(localStorage.getItem('evaleps-evals') || '{}'); } catch { return {}; } }
+function getEvals() { try { return JSON.parse(localStorage.getItem('evaleps-evals') || '{}'); } catch(e) { return {}; } }
 function setEvals(e) { localStorage.setItem('evaleps-evals', JSON.stringify(e)); }
-function getPhotos() { try { return JSON.parse(localStorage.getItem('evaleps-photos') || '{}'); } catch { return {}; } }
+function getPhotos() { try { return JSON.parse(localStorage.getItem('evaleps-photos') || '{}'); } catch(e) { return {}; } }
 function setPhotos(p) { localStorage.setItem('evaleps-photos', JSON.stringify(p)); }
-function getAttendance() { try { return JSON.parse(localStorage.getItem('evaleps-attendance') || '{}'); } catch { return {}; } }
-function setAttendance(a) { localStorage.setItem('evaleps-attendance', JSON.stringify(a)); }
-function getBehavior() { try { return JSON.parse(localStorage.getItem('evaleps-behavior') || '{}'); } catch { return {}; } }
-function setBehavior(b) { localStorage.setItem('evaleps-behavior', JSON.stringify(b)); }
 
-// ─── NAVIGATION ───
-function switchScreen(name) {
-  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
-  var screen = document.getElementById('screen-' + name);
-  if (screen) screen.classList.add('active');
-  document.querySelectorAll('.tab').forEach(function(t) {
-    t.classList.toggle('active', t.dataset.screen === name);
-  });
-  if (name === 'hub') renderHub();
-  if (name === 'plan') initPlanScreen();
-  if (name === 'carnet') initCarnetScreen();
-  if (name === 'results') initResultsScreen();
+// ═══════════════════════════════════
+// RENDER ALL
+// ═══════════════════════════════════
+function renderAll() {
+  var groups = getGroups();
+
+  // Show empty state or notebook
+  var emptyEl = document.getElementById('empty-state');
+  var notebook = document.querySelector('.notebook');
+  if (groups.length === 0) {
+    if (emptyEl) emptyEl.classList.remove('hidden');
+    if (notebook) notebook.style.display = 'none';
+    return;
+  } else {
+    if (emptyEl) emptyEl.classList.add('hidden');
+    if (notebook) notebook.style.display = '';
+  }
+
+  renderGroupTabs();
+  renderCriteriaTabs();
+  renderStudentList();
+  renderGradeGrid();
+  renderDateSelect();
+  renderNameOrderBtn();
 }
 
 // ═══════════════════════════════════
-// HUB — AUJOURD'HUI
+// GROUP TABS (RIGHT)
 // ═══════════════════════════════════
-function renderHub() {
-  // Greeting
-  document.getElementById('hub-greeting-text').textContent = t('greeting');
-  var opts = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-  document.getElementById('hub-date-text').textContent =
-    new Date().toLocaleDateString(_lang === 'en' ? 'en-CA' : 'fr-CA', opts);
-
-  // Stats
+function renderGroupTabs() {
+  var container = document.getElementById('group-tabs');
+  if (!container) return;
   var groups = getGroups();
-  var totalStudents = groups.reduce(function(sum, g) { return sum + g.students.length; }, 0);
-  var evals = getEvals();
-  var totalEvals = Object.keys(evals).reduce(function(sum, gid) {
-    return sum + Object.keys(evals[gid] || {}).length;
-  }, 0);
-  document.getElementById('stat-groups').textContent = groups.length;
-  document.getElementById('stat-students').textContent = totalStudents;
-  document.getElementById('stat-evals').textContent = totalEvals;
-
-  // Group cards
-  var container = document.getElementById('hub-groups');
-  var photos = getPhotos();
-
-  if (groups.length === 0) {
-    container.innerHTML = '<p class="empty-msg">Aucun groupe. Cree ton premier groupe!</p>';
-    return;
-  }
-
   var html = '';
   groups.forEach(function(g) {
-    var color = g.color || 'cyan-blue';
-    html += '<div class="group-card ' + color + '" data-id="' + g.id + '">';
-    html += '<div class="group-card-actions">';
-    html += '<button class="group-card-btn" onclick="event.stopPropagation();editGroup(\'' + g.id + '\')">✏️</button>';
-    html += '</div>';
-    html += '<div class="group-card-name">' + esc(g.name) + '</div>';
-    html += '<div class="group-card-count">' + g.students.length + ' ' + t('students').toLowerCase() + '</div>';
-
-    // Student avatars preview (max 8)
-    html += '<div class="group-card-students">';
-    var maxShow = 8;
-    g.students.slice(0, maxShow).forEach(function(s) {
-      var p = photos[s.id];
-      html += '<div class="group-card-avatar">';
-      if (p) html += '<img src="' + p + '" />';
-      else html += s.name.charAt(0).toUpperCase();
-      html += '</div>';
-    });
-    if (g.students.length > maxShow) {
-      html += '<span class="group-card-more">+' + (g.students.length - maxShow) + '</span>';
-    }
-    html += '</div>';
-
-    html += '<button class="start-btn" onclick="event.stopPropagation();startClass(\'' + g.id + '\')">' + t('startClass') + '</button>';
+    var color = g.color || 'c-blue';
+    var active = g.id === _groupId ? ' active' : '';
+    html += '<div class="group-tab ' + color + active + '" onclick="selectGroup(\'' + g.id + '\')" title="' + esc(g.name) + '">';
+    html += '<span class="tab-edit" onclick="event.stopPropagation();editGroup(\'' + g.id + '\')">✏️</span>';
+    html += esc(g.name.length > 14 ? g.name.substring(0, 12) + '..' : g.name);
     html += '</div>';
   });
   container.innerHTML = html;
 }
 
-function startClass(id) {
+function selectGroup(id) {
   _groupId = id;
   localStorage.setItem('evaleps-lastgroup', id);
-  switchScreen('plan');
-}
-
-// ═══════════════════════════════════
-// PLAN DE CLASSE
-// ═══════════════════════════════════
-function initPlanScreen() {
-  populateGroupSelects();
-  var sel = document.getElementById('plan-group-select');
-  if (sel && _groupId) sel.value = _groupId;
-  populatePlanDateSelect();
-  renderPlanGrid();
-}
-
-function onPlanGroupChange() {
-  _groupId = document.getElementById('plan-group-select').value || null;
-  if (_groupId) localStorage.setItem('evaleps-lastgroup', _groupId);
   _sessionDate = todayStr();
-  populatePlanDateSelect();
-  renderPlanGrid();
+  renderAll();
 }
-
-function onPlanDateChange() {
-  _sessionDate = document.getElementById('plan-date-select').value || todayStr();
-  renderPlanGrid();
-}
-
-function populatePlanDateSelect() {
-  var sel = document.getElementById('plan-date-select');
-  if (!sel) return;
-  var att = getAttendance();
-  var groupAtt = _groupId ? (att[_groupId] || {}) : {};
-  var dates = Object.keys(groupAtt).sort().reverse();
-  var today = todayStr();
-  sel.innerHTML = '<option value="' + today + '">' + t('today') + ' (' + today + ')</option>';
-  dates.forEach(function(d) {
-    if (d === today) return;
-    sel.innerHTML += '<option value="' + d + '"' + (d === _sessionDate ? ' selected' : '') + '>' + t('session') + ' ' + d + '</option>';
-  });
-}
-
-function renderPlanGrid() {
-  var container = document.getElementById('plan-grid');
-  if (!container || !_groupId) {
-    if (container) container.innerHTML = '<p class="empty-msg">' + t('selectGroup') + '</p>';
-    return;
-  }
-  var groups = getGroups();
-  var group = groups.find(function(g) { return g.id === _groupId; });
-  if (!group) return;
-
-  var photos = getPhotos();
-  var att = getAttendance();
-  var groupAtt = (att[_groupId] && att[_groupId][_sessionDate]) || {};
-  var beh = getBehavior();
-  var groupBeh = (beh[_groupId] && beh[_groupId][_sessionDate]) || {};
-
-  var html = '';
-  group.students.forEach(function(s) {
-    var status = groupAtt[s.id] || 'present';
-    var score = groupBeh[s.id] || 0;
-    var photoSrc = photos[s.id];
-
-    html += '<div class="plan-student ' + status + '" data-id="' + s.id + '" ontouchstart="planTouchStart(event,\'' + s.id + '\')" ontouchend="planTouchEnd(event,\'' + s.id + '\')" ontouchmove="planTouchMove(event,\'' + s.id + '\')" onclick="planTap(\'' + s.id + '\')">';
-
-    // Badge
-    if (score !== 0) {
-      html += '<div class="plan-student-badge ' + (score > 0 ? 'positive' : 'negative') + '">' + (score > 0 ? '+' : '') + score + '</div>';
-    }
-
-    // Photo
-    html += '<div class="plan-student-photo" onclick="event.stopPropagation();addStudentPhoto(\'' + s.id + '\')">';
-    if (photoSrc) html += '<img src="' + photoSrc + '" />';
-    else html += '📷';
-    html += '</div>';
-
-    html += '<div class="plan-student-name">' + esc(s.name) + '</div>';
-    html += '</div>';
-  });
-
-  container.innerHTML = html;
-}
-
-// Tap = cycle: present > absent > late > present
-var _planTapTimer = null;
-var _planTouchY = null;
-function planTap(sid) {
-  if (_planTapTimer) return; // swipe handled
-  var att = getAttendance();
-  if (!att[_groupId]) att[_groupId] = {};
-  if (!att[_groupId][_sessionDate]) att[_groupId][_sessionDate] = {};
-  var cur = att[_groupId][_sessionDate][sid] || 'present';
-  var next = cur === 'present' ? 'absent' : cur === 'absent' ? 'late' : 'present';
-  att[_groupId][_sessionDate][sid] = next;
-  setAttendance(att);
-  renderPlanGrid();
-}
-
-function planTouchStart(e, sid) {
-  _planTouchY = e.touches[0].clientY;
-  _planTapTimer = null;
-}
-function planTouchMove(e, sid) {
-  if (_planTouchY === null) return;
-  var dy = _planTouchY - e.touches[0].clientY;
-  if (Math.abs(dy) > 30) {
-    e.preventDefault();
-    _planTapTimer = true;
-    var beh = getBehavior();
-    if (!beh[_groupId]) beh[_groupId] = {};
-    if (!beh[_groupId][_sessionDate]) beh[_groupId][_sessionDate] = {};
-    var cur = beh[_groupId][_sessionDate][sid] || 0;
-    beh[_groupId][_sessionDate][sid] = dy > 0 ? cur + 1 : cur - 1;
-    setBehavior(beh);
-    _planTouchY = null;
-    renderPlanGrid();
-  }
-}
-function planTouchEnd(e, sid) { _planTouchY = null; }
 
 // ═══════════════════════════════════
-// CARNET DE NOTES
+// CRITERIA TABS (TOP)
 // ═══════════════════════════════════
-function initCarnetScreen() {
-  populateGroupSelects();
-  var sel = document.getElementById('carnet-group-select');
-  if (sel && _groupId) sel.value = _groupId;
-  renderCriteriaTags();
-  renderCarnetCard();
-}
-
-function onCarnetGroupChange() {
-  _groupId = document.getElementById('carnet-group-select').value || null;
-  if (_groupId) localStorage.setItem('evaleps-lastgroup', _groupId);
-  _carnetIdx = 0;
-  renderCarnetCard();
-}
-
-function renderCriteriaTags() {
-  var container = document.getElementById('carnet-criteria-tags');
+function renderCriteriaTabs() {
+  var container = document.getElementById('criteria-tabs');
   if (!container) return;
   var criteria = getCriteria();
   if (criteria.length === 0) {
-    container.innerHTML = '';
+    container.innerHTML = '<div class="criteria-empty">' + t('noCriteria') + '</div>';
     return;
   }
   var html = '';
   criteria.forEach(function(c, i) {
     var text = _lang === 'en' && c.en ? c.en : c.fr;
-    html += '<span class="criteria-tag' + (i === _carnetCritIdx ? ' active' : '') + '" onclick="selectCriterion(' + i + ')">' +
-      esc(text.length > 20 ? text.substring(0, 18) + '..' : text) +
-      '<span class="tag-x" onclick="event.stopPropagation();removeCriteria(' + i + ')">✕</span></span>';
+    var display = text.length > 18 ? text.substring(0, 16) + '..' : text;
+    html += '<div class="criteria-tab" title="' + esc(text) + '">';
+    html += esc(display);
+    html += '<span class="crit-x" onclick="removeCriteria(' + i + ')">✕</span>';
+    html += '</div>';
   });
   container.innerHTML = html;
 }
 
-function selectCriterion(idx) {
-  _carnetCritIdx = idx;
-  renderCriteriaTags();
-  renderCarnetCard();
-}
-
-function renderCarnetCard() {
-  var container = document.getElementById('carnet-card-container');
-  var counter = document.getElementById('carnet-counter');
+// ═══════════════════════════════════
+// STUDENT LIST (LEFT)
+// ═══════════════════════════════════
+function renderStudentList() {
+  var container = document.getElementById('student-list');
   if (!container) return;
-
-  if (!_groupId) {
-    container.innerHTML = '<p class="empty-msg">' + t('selectGroup') + '</p>';
-    if (counter) counter.textContent = '0/0';
-    return;
-  }
+  if (!_groupId) { container.innerHTML = ''; return; }
 
   var groups = getGroups();
   var group = groups.find(function(g) { return g.id === _groupId; });
-  if (!group || group.students.length === 0) {
-    container.innerHTML = '<p class="empty-msg">' + t('noData') + '</p>';
-    return;
-  }
-
-  var criteria = getCriteria();
-  if (criteria.length === 0) {
-    container.innerHTML = '<p class="empty-msg">' + t('noCriteria') + '</p>';
-    return;
-  }
-
-  if (_carnetIdx >= group.students.length) _carnetIdx = 0;
-  if (_carnetCritIdx >= criteria.length) _carnetCritIdx = 0;
-  var student = group.students[_carnetIdx];
-  var crit = criteria[_carnetCritIdx];
-  var critText = _lang === 'en' && crit.en ? crit.en : crit.fr;
+  if (!group) { container.innerHTML = ''; return; }
 
   var photos = getPhotos();
-  var evals = getEvals();
-  var sessionEvals = (evals[_groupId] && evals[_groupId][_sessionDate]) || {};
-  var sd = sessionEvals[student.id] || {};
-  var currentVal = sd['c' + _carnetCritIdx] || '';
-  var currentComment = sd._comment || '';
-
-  var color = (groups.find(function(g) { return g.id === _groupId; }) || {}).color || 'cyan-blue';
-  var photoSrc = photos[student.id];
-
-  var html = '<div class="carnet-card ' + color + '">';
-
-  // Photo
-  html += '<div class="carnet-card-photo" onclick="addStudentPhoto(\'' + student.id + '\')">';
-  if (photoSrc) html += '<img src="' + photoSrc + '" />';
-  else html += '📷';
-  html += '</div>';
-
-  html += '<div class="carnet-card-name">' + esc(student.name) + '</div>';
-  html += '<div class="carnet-card-criterion">' + esc(critText) + '</div>';
-
-  // Grade buttons
-  html += '<div class="grade-buttons">';
-  SCALE.forEach(function(grade) {
-    html += '<button class="grade-btn ' + SCALE_COLORS[grade] + (currentVal === grade ? ' selected' : '') +
-      '" onclick="gradeStudent(\'' + student.id + '\',' + _carnetCritIdx + ',\'' + grade + '\')">' + grade + '</button>';
+  var html = '';
+  group.students.forEach(function(s, i) {
+    var photoSrc = photos[s.id];
+    var displayName = formatName(s.name);
+    html += '<div class="student-row" data-sid="' + s.id + '">';
+    html += '<span class="student-num">' + (i + 1) + '</span>';
+    html += '<div class="student-photo" onclick="addStudentPhoto(\'' + s.id + '\')">';
+    if (photoSrc) html += '<img src="' + photoSrc + '" />';
+    else html += '📷';
+    html += '</div>';
+    html += '<span class="student-name">' + esc(displayName) + '</span>';
+    html += '</div>';
   });
-  html += '</div>';
-
-  // Comment
-  html += '<input type="text" class="carnet-comment" value="' + esc(currentComment) + '" placeholder="' + t('comment') + '" onchange="saveCarnetComment(\'' + student.id + '\',this.value)" />';
-
-  html += '</div>';
   container.innerHTML = html;
-
-  if (counter) counter.textContent = (_carnetIdx + 1) + '/' + group.students.length;
 }
 
-function gradeStudent(sid, critIdx, grade) {
-  var evals = getEvals();
-  if (!evals[_groupId]) evals[_groupId] = {};
-  if (!evals[_groupId][_sessionDate]) evals[_groupId][_sessionDate] = {};
-  if (!evals[_groupId][_sessionDate][sid]) evals[_groupId][_sessionDate][sid] = {};
-
-  var cur = evals[_groupId][_sessionDate][sid]['c' + critIdx];
-  if (cur === grade) {
-    delete evals[_groupId][_sessionDate][sid]['c' + critIdx];
-  } else {
-    evals[_groupId][_sessionDate][sid]['c' + critIdx] = grade;
+function formatName(name) {
+  if (_nameOrder === 'np') {
+    // Try to reverse "Prénom Nom" → "Nom, Prénom"
+    var parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      var last = parts.pop();
+      return last + ', ' + parts.join(' ');
+    }
   }
-  setEvals(evals);
-
-  // Auto-advance after short delay
-  setTimeout(function() {
-    carnetNext();
-  }, 300);
-}
-
-function saveCarnetComment(sid, comment) {
-  var evals = getEvals();
-  if (!evals[_groupId]) evals[_groupId] = {};
-  if (!evals[_groupId][_sessionDate]) evals[_groupId][_sessionDate] = {};
-  if (!evals[_groupId][_sessionDate][sid]) evals[_groupId][_sessionDate][sid] = {};
-  evals[_groupId][_sessionDate][sid]._comment = comment;
-  setEvals(evals);
-}
-
-function carnetPrev() {
-  var groups = getGroups();
-  var group = groups.find(function(g) { return g.id === _groupId; });
-  if (!group) return;
-  _carnetIdx = (_carnetIdx - 1 + group.students.length) % group.students.length;
-  renderCarnetCard();
-}
-
-function carnetNext() {
-  var groups = getGroups();
-  var group = groups.find(function(g) { return g.id === _groupId; });
-  if (!group) return;
-  _carnetIdx = (_carnetIdx + 1) % group.students.length;
-  renderCarnetCard();
+  return name;
 }
 
 // ═══════════════════════════════════
-// RESULTATS
+// GRADE GRID (CENTER)
 // ═══════════════════════════════════
-function initResultsScreen() {
-  populateGroupSelects();
-  var sel = document.getElementById('results-group-select');
-  if (sel && _groupId) sel.value = _groupId;
-  renderResultsGrid();
-}
+function renderGradeGrid() {
+  var container = document.getElementById('grade-grid');
+  if (!container) return;
+  if (!_groupId) { container.innerHTML = ''; return; }
 
-function onResultsGroupChange() {
-  _groupId = document.getElementById('results-group-select').value || null;
-  renderResultsGrid();
-}
-
-function renderResultsGrid() {
-  var wrapper = document.getElementById('results-grid-wrapper');
-  if (!wrapper || !_groupId) {
-    if (wrapper) wrapper.innerHTML = '<p class="empty-msg">' + t('noData') + '</p>';
-    return;
-  }
   var groups = getGroups();
   var group = groups.find(function(g) { return g.id === _groupId; });
-  if (!group) return;
+  if (!group) { container.innerHTML = ''; return; }
 
   var criteria = getCriteria();
+  if (criteria.length === 0) { container.innerHTML = ''; return; }
+
   var evals = getEvals();
-  var groupEvals = evals[_groupId] || {};
-  var dates = Object.keys(groupEvals).sort().reverse();
+  var sessionEvals = (evals[_groupId] && evals[_groupId][_sessionDate]) || {};
 
-  if (dates.length === 0 || criteria.length === 0) {
-    wrapper.innerHTML = '<p class="empty-msg">' + t('noData') + '</p>';
-    return;
-  }
-
-  var html = '<table class="results-table"><thead><tr>';
-  html += '<th>' + t('students') + '</th>';
-  criteria.forEach(function(c) {
-    var text = _lang === 'en' && c.en ? c.en : c.fr;
-    html += '<th>' + esc(text.length > 18 ? text.substring(0, 16) + '..' : text) + '</th>';
-  });
-  html += '</tr></thead><tbody>';
-
+  var html = '';
   group.students.forEach(function(s) {
-    html += '<tr><td>' + esc(s.name) + '</td>';
+    var sd = sessionEvals[s.id] || {};
+    html += '<div class="grade-row" data-sid="' + s.id + '">';
     criteria.forEach(function(c, ci) {
-      // Latest eval for this criterion
-      var val = '';
-      for (var i = 0; i < dates.length; i++) {
-        var sd = groupEvals[dates[i]][s.id];
-        if (sd && sd['c' + ci]) { val = sd['c' + ci]; break; }
-      }
+      var val = sd['c' + ci] || '';
+      html += '<div class="grade-cell" onclick="cycleGrade(\'' + s.id + '\',' + ci + ')">';
       if (val) {
-        html += '<td><span class="result-badge ' + SCALE_COLORS[val] + '">' + val + '</span></td>';
+        html += '<span class="grade-badge g-' + val + '">' + val + '</span>';
       } else {
-        html += '<td>-</td>';
+        html += '<span class="grade-empty"></span>';
       }
+      html += '</div>';
     });
-    html += '</tr>';
+    html += '</div>';
   });
+  container.innerHTML = html;
 
-  html += '</tbody></table>';
-  wrapper.innerHTML = html;
+  // Sync scroll between student list and grade grid
+  syncScroll();
+}
+
+function cycleGrade(sid, critIdx) {
+  var evals = getEvals();
+  if (!evals[_groupId]) evals[_groupId] = {};
+  if (!evals[_groupId][_sessionDate]) evals[_groupId][_sessionDate] = {};
+  if (!evals[_groupId][_sessionDate][sid]) evals[_groupId][_sessionDate][sid] = {};
+
+  var cur = evals[_groupId][_sessionDate][sid]['c' + critIdx] || '';
+  var idx = SCALE.indexOf(cur);
+  var next = idx < 0 ? SCALE[0] : (idx + 1 >= SCALE.length ? '' : SCALE[idx + 1]);
+
+  if (next) {
+    evals[_groupId][_sessionDate][sid]['c' + critIdx] = next;
+  } else {
+    delete evals[_groupId][_sessionDate][sid]['c' + critIdx];
+  }
+  setEvals(evals);
+  renderGradeGrid();
+}
+
+// Sync vertical scroll between student list and grade grid
+function syncScroll() {
+  var studentList = document.getElementById('student-list');
+  var gradeGrid = document.getElementById('grade-grid');
+  if (!studentList || !gradeGrid) return;
+
+  // Remove old listeners by replacing elements... use a flag instead
+  gradeGrid.onscroll = function() {
+    studentList.scrollTop = gradeGrid.scrollTop;
+  };
+  studentList.onscroll = function() {
+    gradeGrid.scrollTop = studentList.scrollTop;
+  };
+}
+
+// ═══════════════════════════════════
+// DATE SELECT
+// ═══════════════════════════════════
+function renderDateSelect() {
+  var sel = document.getElementById('date-select');
+  if (!sel) return;
+  var evals = getEvals();
+  var groupEvals = _groupId ? (evals[_groupId] || {}) : {};
+  var dates = Object.keys(groupEvals).sort().reverse();
+  var today = todayStr();
+
+  sel.innerHTML = '<option value="' + today + '">' + t('today') + '</option>';
+  dates.forEach(function(d) {
+    if (d === today) return;
+    sel.innerHTML += '<option value="' + d + '"' + (d === _sessionDate ? ' selected' : '') + '>' + d + '</option>';
+  });
+}
+
+function onDateChange() {
+  _sessionDate = document.getElementById('date-select').value || todayStr();
+  renderGradeGrid();
+}
+
+// ═══════════════════════════════════
+// NAME ORDER
+// ═══════════════════════════════════
+function renderNameOrderBtn() {
+  var btn = document.getElementById('name-order-btn');
+  if (!btn) return;
+  btn.textContent = _nameOrder === 'pn' ? t('namePN') : t('nameNP');
+}
+
+function toggleNameOrder() {
+  _nameOrder = _nameOrder === 'pn' ? 'np' : 'pn';
+  localStorage.setItem('evaleps-nameorder', _nameOrder);
+  renderStudentList();
+  renderNameOrderBtn();
 }
 
 // ═══════════════════════════════════
@@ -549,7 +355,7 @@ var _editingGroupId = null;
 
 function createGroup() {
   _editingGroupId = null;
-  _selectedColor = 'cyan-blue';
+  _selectedColor = 'c-blue';
   document.getElementById('group-name-input').value = '';
   document.getElementById('group-students-input').value = '';
   document.getElementById('group-modal-title').textContent = t('newGroup');
@@ -564,7 +370,7 @@ function editGroup(id) {
   var g = groups.find(function(x) { return x.id === id; });
   if (!g) return;
   _editingGroupId = id;
-  _selectedColor = g.color || 'cyan-blue';
+  _selectedColor = g.color || 'c-blue';
   document.getElementById('group-name-input').value = g.name;
   document.getElementById('group-students-input').value = g.students.map(function(s) { return s.name; }).join('\n');
   document.getElementById('group-modal-title').textContent = t('editGroup');
@@ -612,7 +418,7 @@ function saveGroup() {
   }
   setGroups(groups);
   closeGroupModal();
-  refreshAll();
+  renderAll();
   showToast(t('saved'));
 }
 
@@ -622,11 +428,13 @@ function deleteCurrentGroup() {
   var groups = getGroups().filter(function(g) { return g.id !== _editingGroupId; });
   setGroups(groups);
   var evals = getEvals(); delete evals[_editingGroupId]; setEvals(evals);
-  var att = getAttendance(); delete att[_editingGroupId]; setAttendance(att);
-  var beh = getBehavior(); delete beh[_editingGroupId]; setBehavior(beh);
-  if (_groupId === _editingGroupId) { _groupId = null; localStorage.removeItem('evaleps-lastgroup'); }
+  if (_groupId === _editingGroupId) {
+    _groupId = groups.length > 0 ? groups[0].id : null;
+    if (_groupId) localStorage.setItem('evaleps-lastgroup', _groupId);
+    else localStorage.removeItem('evaleps-lastgroup');
+  }
   closeGroupModal();
-  refreshAll();
+  renderAll();
   showToast(t('deleted'));
 }
 
@@ -643,12 +451,16 @@ function importStudentList() {
     var reader = new FileReader();
     reader.onload = function(ev) {
       var lines = ev.target.result.split(/[\n\r]+/)
-        .map(function(l) { var p = l.split(','); return p.length === 2 && p[0].trim() && p[1].trim() ? p[1].trim() + ' ' + p[0].trim() : l.trim(); })
+        .map(function(l) {
+          var p = l.split(',');
+          return p.length === 2 && p[0].trim() && p[1].trim()
+            ? p[1].trim() + ' ' + p[0].trim() : l.trim();
+        })
         .filter(function(n) { return n && n.length > 1; });
       var ta = document.getElementById('group-students-input');
       var ex = ta.value.trim();
       ta.value = ex ? ex + '\n' + lines.join('\n') : lines.join('\n');
-      showToast(lines.length + ' eleves');
+      showToast(lines.length + ' élèves');
     };
     reader.readAsText(file);
   });
@@ -675,7 +487,7 @@ function addStudentPhoto(studentId) {
         var photos = getPhotos();
         photos[studentId] = canvas.toDataURL('image/jpeg', 0.7);
         setPhotos(photos);
-        refreshCurrentScreen();
+        renderStudentList();
       };
       img.src = ev.target.result;
     };
@@ -693,17 +505,14 @@ function addColumnPrompt() {
   var criteria = getCriteria();
   criteria.push({ fr: name.trim(), en: name.trim(), custom: true });
   setCriteria(criteria);
-  renderCriteriaTags();
-  renderCarnetCard();
+  renderAll();
 }
 
 function removeCriteria(idx) {
   var criteria = getCriteria();
   criteria.splice(idx, 1);
   setCriteria(criteria);
-  if (_carnetCritIdx >= criteria.length) _carnetCritIdx = Math.max(0, criteria.length - 1);
-  renderCriteriaTags();
-  renderCarnetCard();
+  renderAll();
 }
 
 // ─── LEXIQUE ───
@@ -713,8 +522,7 @@ function openLexiqueModal() {
 }
 function closeLexiqueModal() {
   document.getElementById('lexique-modal').classList.add('hidden');
-  renderCriteriaTags();
-  renderCarnetCard();
+  renderAll();
 }
 
 function renderLexique() {
@@ -722,12 +530,11 @@ function renderLexique() {
   var sel = getCriteria().map(function(c) { return c.fr; });
   var html = '';
 
-  // Quick assess
-  html += '<h3 class="lexique-comp-title">⚡ ' + (_lang === 'en' ? 'Quick Assessment' : 'Evaluation rapide') + '</h3>';
+  html += '<h3 class="lexique-comp-title">⚡ ' + (_lang === 'en' ? 'Quick Assessment' : 'Évaluation rapide') + '</h3>';
   html += '<div class="lexique-items">';
   QUICK_ASSESS.forEach(function(qa) {
     var text = _lang === 'en' ? qa.en : qa.fr;
-    var s = sel.includes(qa.fr);
+    var s = sel.indexOf(qa.fr) >= 0;
     html += '<div class="lexique-item' + (s ? ' selected' : '') + '" data-fr="' + esc(qa.fr) + '" data-en="' + esc(qa.en) + '">' +
       '<span class="lexique-item-check">✓</span><span class="lexique-item-text">' + esc(text) + '</span></div>';
   });
@@ -740,7 +547,7 @@ function renderLexique() {
       html += '<div class="lexique-items">';
       compo.criteres.forEach(function(crit) {
         var text = _lang === 'en' ? crit.en : crit.fr;
-        var s = sel.includes(crit.fr);
+        var s = sel.indexOf(crit.fr) >= 0;
         html += '<div class="lexique-item' + (s ? ' selected' : '') + '" data-fr="' + esc(crit.fr) + '" data-en="' + esc(crit.en) + '">' +
           '<span class="lexique-item-check">✓</span><span class="lexique-item-text">' + esc(text) + '</span></div>';
       });
@@ -780,29 +587,30 @@ function exportPDF() {
     'h1{font-family:Bangers,cursive;color:#0077CC;text-align:center;font-size:2rem;letter-spacing:3px;}' +
     'h2{font-family:Bangers,cursive;color:#0077CC;font-size:1.3rem;margin:16px 0 6px;}' +
     'table{width:100%;border-collapse:collapse;font-size:0.85rem;margin-bottom:16px;}' +
-    'th{background:#0077CC;color:#fff;padding:6px;border:2px solid #0066b3;font-family:Bangers,cursive;font-size:0.8rem;text-align:center;}' +
+    'th{background:#0077CC;color:#fff;padding:6px;border:1px solid #0066b3;font-family:Bangers,cursive;font-size:0.8rem;text-align:center;}' +
     'th:first-child{text-align:left;}td{padding:5px;border:1px solid #ddd;text-align:center;}' +
-    'td:first-child{text-align:left;font-weight:700;}.g{padding:2px 8px;border-radius:4px;border:2px solid #0077CC;font-family:Bangers,cursive;}' +
+    'td:first-child{text-align:left;font-weight:700;}' +
+    '.g{padding:2px 8px;border-radius:4px;font-family:Bangers,cursive;color:#fff;}' +
     '.footer{text-align:center;margin-top:20px;font-size:0.8rem;color:#999;}' +
     '@media print{@page{margin:10mm;}}</style></head><body>';
   html += '<h1>' + esc(group.name) + ' — EVALEPS</h1>';
 
   dates.forEach(function(date) {
     var sd = groupEvals[date] || {};
-    html += '<h2>' + date + '</h2><table><thead><tr><th>Eleve</th>';
+    html += '<h2>' + date + '</h2><table><thead><tr><th>#</th><th>Élève</th>';
     criteria.forEach(function(c) {
       var tx = _lang === 'en' && c.en ? c.en : c.fr;
       html += '<th>' + esc(tx.length > 18 ? tx.substring(0, 16) + '..' : tx) + '</th>';
     });
-    html += '<th>Note</th></tr></thead><tbody>';
-    group.students.forEach(function(s) {
+    html += '</tr></thead><tbody>';
+    group.students.forEach(function(s, i) {
       var d = sd[s.id] || {};
-      html += '<tr><td>' + esc(s.name) + '</td>';
+      html += '<tr><td>' + (i + 1) + '</td><td>' + esc(formatName(s.name)) + '</td>';
       criteria.forEach(function(c, ci) {
         var v = d['c' + ci] || '';
-        html += v ? '<td><span class="g" style="background:' + gradeColor(v) + ';">' + v + '</span></td>' : '<td></td>';
+        html += v ? '<td><span class="g" style="background:' + (SCALE_BG[v] || '#999') + ';">' + v + '</span></td>' : '<td></td>';
       });
-      html += '<td style="font-size:0.75rem;">' + esc(d._comment || '') + '</td></tr>';
+      html += '</tr>';
     });
     html += '</tbody></table>';
   });
@@ -819,14 +627,13 @@ function exportCSV() {
   var criteria = getCriteria();
   var evals = getEvals();
   var groupEvals = evals[_groupId] || {};
-  var lines = [['Date', 'Eleve'].concat(criteria.map(function(c) { return c.fr; })).concat(['Commentaire']).join(',')];
+  var lines = [['Date', '#', 'Élève'].concat(criteria.map(function(c) { return c.fr; })).join(',')];
   Object.keys(groupEvals).sort().forEach(function(date) {
     var sd = groupEvals[date];
-    group.students.forEach(function(s) {
+    group.students.forEach(function(s, i) {
       var d = sd[s.id] || {};
-      var row = [date, '"' + s.name + '"'];
+      var row = [date, i + 1, '"' + formatName(s.name) + '"'];
       criteria.forEach(function(c, ci) { row.push(d['c' + ci] || ''); });
-      row.push('"' + (d._comment || '') + '"');
       lines.push(row.join(','));
     });
   });
@@ -843,40 +650,9 @@ function printResults() { window.print(); }
 // ═══════════════════════════════════
 // HELPERS
 // ═══════════════════════════════════
-function populateGroupSelects() {
-  var groups = getGroups();
-  ['plan-group-select', 'carnet-group-select', 'results-group-select'].forEach(function(id) {
-    var sel = document.getElementById(id);
-    if (!sel) return;
-    sel.innerHTML = '<option value="">' + t('selectGroup') + '</option>';
-    groups.forEach(function(g) {
-      sel.innerHTML += '<option value="' + g.id + '"' + (g.id === _groupId ? ' selected' : '') + '>' + esc(g.name) + ' (' + g.students.length + ')</option>';
-    });
-  });
-}
-
-function refreshAll() {
-  var activeScreen = document.querySelector('.screen.active');
-  var id = activeScreen ? activeScreen.id.replace('screen-', '') : 'hub';
-  switchScreen(id);
-}
-
-function refreshCurrentScreen() {
-  var activeScreen = document.querySelector('.screen.active');
-  if (!activeScreen) return;
-  var id = activeScreen.id.replace('screen-', '');
-  if (id === 'hub') renderHub();
-  if (id === 'plan') renderPlanGrid();
-  if (id === 'carnet') renderCarnetCard();
-  if (id === 'results') renderResultsGrid();
-}
-
 function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
 function esc(s) { return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : ''; }
-function gradeColor(v) {
-  var c = { A:'#00C853', B:'#66ff99', C:'#FFD600', D:'#FF6D00', E:'#FF1744' };
-  return c[v] || '#999';
-}
+
 function showToast(msg) {
   var el = document.getElementById('toast');
   if (!el) return;
@@ -892,6 +668,8 @@ document.addEventListener('DOMContentLoaded', function() {
   var langSel = document.getElementById('lang-select');
   if (langSel) langSel.value = savedLang;
 
+  _nameOrder = localStorage.getItem('evaleps-nameorder') || 'pn';
+
   var lastGroup = localStorage.getItem('evaleps-lastgroup');
   var groups = getGroups();
   if (lastGroup && groups.some(function(g) { return g.id === lastGroup; })) {
@@ -900,5 +678,5 @@ document.addEventListener('DOMContentLoaded', function() {
     _groupId = groups[0].id;
   }
 
-  switchScreen('hub');
+  renderAll();
 });

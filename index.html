@@ -3,161 +3,90 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <meta name="description" content="EvalEPS — Gestion de classe ultra-simple pour educateurs physiques. Style pop art." />
-  <meta name="theme-color" content="#00D4FF" />
+  <meta name="description" content="EvalEPS — Carnet d'évaluation pour éducateurs physiques. zonetotalsport.ca" />
+  <meta name="theme-color" content="#0077CC" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>EvalEPS — Zone Total Sport</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Boogaloo&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Boogaloo&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <!-- APP SHELL -->
-  <div id="app">
+  <!-- GYM BACKGROUND -->
+  <div id="gymBg"></div>
 
-    <!-- HEADER -->
-    <header class="app-header">
-      <div class="header-left">
-        <img src="img/bucheron-salut.png" alt="" class="header-mascot" />
-        <span class="header-title">EvalEPS</span>
+  <!-- TOOLBAR -->
+  <header class="toolbar">
+    <div class="toolbar-left">
+      <img src="img/bucheron-salut.png" alt="" class="toolbar-mascot" />
+      <span class="toolbar-title">EvalEPS</span>
+    </div>
+    <div class="toolbar-center">
+      <button class="tool-btn" onclick="createGroup()" title="Nouveau groupe">➕ Groupe</button>
+      <button class="tool-btn" onclick="openLexiqueModal()" title="Critères PFEQ">📚 PFEQ</button>
+      <button class="tool-btn" onclick="addColumnPrompt()" title="Ajouter critère">📝 Critère</button>
+      <span class="toolbar-sep"></span>
+      <button class="tool-btn" onclick="exportPDF()" title="Exporter PDF">📄 PDF</button>
+      <button class="tool-btn" onclick="exportCSV()" title="Exporter CSV">📊 CSV</button>
+      <button class="tool-btn" onclick="printResults()" title="Imprimer">🖨️</button>
+    </div>
+    <div class="toolbar-right">
+      <button class="tool-btn name-order-btn" onclick="toggleNameOrder()" id="name-order-btn" title="Ordre du nom">P.N</button>
+      <select id="date-select" class="tool-select" onchange="onDateChange()"></select>
+      <select id="lang-select" class="tool-select" onchange="setLang(this.value)">
+        <option value="fr">FR</option>
+        <option value="en">EN</option>
+      </select>
+    </div>
+  </header>
+
+  <!-- NOTEBOOK LAYOUT -->
+  <div class="notebook">
+
+    <!-- LEFT: STUDENT LIST -->
+    <div class="notebook-left" id="notebook-left">
+      <div class="student-header">
+        <span class="sh-num">#</span>
+        <span class="sh-photo"></span>
+        <span class="sh-name">ÉLÈVE</span>
       </div>
-      <div class="header-right">
-        <select id="lang-select" class="lang-pill" onchange="setLang(this.value)">
-          <option value="fr">FR</option>
-          <option value="en">EN</option>
-        </select>
+      <div class="student-list" id="student-list">
+        <!-- Filled by JS -->
       </div>
-    </header>
+    </div>
 
-    <!-- SCREENS -->
-    <main class="screen-container" id="screen-container">
+    <!-- CENTER: GRADE GRID -->
+    <div class="notebook-center" id="notebook-center">
+      <!-- CRITERIA TABS (TOP) -->
+      <div class="criteria-tabs" id="criteria-tabs">
+        <!-- Filled by JS -->
+      </div>
+      <!-- GRADE GRID -->
+      <div class="grade-grid" id="grade-grid">
+        <!-- Filled by JS -->
+      </div>
+    </div>
 
-      <!-- SCREEN: AUJOURD'HUI (HUB) -->
-      <section class="screen active" id="screen-hub">
-        <div class="hub-greeting">
-          <h1 class="hub-title" id="hub-greeting-text">BONJOUR COACH!</h1>
-          <p class="hub-subtitle" id="hub-date-text"></p>
-        </div>
+    <!-- RIGHT: GROUP TABS -->
+    <div class="notebook-right" id="notebook-right">
+      <div class="group-tabs" id="group-tabs">
+        <!-- Filled by JS -->
+      </div>
+      <button class="group-tab-add" onclick="createGroup()" title="Nouveau groupe">+</button>
+    </div>
 
-        <!-- Quick stats -->
-        <div class="hub-stats" id="hub-stats">
-          <div class="stat-pill stat-cyan-blue">
-            <span class="stat-num" id="stat-groups">0</span>
-            <span class="stat-label">Groupes</span>
-          </div>
-          <div class="stat-pill stat-cyan-green">
-            <span class="stat-num" id="stat-students">0</span>
-            <span class="stat-label">Eleves</span>
-          </div>
-          <div class="stat-pill stat-cyan-orange">
-            <span class="stat-num" id="stat-evals">0</span>
-            <span class="stat-label">Evaluations</span>
-          </div>
-        </div>
+  </div>
 
-        <!-- Group cards -->
-        <div class="hub-section-title">MES GROUPES</div>
-        <div class="hub-groups" id="hub-groups">
-          <!-- Filled by JS -->
-        </div>
-
-        <!-- Add group button -->
-        <button class="big-add-btn" onclick="createGroup()">
-          <span class="big-add-icon">+</span>
-          <span>NOUVEAU GROUPE</span>
-        </button>
-      </section>
-
-      <!-- SCREEN: PLAN DE CLASSE -->
-      <section class="screen" id="screen-plan">
-        <div class="screen-top-bar">
-          <h2 class="screen-title">PLAN DE CLASSE</h2>
-          <div class="screen-top-actions">
-            <select id="plan-group-select" class="comic-select" onchange="onPlanGroupChange()"></select>
-          </div>
-        </div>
-        <div class="plan-legend">
-          <span class="legend-item"><span class="legend-dot present"></span> Present</span>
-          <span class="legend-item"><span class="legend-dot absent"></span> Absent (1 tap)</span>
-          <span class="legend-item"><span class="legend-dot late"></span> Retard (2 taps)</span>
-          <span class="legend-item"><span class="legend-arrow up"></span> +1</span>
-          <span class="legend-item"><span class="legend-arrow down"></span> -1</span>
-        </div>
-        <div class="plan-grid" id="plan-grid">
-          <p class="empty-msg">Selectionne un groupe ci-dessus</p>
-        </div>
-        <div class="plan-date-bar">
-          <select id="plan-date-select" class="comic-select" onchange="onPlanDateChange()"></select>
-        </div>
-      </section>
-
-      <!-- SCREEN: CARNET DE NOTES -->
-      <section class="screen" id="screen-carnet">
-        <div class="screen-top-bar">
-          <h2 class="screen-title">CARNET DE NOTES</h2>
-          <div class="screen-top-actions">
-            <select id="carnet-group-select" class="comic-select" onchange="onCarnetGroupChange()"></select>
-          </div>
-        </div>
-        <div class="carnet-criteria-bar" id="carnet-criteria-bar">
-          <button class="comic-btn cyan-blue" onclick="openLexiqueModal()">📚 PFEQ</button>
-          <button class="comic-btn cyan-green" onclick="addColumnPrompt()">+ CRITERE</button>
-          <div class="carnet-criteria-tags" id="carnet-criteria-tags"></div>
-        </div>
-        <div class="carnet-card-container" id="carnet-card-container">
-          <p class="empty-msg">Selectionne un groupe et des criteres pour commencer</p>
-        </div>
-        <div class="carnet-nav" id="carnet-nav">
-          <button class="comic-btn cyan-orange" onclick="carnetPrev()">◀ PRECEDENT</button>
-          <span class="carnet-counter" id="carnet-counter">0/0</span>
-          <button class="comic-btn cyan-orange" onclick="carnetNext()">SUIVANT ▶</button>
-        </div>
-      </section>
-
-      <!-- SCREEN: RESULTATS / EXPORT -->
-      <section class="screen" id="screen-results">
-        <div class="screen-top-bar">
-          <h2 class="screen-title">RESULTATS</h2>
-          <div class="screen-top-actions">
-            <select id="results-group-select" class="comic-select" onchange="onResultsGroupChange()"></select>
-          </div>
-        </div>
-        <div class="results-actions-bar">
-          <button class="comic-btn cyan-blue" onclick="exportPDF()">📄 PDF</button>
-          <button class="comic-btn cyan-green" onclick="exportCSV()">📊 CSV</button>
-          <button class="comic-btn cyan-orange" onclick="printResults()">🖨️ IMPRIMER</button>
-        </div>
-        <div class="results-grid-wrapper" id="results-grid-wrapper">
-          <p class="empty-msg">Selectionne un groupe pour voir les resultats</p>
-        </div>
-      </section>
-
-    </main>
-
-    <!-- BOTTOM TAB BAR -->
-    <nav class="tab-bar">
-      <button class="tab active" data-screen="hub" onclick="switchScreen('hub')">
-        <span class="tab-icon">🏠</span>
-        <span class="tab-label">Aujourd'hui</span>
-      </button>
-      <button class="tab" data-screen="plan" onclick="switchScreen('plan')">
-        <span class="tab-icon">👥</span>
-        <span class="tab-label">Classe</span>
-      </button>
-      <button class="tab" data-screen="carnet" onclick="switchScreen('carnet')">
-        <span class="tab-icon">📋</span>
-        <span class="tab-label">Notes</span>
-      </button>
-      <button class="tab" data-screen="results" onclick="switchScreen('results')">
-        <span class="tab-icon">📊</span>
-        <span class="tab-label">Resultats</span>
-      </button>
-    </nav>
-
-  </div><!-- /app -->
+  <!-- EMPTY STATE (no groups yet) -->
+  <div class="empty-state hidden" id="empty-state">
+    <img src="img/bucheron-salut.png" alt="" class="empty-mascot" />
+    <h1 class="empty-title">BONJOUR COACH!</h1>
+    <p class="empty-sub">Crée ton premier groupe pour commencer</p>
+    <button class="empty-btn" onclick="createGroup()">➕ NOUVEAU GROUPE</button>
+  </div>
 
   <!-- MODAL: CREATE/EDIT GROUP -->
   <div id="group-modal" class="modal hidden">
@@ -168,28 +97,29 @@
         <button class="modal-close" onclick="closeGroupModal()">✕</button>
       </div>
       <div class="modal-body">
-        <div class="comic-field">
+        <div class="form-field">
           <label>NOM DU GROUPE</label>
-          <input type="text" id="group-name-input" class="comic-input" placeholder="Ex: 3e annee Groupe A" />
+          <input type="text" id="group-name-input" class="form-input" placeholder="Ex: 3e année Groupe A" />
         </div>
-        <div class="comic-field">
+        <div class="form-field">
           <label>COULEUR</label>
           <div class="color-picker" id="color-picker">
-            <button class="color-swatch cyan-blue active" data-color="cyan-blue" onclick="pickColor('cyan-blue')"></button>
-            <button class="color-swatch cyan-green" data-color="cyan-green" onclick="pickColor('cyan-green')"></button>
-            <button class="color-swatch cyan-orange" data-color="cyan-orange" onclick="pickColor('cyan-orange')"></button>
-            <button class="color-swatch cyan-yellow" data-color="cyan-yellow" onclick="pickColor('cyan-yellow')"></button>
+            <button class="color-swatch c-blue active" data-color="c-blue" onclick="pickColor('c-blue')"></button>
+            <button class="color-swatch c-green" data-color="c-green" onclick="pickColor('c-green')"></button>
+            <button class="color-swatch c-orange" data-color="c-orange" onclick="pickColor('c-orange')"></button>
+            <button class="color-swatch c-pink" data-color="c-pink" onclick="pickColor('c-pink')"></button>
+            <button class="color-swatch c-purple" data-color="c-purple" onclick="pickColor('c-purple')"></button>
           </div>
         </div>
-        <div class="comic-field">
-          <label>ELEVES (un par ligne)</label>
-          <textarea id="group-students-input" class="comic-textarea" rows="8" placeholder="Alexis B.&#10;Camille D.&#10;Emile F."></textarea>
+        <div class="form-field">
+          <label>ÉLÈVES (un par ligne)</label>
+          <textarea id="group-students-input" class="form-textarea" rows="8" placeholder="Alexis Beaumont&#10;Camille Dupont&#10;Émile Fortin"></textarea>
         </div>
         <div class="modal-actions">
-          <button class="comic-btn cyan-green big" onclick="saveGroup()">SAUVEGARDER</button>
-          <button class="comic-btn cyan-orange" onclick="importStudentList()">📥 IMPORTER</button>
-          <button class="comic-btn" onclick="closeGroupModal()">ANNULER</button>
-          <button class="comic-btn danger" id="delete-group-btn" onclick="deleteCurrentGroup()" style="display:none;">🗑️ SUPPRIMER</button>
+          <button class="btn-primary" onclick="saveGroup()">💾 SAUVEGARDER</button>
+          <button class="btn-secondary" onclick="importStudentList()">📥 IMPORTER</button>
+          <button class="btn-secondary" onclick="closeGroupModal()">ANNULER</button>
+          <button class="btn-danger" id="delete-group-btn" onclick="deleteCurrentGroup()" style="display:none;">🗑️ SUPPRIMER</button>
         </div>
       </div>
     </div>
