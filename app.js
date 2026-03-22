@@ -777,12 +777,12 @@ function exportPDF() {
   var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>EvalEPS — ' + esc(group.name) + '</title>' +
     '<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Boogaloo&display=swap" rel="stylesheet">' +
     '<style>body{font-family:Boogaloo,sans-serif;margin:20px;color:#111;}' +
-    'h1{font-family:Bangers,cursive;color:#00D4FF;text-align:center;font-size:2rem;letter-spacing:3px;}' +
-    'h2{font-family:Bangers,cursive;color:#2962FF;font-size:1.3rem;margin:16px 0 6px;}' +
+    'h1{font-family:Bangers,cursive;color:#0077CC;text-align:center;font-size:2rem;letter-spacing:3px;}' +
+    'h2{font-family:Bangers,cursive;color:#0077CC;font-size:1.3rem;margin:16px 0 6px;}' +
     'table{width:100%;border-collapse:collapse;font-size:0.85rem;margin-bottom:16px;}' +
-    'th{background:#1a1a2e;color:#00D4FF;padding:6px;border:2px solid #111;font-family:Bangers,cursive;font-size:0.8rem;text-align:center;}' +
-    'th:first-child{text-align:left;}td{padding:5px;border:1px solid #333;text-align:center;}' +
-    'td:first-child{text-align:left;font-weight:700;}.g{padding:2px 8px;border-radius:4px;border:2px solid #111;font-family:Bangers,cursive;}' +
+    'th{background:#0077CC;color:#fff;padding:6px;border:2px solid #0066b3;font-family:Bangers,cursive;font-size:0.8rem;text-align:center;}' +
+    'th:first-child{text-align:left;}td{padding:5px;border:1px solid #ddd;text-align:center;}' +
+    'td:first-child{text-align:left;font-weight:700;}.g{padding:2px 8px;border-radius:4px;border:2px solid #0077CC;font-family:Bangers,cursive;}' +
     '.footer{text-align:center;margin-top:20px;font-size:0.8rem;color:#999;}' +
     '@media print{@page{margin:10mm;}}</style></head><body>';
   html += '<h1>' + esc(group.name) + ' — EVALEPS</h1>';
