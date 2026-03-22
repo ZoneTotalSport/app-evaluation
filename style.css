@@ -169,6 +169,43 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
   padding: 0 12px 30px;
 }
 
+/* ===== GROUP TABS ===== */
+.group-tabs {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 6px 0; overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.group-tab {
+  font-family: 'Fredoka', sans-serif; font-weight: 600;
+  font-size: 0.85rem; padding: 8px 18px;
+  border-radius: 12px 12px 0 0;
+  background: rgba(255,255,255,0.5); color: var(--text-muted);
+  border: 1px solid var(--card-border); border-bottom: none;
+  cursor: pointer; transition: var(--transition);
+  white-space: nowrap; position: relative;
+}
+.group-tab:hover { background: rgba(255,255,255,0.75); color: var(--text); }
+.group-tab.active {
+  background: var(--card-bg); color: var(--primary);
+  font-weight: 700; border-color: var(--primary);
+  box-shadow: 0 -2px 8px rgba(0,119,204,0.1);
+}
+.group-tab .tab-count {
+  font-size: 0.7rem; font-weight: 400;
+  color: var(--text-muted); margin-left: 4px;
+}
+.group-tab.active .tab-count { color: var(--primary); opacity: 0.7; }
+.group-tab-add {
+  font-family: 'Fredoka', sans-serif; font-weight: 700;
+  font-size: 1.1rem; width: 36px; height: 36px;
+  border-radius: 12px 12px 0 0;
+  background: rgba(0,119,204,0.08); color: var(--primary);
+  border: 1px dashed var(--card-border); border-bottom: none;
+  cursor: pointer; transition: var(--transition);
+  display: flex; align-items: center; justify-content: center;
+}
+.group-tab-add:hover { background: var(--primary); color: #fff; }
+
 /* ===== TOOLBAR ===== */
 .toolbar {
   background: var(--card-bg);
@@ -263,6 +300,24 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
   text-align: left; padding: 6px 8px;
   font-family: 'Fredoka', sans-serif; font-weight: 600;
   font-size: 0.85rem; color: var(--text); white-space: nowrap;
+}
+.student-cell { display: flex; align-items: center; gap: 8px; }
+.student-photo {
+  width: 30px; height: 30px; border-radius: 50%;
+  object-fit: cover; cursor: pointer; flex-shrink: 0;
+  border: 2px solid var(--card-border);
+  transition: var(--transition);
+}
+.student-photo:hover { border-color: var(--primary); transform: scale(1.1); }
+.student-photo-placeholder {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: rgba(0,119,204,0.06); border: 1.5px dashed rgba(0,119,204,0.25);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.7rem; cursor: pointer; flex-shrink: 0;
+  transition: var(--transition); color: var(--text-muted);
+}
+.student-photo-placeholder:hover {
+  background: rgba(0,119,204,0.12); border-color: var(--primary);
 }
 .eval-grid tr:hover td { background: rgba(0,119,204,0.02); }
 .eval-grid tr:hover td:first-child { background: rgba(0,119,204,0.05); }

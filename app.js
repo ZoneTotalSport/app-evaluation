@@ -41,6 +41,7 @@ const I18N = {
     noStudents: 'Aucun eleve. Modifie le groupe pour en ajouter.',
     noCriteria: 'Ajoute des colonnes avec le bouton "+ Colonne" ou depuis le lexique PFEQ.',
     deleteGroup: 'Supprimer le groupe',
+    editGrp: 'Groupe',
     howTitle: 'Comment ca marche ?',
     howStep1Title: 'Cree ton groupe',
     howStep1Desc: 'Ajoute le nom de ton groupe et entre tes eleves (un par ligne). Tu peux aussi importer un fichier CSV ou TXT.',
@@ -90,6 +91,7 @@ const I18N = {
     noStudents: 'No students. Edit the group to add some.',
     noCriteria: 'Add columns with "+ Column" button or from the PFEQ lexicon.',
     deleteGroup: 'Delete group',
+    editGrp: 'Group',
     howTitle: 'How does it work?',
     howStep1Title: 'Create your group',
     howStep1Desc: 'Add your group name and enter your students (one per line). You can also import a CSV or TXT file.',
@@ -234,41 +236,47 @@ function getCriteria() { try { return JSON.parse(localStorage.getItem('evaleps-c
 function setCriteria(c) { localStorage.setItem('evaleps-criteria', JSON.stringify(c)); }
 function getEvals() { try { return JSON.parse(localStorage.getItem('evaleps-evals') || '{}'); } catch { return {}; } }
 function setEvals(e) { localStorage.setItem('evaleps-evals', JSON.stringify(e)); }
+function getPhotos() { try { return JSON.parse(localStorage.getItem('evaleps-photos') || '{}'); } catch { return {}; } }
+function setPhotos(p) { localStorage.setItem('evaleps-photos', JSON.stringify(p)); }
 
 // ─── OPEN NOTEBOOK ───
 function openNotebook() {
   document.getElementById('hero-section').classList.add('hidden');
   document.getElementById('notebook').classList.remove('hidden');
-  populateGroupSelect();
   restoreScale();
   // Auto-select last used group
   var lastGroup = localStorage.getItem('evaleps-lastgroup');
-  if (lastGroup) {
-    _groupId = lastGroup;
-    document.getElementById('group-select').value = lastGroup;
-  }
+  if (lastGroup) _groupId = lastGroup;
+  renderGroupTabs();
   populateDateSelect();
   renderGrid();
 }
 
-// ─── GROUP SELECT ───
-function populateGroupSelect() {
-  var sel = document.getElementById('group-select');
+// ─── GROUP TABS ───
+function renderGroupTabs() {
+  var container = document.getElementById('group-tabs');
   var groups = getGroups();
-  sel.innerHTML = '<option value="">' + t('selectGroup') + '</option>';
+  var html = '';
+
   groups.forEach(function(g) {
-    var opt = document.createElement('option');
-    opt.value = g.id;
-    opt.textContent = g.name + ' (' + g.students.length + ')';
-    opt.selected = g.id === _groupId;
-    sel.appendChild(opt);
+    html += '<button class="group-tab' + (g.id === _groupId ? ' active' : '') + '" data-id="' + g.id + '">' +
+      esc(g.name) + '<span class="tab-count">(' + g.students.length + ')</span></button>';
+  });
+
+  html += '<button class="group-tab-add" onclick="createGroup()" title="' + t('newGroup') + '">+</button>';
+  container.innerHTML = html;
+
+  // Click handlers
+  container.querySelectorAll('.group-tab').forEach(function(tab) {
+    tab.addEventListener('click', function() { selectGroup(tab.dataset.id); });
   });
 }
 
-function onGroupChange() {
-  _groupId = document.getElementById('group-select').value || null;
-  if (_groupId) localStorage.setItem('evaleps-lastgroup', _groupId);
+function selectGroup(id) {
+  _groupId = id;
+  localStorage.setItem('evaleps-lastgroup', id);
   _sessionDate = todayStr();
+  renderGroupTabs();
   populateDateSelect();
   renderGrid();
 }
@@ -340,7 +348,7 @@ function renderGrid() {
 
   var evals = getEvals();
   var sessionEvals = (evals[_groupId] && evals[_groupId][_sessionDate]) || {};
-  var scaleValues = SCALES[_scale] || SCALES.ABCDE;
+  var photos = getPhotos();
 
   var html = '<table class="eval-grid"><thead><tr>';
   html += '<th>' + t('student') + '</th>';
@@ -361,7 +369,14 @@ function renderGrid() {
     var isAbs = sd._absent || false;
 
     html += '<tr' + (isAbs ? ' class="absent"' : '') + '>';
-    html += '<td>' + esc(s.name) + '</td>';
+    var photoSrc = photos[s.id];
+    html += '<td><div class="student-cell">';
+    if (photoSrc) {
+      html += '<img src="' + photoSrc + '" class="student-photo" onclick="addStudentPhoto(\'' + s.id + '\')" />';
+    } else {
+      html += '<span class="student-photo-placeholder" onclick="addStudentPhoto(\'' + s.id + '\')">📷</span>';
+    }
+    html += '<span>' + esc(s.name) + '</span></div></td>';
 
     criteria.forEach(function(c, ci) {
       var val = sd['c' + ci] || '';
@@ -443,6 +458,39 @@ function saveComment(sid, comment) {
   setEvals(evals);
 }
 
+// ─── STUDENT PHOTOS ───
+function addStudentPhoto(studentId) {
+  var input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.capture = 'environment';
+  input.addEventListener('change', function(e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      var img = new Image();
+      img.onload = function() {
+        var canvas = document.createElement('canvas');
+        var maxSize = 150;
+        var w = img.width, h = img.height;
+        if (w > h) { h = maxSize * h / w; w = maxSize; }
+        else { w = maxSize * w / h; h = maxSize; }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        var dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+        var photos = getPhotos();
+        photos[studentId] = dataUrl;
+        setPhotos(photos);
+        renderGrid();
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+  input.click();
+}
+
 // ─── ADD / REMOVE CRITERIA (columns) ───
 function addColumnPrompt() {
   var name = prompt(t('addColPrompt'));
@@ -516,8 +564,7 @@ function saveGroup() {
 
   setGroups(groups);
   closeGroupModal();
-  populateGroupSelect();
-  document.getElementById('group-select').value = _groupId;
+  renderGroupTabs();
   renderGrid();
   showToast(t('saved'));
 }
@@ -533,7 +580,7 @@ function deleteCurrentGroup() {
   _groupId = null;
   localStorage.removeItem('evaleps-lastgroup');
   closeGroupModal();
-  populateGroupSelect();
+  renderGroupTabs();
   renderGrid();
   showToast(t('deleted'));
 }

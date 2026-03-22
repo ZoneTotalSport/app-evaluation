@@ -122,18 +122,14 @@
     <!-- NOTEBOOK (main view — single screen) -->
     <main class="notebook hidden" id="notebook">
 
-      <!-- TOOLBAR — like the top of a paper notebook -->
+      <!-- GROUP TABS -->
+      <div class="group-tabs" id="group-tabs">
+        <!-- Filled by JS -->
+      </div>
+
+      <!-- TOOLBAR -->
       <div class="toolbar">
         <div class="toolbar-row">
-          <!-- Group selector -->
-          <div class="toolbar-group">
-            <select id="group-select" class="toolbar-select" onchange="onGroupChange()">
-              <option value="" data-i18n="selectGroup">-- Groupe --</option>
-            </select>
-            <button class="toolbar-btn" onclick="createGroup()" title="Nouveau groupe">+</button>
-            <button class="toolbar-btn" onclick="editCurrentGroup()" title="Modifier">✏️</button>
-          </div>
-
           <!-- Date -->
           <div class="toolbar-group">
             <select id="date-select" class="toolbar-select" onchange="onDateChange()">
@@ -155,6 +151,7 @@
           <div class="toolbar-group toolbar-actions">
             <button class="toolbar-btn" onclick="openLexiqueModal()">📚 <span data-i18n="pfeq">PFEQ</span></button>
             <button class="toolbar-btn" onclick="addColumnPrompt()">+ <span data-i18n="addCol">Colonne</span></button>
+            <button class="toolbar-btn" onclick="editCurrentGroup()">✏️ <span data-i18n="editGrp">Groupe</span></button>
             <button class="toolbar-btn" onclick="exportPDF()">📄 PDF</button>
             <button class="toolbar-btn" onclick="exportCSV()">📊 CSV</button>
           </div>
