@@ -1,213 +1,91 @@
 /* ============================================================
-   EvalEPS — Carnet d'evaluation
-   Simple comme un cahier papier
+   EvalEPS — Pop Art Comic Book Edition
+   4 modules: Hub, Plan de classe, Carnet, Resultats
    ============================================================ */
 'use strict';
 
 // ─── i18n ───
 const I18N = {
   fr: {
-    appName: 'EvalEPS',
-    heroTitle: 'CARNET D\'EVALUATION<br /><span class="hero-accent">EDUCATION PHYSIQUE</span>',
-    heroAccent: 'EDUCATION PHYSIQUE',
-    heroDesc: 'Simple comme un cahier papier. Tape pour noter.',
-    feat1: 'Grille tactile — <strong>tape pour noter</strong>',
-    feat2: '<strong>Lexique PFEQ</strong> integre',
-    feat3: '<strong>Tablette et ordinateur</strong>',
-    feat4: '<strong>PDF et impression</strong> en un clic',
-    ctaStart: 'Ouvrir mon carnet',
-    selectGroup: '-- Groupe --',
-    today: 'Aujourd\'hui',
-    pfeq: 'PFEQ',
-    addCol: 'Colonne',
-    gridEmpty: 'Choisis un groupe pour ouvrir ton carnet.',
-    newGroup: '👥 Nouveau groupe',
-    editGroup: '✏️ Modifier le groupe',
-    groupName: 'Nom du groupe',
-    groupStudents: 'Eleves (un par ligne)',
-    save: 'Sauvegarder',
-    import: '📥 Importer',
-    cancel: 'Annuler',
-    lexiqueTitle: '📚 Lexique PFEQ',
-    student: 'Eleve',
-    abs: 'ABS',
-    note: 'Note',
-    saved: 'Sauvegarde !',
-    deleted: 'Supprime !',
-    exported: 'PDF genere !',
-    confirmDelete: 'Supprimer ce groupe et toutes ses evaluations ?',
-    addColPrompt: 'Nom de la colonne (critere) :',
-    session: 'Seance',
-    noStudents: 'Aucun eleve. Modifie le groupe pour en ajouter.',
-    noCriteria: 'Ajoute des colonnes avec le bouton "+ Colonne" ou depuis le lexique PFEQ.',
-    deleteGroup: 'Supprimer le groupe',
-    editGrp: 'Groupe',
-    howTitle: 'Comment ca marche ?',
-    howStep1Title: 'Cree ton groupe',
-    howStep1Desc: 'Ajoute le nom de ton groupe et entre tes eleves (un par ligne). Tu peux aussi importer un fichier CSV ou TXT.',
-    howStep2Title: 'Choisis tes criteres',
-    howStep2Desc: 'Ajoute des colonnes avec le bouton <strong>+ Colonne</strong> ou pioche dans le <strong>lexique PFEQ</strong> integre (3 competences, evaluation rapide).',
-    howStep3Title: 'Tape pour noter',
-    howStep3Desc: 'Tape sur une case pour faire defiler les notes (A > B > C > D > E > vide). Choisis ton echelle : lettres, chiffres, symboles ou coches.',
-    howStep4Title: 'Exporte en un clic',
-    howStep4Desc: 'Genere un <strong>PDF</strong> pour imprimer ou un <strong>CSV</strong> pour Excel. Tes donnees sont sauvegardees automatiquement sur ton appareil.',
-    howExtra1: 'Change la date pour consulter ou modifier une <strong>seance precedente</strong>',
-    howExtra2: 'Marque un eleve <strong>absent</strong> en tapant la colonne ABS',
-    howExtra3: 'Ajoute une <strong>note</strong> personnalisee pour chaque eleve',
-    howExtra4: 'Survole un en-tete de colonne pour <strong>supprimer</strong> un critere',
+    greeting: 'BONJOUR COACH!',
+    groups: 'Groupes', students: 'Eleves', evals: 'Evaluations',
+    myGroups: 'MES GROUPES', newGroup: 'NOUVEAU GROUPE',
+    startClass: 'COMMENCER LE COURS', editGroup: 'MODIFIER LE GROUPE',
+    selectGroup: '-- Groupe --', today: 'Aujourd\'hui', session: 'Seance',
+    save: 'SAUVEGARDER', cancel: 'ANNULER', import: 'IMPORTER',
+    delete: 'SUPPRIMER', deleteConfirm: 'Supprimer ce groupe ?',
+    saved: 'SAUVEGARDE!', deleted: 'SUPPRIME!', exported: 'PDF GENERE!',
+    addCriteria: 'Nom du critere :', noCriteria: 'Ajoute des criteres pour evaluer',
+    prev: 'PRECEDENT', next: 'SUIVANT', comment: 'Ajouter une note...',
+    noData: 'Aucune donnee',
   },
   en: {
-    appName: 'EvalPE',
-    heroTitle: 'ASSESSMENT NOTEBOOK<br /><span class="hero-accent">PHYSICAL EDUCATION</span>',
-    heroAccent: 'PHYSICAL EDUCATION',
-    heroDesc: 'Simple as a paper notebook. Tap to grade.',
-    feat1: 'Touch grid — <strong>tap to grade</strong>',
-    feat2: '<strong>PFEQ Lexicon</strong> integrated',
-    feat3: '<strong>Tablet and computer</strong>',
-    feat4: '<strong>PDF and print</strong> in one click',
-    ctaStart: 'Open my notebook',
-    selectGroup: '-- Group --',
-    today: 'Today',
-    pfeq: 'PFEQ',
-    addCol: 'Column',
-    gridEmpty: 'Select a group to open your notebook.',
-    newGroup: '👥 New Group',
-    editGroup: '✏️ Edit Group',
-    groupName: 'Group name',
-    groupStudents: 'Students (one per line)',
-    save: 'Save',
-    import: '📥 Import',
-    cancel: 'Cancel',
-    lexiqueTitle: '📚 PFEQ Lexicon',
-    student: 'Student',
-    abs: 'ABS',
-    note: 'Note',
-    saved: 'Saved!',
-    deleted: 'Deleted!',
-    exported: 'PDF generated!',
-    confirmDelete: 'Delete this group and all its assessments?',
-    addColPrompt: 'Column name (criterion):',
-    session: 'Session',
-    noStudents: 'No students. Edit the group to add some.',
-    noCriteria: 'Add columns with "+ Column" button or from the PFEQ lexicon.',
-    deleteGroup: 'Delete group',
-    editGrp: 'Group',
-    howTitle: 'How does it work?',
-    howStep1Title: 'Create your group',
-    howStep1Desc: 'Add your group name and enter your students (one per line). You can also import a CSV or TXT file.',
-    howStep2Title: 'Choose your criteria',
-    howStep2Desc: 'Add columns with the <strong>+ Column</strong> button or pick from the built-in <strong>PFEQ lexicon</strong> (3 competencies, quick assessment).',
-    howStep3Title: 'Tap to grade',
-    howStep3Desc: 'Tap a cell to cycle through grades (A > B > C > D > E > empty). Choose your scale: letters, numbers, symbols or checks.',
-    howStep4Title: 'Export in one click',
-    howStep4Desc: 'Generate a <strong>PDF</strong> to print or a <strong>CSV</strong> for Excel. Your data is saved automatically on your device.',
-    howExtra1: 'Change the date to view or edit a <strong>previous session</strong>',
-    howExtra2: 'Mark a student <strong>absent</strong> by tapping the ABS column',
-    howExtra3: 'Add a custom <strong>note</strong> for each student',
-    howExtra4: 'Hover a column header to <strong>delete</strong> a criterion',
+    greeting: 'HELLO COACH!',
+    groups: 'Groups', students: 'Students', evals: 'Assessments',
+    myGroups: 'MY GROUPS', newGroup: 'NEW GROUP',
+    startClass: 'START CLASS', editGroup: 'EDIT GROUP',
+    selectGroup: '-- Group --', today: 'Today', session: 'Session',
+    save: 'SAVE', cancel: 'CANCEL', import: 'IMPORT',
+    delete: 'DELETE', deleteConfirm: 'Delete this group?',
+    saved: 'SAVED!', deleted: 'DELETED!', exported: 'PDF GENERATED!',
+    addCriteria: 'Criterion name:', noCriteria: 'Add criteria to start grading',
+    prev: 'PREVIOUS', next: 'NEXT', comment: 'Add a note...',
+    noData: 'No data',
   }
 };
-
 let _lang = 'fr';
-function t(k) { return (I18N[_lang] && I18N[_lang][k]) || (I18N.fr[k]) || k; }
-
-function setLang(lang) {
-  _lang = lang;
-  localStorage.setItem('evaleps-lang', lang);
-  var langSel = document.getElementById('lang-select');
-  if (langSel) langSel.value = lang;
-  document.documentElement.lang = lang;
-  document.querySelectorAll('[data-i18n]').forEach(function(el) {
-    var v = t(el.getAttribute('data-i18n'));
-    if (v) el.innerHTML = v;
-  });
-  // Only render if notebook is visible
-  if (document.getElementById('notebook') && !document.getElementById('notebook').classList.contains('hidden')) {
-    renderGroupTabs();
-    renderGrid();
-  }
+function t(k) { return (I18N[_lang] && I18N[_lang][k]) || I18N.fr[k] || k; }
+function setLang(l) {
+  _lang = l; localStorage.setItem('evaleps-lang', l);
+  var s = document.getElementById('lang-select'); if (s) s.value = l;
+  refreshAll();
 }
 
 // ─── LEXIQUE PFEQ ───
 const LEXIQUE_PFEQ = [
-  {
-    competence: 'Competence 1 — Agir',
-    competence_en: 'Competency 1 — To act',
-    composantes: [
-      { nom: 'Analyser la situation', nom_en: 'Analyze the situation', criteres: [
-        { fr: 'Identifie les elements de la tache (but, regles, contraintes)', en: 'Identifies task elements (goal, rules, constraints)' },
-        { fr: 'Reconnait les possibilites de l\'espace de travail', en: 'Recognizes work space possibilities' },
-        { fr: 'Reconnait les risques et adopte des comportements securitaires', en: 'Recognizes risks and adopts safe behaviors' },
-      ]},
-      { nom: 'Elaborer un plan d\'action', nom_en: 'Develop an action plan', criteres: [
-        { fr: 'Choisit les actions motrices appropriees', en: 'Chooses appropriate motor actions' },
-        { fr: 'Organise ses actions en sequence logique', en: 'Organizes actions in logical sequence' },
-        { fr: 'Selectionne des strategies adaptees', en: 'Selects adapted strategies' },
-      ]},
-      { nom: 'Executer des actions motrices', nom_en: 'Execute motor actions', criteres: [
-        { fr: 'Courir a differentes vitesses et directions', en: 'Run at different speeds and directions' },
-        { fr: 'Sauter de differentes facons', en: 'Jump in different ways' },
-        { fr: 'Lancer avec precision vers une cible', en: 'Throw accurately at a target' },
-        { fr: 'Attraper un objet en mouvement', en: 'Catch a moving object' },
-        { fr: 'Frapper avec la main, le pied ou un outil', en: 'Strike with hand, foot or tool' },
-        { fr: 'Dribler un ballon de facon controlee', en: 'Dribble a ball in a controlled way' },
-        { fr: 'Maintenir son equilibre (statique et dynamique)', en: 'Maintain balance (static and dynamic)' },
-        { fr: 'Effectuer des rotations (roulades, vrilles)', en: 'Perform rotations (rolls, twists)' },
-        { fr: 'Se recevoir de facon securitaire', en: 'Land safely' },
-      ]},
-      { nom: 'Evaluer sa demarche', nom_en: 'Evaluate process', criteres: [
-        { fr: 'Compare sa performance aux criteres de reussite', en: 'Compares performance to success criteria' },
-        { fr: 'Identifie les ajustements necessaires', en: 'Identifies necessary adjustments' },
-        { fr: 'Reconnait ses reussites et difficultes', en: 'Recognizes successes and difficulties' },
-      ]},
-    ]
-  },
-  {
-    competence: 'Competence 2 — Interagir',
-    competence_en: 'Competency 2 — To interact',
-    composantes: [
-      { nom: 'Analyser la situation d\'interaction', nom_en: 'Analyze interaction', criteres: [
-        { fr: 'Identifie le type d\'interaction (coop, opposition)', en: 'Identifies interaction type (coop, opposition)' },
-        { fr: 'Tient compte de la position des partenaires/adversaires', en: 'Considers partners/opponents position' },
-        { fr: 'Identifie les espaces libres', en: 'Identifies open spaces' },
-      ]},
-      { nom: 'Elaborer un plan en interaction', nom_en: 'Plan in interaction', criteres: [
-        { fr: 'Communique ses intentions aux partenaires', en: 'Communicates intentions to partners' },
-        { fr: 'Propose des strategies adaptees', en: 'Proposes adapted strategies' },
-        { fr: 'Accepte les idees des autres', en: 'Accepts others\' ideas' },
-      ]},
-      { nom: 'Executer en interaction', nom_en: 'Execute in interaction', criteres: [
-        { fr: 'Synchronise ses actions avec ses partenaires', en: 'Synchronizes actions with partners' },
-        { fr: 'Se deplace pour se rendre disponible', en: 'Moves to become available' },
-        { fr: 'Utilise des feintes pour tromper l\'adversaire', en: 'Uses feints to deceive opponents' },
-        { fr: 'Anticipe les actions de l\'adversaire', en: 'Anticipates opponent actions' },
-        { fr: 'Passe avec precision', en: 'Passes accurately' },
-        { fr: 'Exerce une pression defensive appropriee', en: 'Applies appropriate defensive pressure' },
-      ]},
-      { nom: 'Ethique et fair-play', nom_en: 'Ethics and fair play', criteres: [
-        { fr: 'Accepte la victoire et la defaite avec grace', en: 'Accepts victory and defeat gracefully' },
-        { fr: 'Respecte les adversaires', en: 'Respects opponents' },
-        { fr: 'Joue dans le respect des regles', en: 'Plays within the rules' },
-        { fr: 'Encourage ses partenaires', en: 'Encourages partners' },
-      ]},
-    ]
-  },
-  {
-    competence: 'Competence 3 — Mode de vie sain',
-    competence_en: 'Competency 3 — Healthy lifestyle',
-    composantes: [
-      { nom: 'Habitudes de vie', nom_en: 'Lifestyle habits', criteres: [
-        { fr: 'Identifie les effets de l\'activite physique sur le corps', en: 'Identifies effects of physical activity on body' },
-        { fr: 'S\'engage activement dans les activites', en: 'Actively engages in activities' },
-        { fr: 'Pratique l\'echauffement et le retour au calme', en: 'Practices warm-up and cool-down' },
-        { fr: 'Respecte les regles de securite', en: 'Respects safety rules' },
-        { fr: 'S\'hydrate adequatement', en: 'Hydrates adequately' },
-      ]},
-    ]
-  }
+  { competence: 'Comp. 1 — Agir', competence_en: 'Comp. 1 — To act', composantes: [
+    { nom: 'Actions motrices', nom_en: 'Motor actions', criteres: [
+      { fr: 'Courir a differentes vitesses', en: 'Run at different speeds' },
+      { fr: 'Sauter de differentes facons', en: 'Jump in different ways' },
+      { fr: 'Lancer avec precision', en: 'Throw accurately' },
+      { fr: 'Attraper un objet en mouvement', en: 'Catch a moving object' },
+      { fr: 'Frapper avec main/pied/outil', en: 'Strike with hand/foot/tool' },
+      { fr: 'Dribler de facon controlee', en: 'Dribble in controlled way' },
+      { fr: 'Maintenir son equilibre', en: 'Maintain balance' },
+      { fr: 'Roulades et rotations', en: 'Rolls and rotations' },
+      { fr: 'Se recevoir securitairement', en: 'Land safely' },
+    ]},
+    { nom: 'Planification et evaluation', nom_en: 'Planning and evaluation', criteres: [
+      { fr: 'Choisit les actions appropriees', en: 'Chooses appropriate actions' },
+      { fr: 'Identifie ses ajustements', en: 'Identifies adjustments needed' },
+      { fr: 'Reconnait reussites et difficultes', en: 'Recognizes successes and difficulties' },
+    ]},
+  ]},
+  { competence: 'Comp. 2 — Interagir', competence_en: 'Comp. 2 — To interact', composantes: [
+    { nom: 'Cooperation et opposition', nom_en: 'Cooperation and opposition', criteres: [
+      { fr: 'Synchronise avec partenaires', en: 'Synchronizes with partners' },
+      { fr: 'Se demarque pour recevoir', en: 'Gets open to receive' },
+      { fr: 'Utilise des feintes', en: 'Uses feints' },
+      { fr: 'Anticipe l\'adversaire', en: 'Anticipates opponent' },
+      { fr: 'Passe avec precision', en: 'Passes accurately' },
+      { fr: 'Pression defensive', en: 'Defensive pressure' },
+    ]},
+    { nom: 'Ethique sportive', nom_en: 'Sports ethics', criteres: [
+      { fr: 'Accepte victoire et defaite', en: 'Accepts victory and defeat' },
+      { fr: 'Respecte les adversaires', en: 'Respects opponents' },
+      { fr: 'Joue selon les regles', en: 'Plays within rules' },
+      { fr: 'Encourage ses partenaires', en: 'Encourages partners' },
+    ]},
+  ]},
+  { competence: 'Comp. 3 — Mode de vie sain', competence_en: 'Comp. 3 — Healthy lifestyle', composantes: [
+    { nom: 'Habitudes', nom_en: 'Habits', criteres: [
+      { fr: 'S\'engage activement', en: 'Actively engages' },
+      { fr: 'Echauffement et retour au calme', en: 'Warm-up and cool-down' },
+      { fr: 'Securite', en: 'Safety' },
+      { fr: 'Hydratation', en: 'Hydration' },
+    ]},
+  ]},
 ];
-
-// Quick assess items
 const QUICK_ASSESS = [
   { fr: 'Comportement', en: 'Behavior' },
   { fr: 'Effort', en: 'Effort' },
@@ -220,17 +98,15 @@ const QUICK_ASSESS = [
 ];
 
 // ─── SCALES ───
-const SCALES = {
-  ABCDE: ['A', 'B', 'C', 'D', 'E'],
-  '12345': ['5', '4', '3', '2', '1'],
-  symbols: ['++', '+', '=', '-', '--'],
-  check: ['ok', '~', 'no']
-};
+const SCALE = ['A', 'B', 'C', 'D', 'E'];
+const SCALE_COLORS = { A: 'grade-a', B: 'grade-b', C: 'grade-c', D: 'grade-d', E: 'grade-e' };
 
 // ─── STATE ───
 let _groupId = null;
 let _sessionDate = todayStr();
-let _scale = 'ABCDE';
+let _carnetIdx = 0;
+let _carnetCritIdx = 0;
+let _selectedColor = 'cyan-blue';
 
 function todayStr() { return new Date().toISOString().slice(0, 10); }
 
@@ -243,228 +119,340 @@ function getEvals() { try { return JSON.parse(localStorage.getItem('evaleps-eval
 function setEvals(e) { localStorage.setItem('evaleps-evals', JSON.stringify(e)); }
 function getPhotos() { try { return JSON.parse(localStorage.getItem('evaleps-photos') || '{}'); } catch { return {}; } }
 function setPhotos(p) { localStorage.setItem('evaleps-photos', JSON.stringify(p)); }
+function getAttendance() { try { return JSON.parse(localStorage.getItem('evaleps-attendance') || '{}'); } catch { return {}; } }
+function setAttendance(a) { localStorage.setItem('evaleps-attendance', JSON.stringify(a)); }
+function getBehavior() { try { return JSON.parse(localStorage.getItem('evaleps-behavior') || '{}'); } catch { return {}; } }
+function setBehavior(b) { localStorage.setItem('evaleps-behavior', JSON.stringify(b)); }
 
-// ─── OPEN NOTEBOOK ───
-function openNotebook() {
-  document.getElementById('hero-section').classList.add('hidden');
-  document.getElementById('notebook').classList.remove('hidden');
-  restoreScale();
-  // Auto-select last used group (verify it still exists)
-  var lastGroup = localStorage.getItem('evaleps-lastgroup');
+// ─── NAVIGATION ───
+function switchScreen(name) {
+  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+  var screen = document.getElementById('screen-' + name);
+  if (screen) screen.classList.add('active');
+  document.querySelectorAll('.tab').forEach(function(t) {
+    t.classList.toggle('active', t.dataset.screen === name);
+  });
+  if (name === 'hub') renderHub();
+  if (name === 'plan') initPlanScreen();
+  if (name === 'carnet') initCarnetScreen();
+  if (name === 'results') initResultsScreen();
+}
+
+// ═══════════════════════════════════
+// HUB — AUJOURD'HUI
+// ═══════════════════════════════════
+function renderHub() {
+  // Greeting
+  document.getElementById('hub-greeting-text').textContent = t('greeting');
+  var opts = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  document.getElementById('hub-date-text').textContent =
+    new Date().toLocaleDateString(_lang === 'en' ? 'en-CA' : 'fr-CA', opts);
+
+  // Stats
   var groups = getGroups();
-  if (lastGroup && groups.some(function(g) { return g.id === lastGroup; })) {
-    _groupId = lastGroup;
-  } else if (groups.length > 0) {
-    _groupId = groups[0].id;
-    localStorage.setItem('evaleps-lastgroup', _groupId);
-  } else {
-    _groupId = null;
+  var totalStudents = groups.reduce(function(sum, g) { return sum + g.students.length; }, 0);
+  var evals = getEvals();
+  var totalEvals = Object.keys(evals).reduce(function(sum, gid) {
+    return sum + Object.keys(evals[gid] || {}).length;
+  }, 0);
+  document.getElementById('stat-groups').textContent = groups.length;
+  document.getElementById('stat-students').textContent = totalStudents;
+  document.getElementById('stat-evals').textContent = totalEvals;
+
+  // Group cards
+  var container = document.getElementById('hub-groups');
+  var photos = getPhotos();
+
+  if (groups.length === 0) {
+    container.innerHTML = '<p class="empty-msg">Aucun groupe. Cree ton premier groupe!</p>';
+    return;
   }
-  renderGroupTabs();
-  populateDateSelect();
-  renderGrid();
-}
 
-// ─── GROUP TABS ───
-function renderGroupTabs() {
-  var container = document.getElementById('group-tabs');
-  if (!container) return;
-  var groups = getGroups();
   var html = '';
-
   groups.forEach(function(g) {
-    html += '<button class="group-tab' + (g.id === _groupId ? ' active' : '') + '" data-id="' + g.id + '">' +
-      esc(g.name) + '<span class="tab-count">(' + g.students.length + ')</span></button>';
-  });
+    var color = g.color || 'cyan-blue';
+    html += '<div class="group-card ' + color + '" data-id="' + g.id + '">';
+    html += '<div class="group-card-actions">';
+    html += '<button class="group-card-btn" onclick="event.stopPropagation();editGroup(\'' + g.id + '\')">✏️</button>';
+    html += '</div>';
+    html += '<div class="group-card-name">' + esc(g.name) + '</div>';
+    html += '<div class="group-card-count">' + g.students.length + ' ' + t('students').toLowerCase() + '</div>';
 
-  html += '<button class="group-tab-add" onclick="createGroup()" title="' + t('newGroup') + '">+</button>';
+    // Student avatars preview (max 8)
+    html += '<div class="group-card-students">';
+    var maxShow = 8;
+    g.students.slice(0, maxShow).forEach(function(s) {
+      var p = photos[s.id];
+      html += '<div class="group-card-avatar">';
+      if (p) html += '<img src="' + p + '" />';
+      else html += s.name.charAt(0).toUpperCase();
+      html += '</div>';
+    });
+    if (g.students.length > maxShow) {
+      html += '<span class="group-card-more">+' + (g.students.length - maxShow) + '</span>';
+    }
+    html += '</div>';
+
+    html += '<button class="start-btn" onclick="event.stopPropagation();startClass(\'' + g.id + '\')">' + t('startClass') + '</button>';
+    html += '</div>';
+  });
   container.innerHTML = html;
-
-  // Click handlers
-  container.querySelectorAll('.group-tab').forEach(function(tab) {
-    tab.addEventListener('click', function() { selectGroup(tab.dataset.id); });
-  });
 }
 
-function selectGroup(id) {
+function startClass(id) {
   _groupId = id;
   localStorage.setItem('evaleps-lastgroup', id);
-  _sessionDate = todayStr();
-  renderGroupTabs();
-  populateDateSelect();
-  renderGrid();
+  switchScreen('plan');
 }
 
-// ─── DATE SELECT ───
-function populateDateSelect() {
-  var sel = document.getElementById('date-select');
+// ═══════════════════════════════════
+// PLAN DE CLASSE
+// ═══════════════════════════════════
+function initPlanScreen() {
+  populateGroupSelects();
+  var sel = document.getElementById('plan-group-select');
+  if (sel && _groupId) sel.value = _groupId;
+  populatePlanDateSelect();
+  renderPlanGrid();
+}
+
+function onPlanGroupChange() {
+  _groupId = document.getElementById('plan-group-select').value || null;
+  if (_groupId) localStorage.setItem('evaleps-lastgroup', _groupId);
+  _sessionDate = todayStr();
+  populatePlanDateSelect();
+  renderPlanGrid();
+}
+
+function onPlanDateChange() {
+  _sessionDate = document.getElementById('plan-date-select').value || todayStr();
+  renderPlanGrid();
+}
+
+function populatePlanDateSelect() {
+  var sel = document.getElementById('plan-date-select');
   if (!sel) return;
-  var evals = getEvals();
-  var groupEvals = _groupId ? (evals[_groupId] || {}) : {};
-  var dates = Object.keys(groupEvals).sort().reverse();
+  var att = getAttendance();
+  var groupAtt = _groupId ? (att[_groupId] || {}) : {};
+  var dates = Object.keys(groupAtt).sort().reverse();
   var today = todayStr();
-
-  sel.innerHTML = '';
-  var todayOpt = document.createElement('option');
-  todayOpt.value = today;
-  todayOpt.textContent = t('today') + ' (' + today + ')';
-  todayOpt.selected = _sessionDate === today;
-  sel.appendChild(todayOpt);
-
+  sel.innerHTML = '<option value="' + today + '">' + t('today') + ' (' + today + ')</option>';
   dates.forEach(function(d) {
     if (d === today) return;
-    var opt = document.createElement('option');
-    opt.value = d;
-    opt.textContent = t('session') + ' ' + d;
-    opt.selected = d === _sessionDate;
-    sel.appendChild(opt);
+    sel.innerHTML += '<option value="' + d + '"' + (d === _sessionDate ? ' selected' : '') + '>' + t('session') + ' ' + d + '</option>';
   });
 }
 
-function onDateChange() {
-  _sessionDate = document.getElementById('date-select').value || todayStr();
-  renderGrid();
+function renderPlanGrid() {
+  var container = document.getElementById('plan-grid');
+  if (!container || !_groupId) {
+    if (container) container.innerHTML = '<p class="empty-msg">' + t('selectGroup') + '</p>';
+    return;
+  }
+  var groups = getGroups();
+  var group = groups.find(function(g) { return g.id === _groupId; });
+  if (!group) return;
+
+  var photos = getPhotos();
+  var att = getAttendance();
+  var groupAtt = (att[_groupId] && att[_groupId][_sessionDate]) || {};
+  var beh = getBehavior();
+  var groupBeh = (beh[_groupId] && beh[_groupId][_sessionDate]) || {};
+
+  var html = '';
+  group.students.forEach(function(s) {
+    var status = groupAtt[s.id] || 'present';
+    var score = groupBeh[s.id] || 0;
+    var photoSrc = photos[s.id];
+
+    html += '<div class="plan-student ' + status + '" data-id="' + s.id + '" ontouchstart="planTouchStart(event,\'' + s.id + '\')" ontouchend="planTouchEnd(event,\'' + s.id + '\')" ontouchmove="planTouchMove(event,\'' + s.id + '\')" onclick="planTap(\'' + s.id + '\')">';
+
+    // Badge
+    if (score !== 0) {
+      html += '<div class="plan-student-badge ' + (score > 0 ? 'positive' : 'negative') + '">' + (score > 0 ? '+' : '') + score + '</div>';
+    }
+
+    // Photo
+    html += '<div class="plan-student-photo" onclick="event.stopPropagation();addStudentPhoto(\'' + s.id + '\')">';
+    if (photoSrc) html += '<img src="' + photoSrc + '" />';
+    else html += '📷';
+    html += '</div>';
+
+    html += '<div class="plan-student-name">' + esc(s.name) + '</div>';
+    html += '</div>';
+  });
+
+  container.innerHTML = html;
 }
 
-// ─── SCALE ───
-function restoreScale() {
-  _scale = localStorage.getItem('evaleps-scale') || 'ABCDE';
-  document.getElementById('scale-select').value = _scale;
+// Tap = cycle: present > absent > late > present
+var _planTapTimer = null;
+var _planTouchY = null;
+function planTap(sid) {
+  if (_planTapTimer) return; // swipe handled
+  var att = getAttendance();
+  if (!att[_groupId]) att[_groupId] = {};
+  if (!att[_groupId][_sessionDate]) att[_groupId][_sessionDate] = {};
+  var cur = att[_groupId][_sessionDate][sid] || 'present';
+  var next = cur === 'present' ? 'absent' : cur === 'absent' ? 'late' : 'present';
+  att[_groupId][_sessionDate][sid] = next;
+  setAttendance(att);
+  renderPlanGrid();
 }
 
-function setScale(val) {
-  _scale = val;
-  localStorage.setItem('evaleps-scale', val);
-  renderGrid();
+function planTouchStart(e, sid) {
+  _planTouchY = e.touches[0].clientY;
+  _planTapTimer = null;
+}
+function planTouchMove(e, sid) {
+  if (_planTouchY === null) return;
+  var dy = _planTouchY - e.touches[0].clientY;
+  if (Math.abs(dy) > 30) {
+    e.preventDefault();
+    _planTapTimer = true;
+    var beh = getBehavior();
+    if (!beh[_groupId]) beh[_groupId] = {};
+    if (!beh[_groupId][_sessionDate]) beh[_groupId][_sessionDate] = {};
+    var cur = beh[_groupId][_sessionDate][sid] || 0;
+    beh[_groupId][_sessionDate][sid] = dy > 0 ? cur + 1 : cur - 1;
+    setBehavior(beh);
+    _planTouchY = null;
+    renderPlanGrid();
+  }
+}
+function planTouchEnd(e, sid) { _planTouchY = null; }
+
+// ═══════════════════════════════════
+// CARNET DE NOTES
+// ═══════════════════════════════════
+function initCarnetScreen() {
+  populateGroupSelects();
+  var sel = document.getElementById('carnet-group-select');
+  if (sel && _groupId) sel.value = _groupId;
+  renderCriteriaTags();
+  renderCarnetCard();
 }
 
-// ─── THE GRID — heart of the notebook ───
-function renderGrid() {
-  var wrapper = document.getElementById('grid-wrapper');
-  if (!wrapper) return;
+function onCarnetGroupChange() {
+  _groupId = document.getElementById('carnet-group-select').value || null;
+  if (_groupId) localStorage.setItem('evaleps-lastgroup', _groupId);
+  _carnetIdx = 0;
+  renderCarnetCard();
+}
+
+function renderCriteriaTags() {
+  var container = document.getElementById('carnet-criteria-tags');
+  if (!container) return;
+  var criteria = getCriteria();
+  if (criteria.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+  var html = '';
+  criteria.forEach(function(c, i) {
+    var text = _lang === 'en' && c.en ? c.en : c.fr;
+    html += '<span class="criteria-tag' + (i === _carnetCritIdx ? ' active' : '') + '" onclick="selectCriterion(' + i + ')">' +
+      esc(text.length > 20 ? text.substring(0, 18) + '..' : text) +
+      '<span class="tag-x" onclick="event.stopPropagation();removeCriteria(' + i + ')">✕</span></span>';
+  });
+  container.innerHTML = html;
+}
+
+function selectCriterion(idx) {
+  _carnetCritIdx = idx;
+  renderCriteriaTags();
+  renderCarnetCard();
+}
+
+function renderCarnetCard() {
+  var container = document.getElementById('carnet-card-container');
+  var counter = document.getElementById('carnet-counter');
+  if (!container) return;
 
   if (!_groupId) {
-    wrapper.innerHTML = '<p class="grid-empty">' + t('gridEmpty') + '</p>';
+    container.innerHTML = '<p class="empty-msg">' + t('selectGroup') + '</p>';
+    if (counter) counter.textContent = '0/0';
     return;
   }
 
   var groups = getGroups();
   var group = groups.find(function(g) { return g.id === _groupId; });
   if (!group || group.students.length === 0) {
-    wrapper.innerHTML = '<p class="grid-empty">' + t('noStudents') + '</p>';
+    container.innerHTML = '<p class="empty-msg">' + t('noData') + '</p>';
     return;
   }
 
   var criteria = getCriteria();
   if (criteria.length === 0) {
-    wrapper.innerHTML = '<p class="grid-empty">' + t('noCriteria') + '</p>';
+    container.innerHTML = '<p class="empty-msg">' + t('noCriteria') + '</p>';
     return;
   }
 
+  if (_carnetIdx >= group.students.length) _carnetIdx = 0;
+  if (_carnetCritIdx >= criteria.length) _carnetCritIdx = 0;
+  var student = group.students[_carnetIdx];
+  var crit = criteria[_carnetCritIdx];
+  var critText = _lang === 'en' && crit.en ? crit.en : crit.fr;
+
+  var photos = getPhotos();
   var evals = getEvals();
   var sessionEvals = (evals[_groupId] && evals[_groupId][_sessionDate]) || {};
-  var photos = getPhotos();
+  var sd = sessionEvals[student.id] || {};
+  var currentVal = sd['c' + _carnetCritIdx] || '';
+  var currentComment = sd._comment || '';
 
-  var html = '<table class="eval-grid"><thead><tr>';
-  html += '<th>' + t('student') + '</th>';
+  var color = (groups.find(function(g) { return g.id === _groupId; }) || {}).color || 'cyan-blue';
+  var photoSrc = photos[student.id];
 
-  criteria.forEach(function(c, i) {
-    var text = _lang === 'en' && c.en ? c.en : c.fr;
-    var short = text.length > 25 ? text.substring(0, 23) + '..' : text;
-    html += '<th title="' + esc(text) + '">' + esc(short) +
-      '<span class="th-delete" onclick="removeCriteria(' + i + ')">✕</span></th>';
+  var html = '<div class="carnet-card ' + color + '">';
+
+  // Photo
+  html += '<div class="carnet-card-photo" onclick="addStudentPhoto(\'' + student.id + '\')">';
+  if (photoSrc) html += '<img src="' + photoSrc + '" />';
+  else html += '📷';
+  html += '</div>';
+
+  html += '<div class="carnet-card-name">' + esc(student.name) + '</div>';
+  html += '<div class="carnet-card-criterion">' + esc(critText) + '</div>';
+
+  // Grade buttons
+  html += '<div class="grade-buttons">';
+  SCALE.forEach(function(grade) {
+    html += '<button class="grade-btn ' + SCALE_COLORS[grade] + (currentVal === grade ? ' selected' : '') +
+      '" onclick="gradeStudent(\'' + student.id + '\',' + _carnetCritIdx + ',\'' + grade + '\')">' + grade + '</button>';
   });
+  html += '</div>';
 
-  html += '<th>' + t('abs') + '</th>';
-  html += '<th>' + t('note') + '</th>';
-  html += '</tr></thead><tbody>';
+  // Comment
+  html += '<input type="text" class="carnet-comment" value="' + esc(currentComment) + '" placeholder="' + t('comment') + '" onchange="saveCarnetComment(\'' + student.id + '\',this.value)" />';
 
-  group.students.forEach(function(s) {
-    var sd = sessionEvals[s.id] || {};
-    var isAbs = sd._absent || false;
+  html += '</div>';
+  container.innerHTML = html;
 
-    html += '<tr' + (isAbs ? ' class="absent"' : '') + '>';
-    var photoSrc = photos[s.id];
-    html += '<td><div class="student-cell">';
-    if (photoSrc) {
-      html += '<img src="' + photoSrc + '" class="student-photo" onclick="addStudentPhoto(\'' + s.id + '\')" />';
-    } else {
-      html += '<span class="student-photo-placeholder" onclick="addStudentPhoto(\'' + s.id + '\')">📷</span>';
-    }
-    html += '<span>' + esc(s.name) + '</span></div></td>';
-
-    criteria.forEach(function(c, ci) {
-      var val = sd['c' + ci] || '';
-      html += '<td><button class="eval-cell" data-s="' + s.id + '" data-c="' + ci + '"' +
-        (val ? ' data-val="' + esc(val) + '"' : '') + '>' + (val || '·') + '</button></td>';
-    });
-
-    // Absent
-    html += '<td><button class="eval-cell abs-btn" data-s="' + s.id + '" data-action="abs"' +
-      (isAbs ? ' data-val="abs"' : '') + '>' + (isAbs ? 'ABS' : '·') + '</button></td>';
-
-    // Comment
-    var comment = sd._comment || '';
-    html += '<td><input type="text" class="eval-comment" data-s="' + s.id + '" value="' + esc(comment) + '" placeholder="..." /></td>';
-
-    html += '</tr>';
-  });
-
-  html += '</tbody></table>';
-  wrapper.innerHTML = html;
-
-  // Event: tap to cycle grade
-  wrapper.querySelectorAll('.eval-cell[data-c]').forEach(function(cell) {
-    cell.addEventListener('click', function() { cycleGrade(cell); });
-  });
-
-  // Event: absent toggle
-  wrapper.querySelectorAll('[data-action="abs"]').forEach(function(cell) {
-    cell.addEventListener('click', function() { toggleAbsent(cell.dataset.s); });
-  });
-
-  // Event: comment
-  wrapper.querySelectorAll('.eval-comment').forEach(function(inp) {
-    inp.addEventListener('input', function() { saveComment(inp.dataset.s, inp.value); });
-  });
+  if (counter) counter.textContent = (_carnetIdx + 1) + '/' + group.students.length;
 }
 
-function cycleGrade(cell) {
-  var vals = SCALES[_scale] || SCALES.ABCDE;
-  var cur = cell.getAttribute('data-val') || '';
-  var idx = vals.indexOf(cur);
-  var next = idx >= 0 && idx < vals.length - 1 ? vals[idx + 1] : (idx === vals.length - 1 ? '' : vals[0]);
-
-  var sid = cell.dataset.s;
-  var ci = cell.dataset.c;
+function gradeStudent(sid, critIdx, grade) {
   var evals = getEvals();
   if (!evals[_groupId]) evals[_groupId] = {};
   if (!evals[_groupId][_sessionDate]) evals[_groupId][_sessionDate] = {};
   if (!evals[_groupId][_sessionDate][sid]) evals[_groupId][_sessionDate][sid] = {};
 
-  if (next) {
-    evals[_groupId][_sessionDate][sid]['c' + ci] = next;
-    cell.setAttribute('data-val', next);
-    cell.textContent = next;
+  var cur = evals[_groupId][_sessionDate][sid]['c' + critIdx];
+  if (cur === grade) {
+    delete evals[_groupId][_sessionDate][sid]['c' + critIdx];
   } else {
-    delete evals[_groupId][_sessionDate][sid]['c' + ci];
-    cell.removeAttribute('data-val');
-    cell.textContent = '·';
+    evals[_groupId][_sessionDate][sid]['c' + critIdx] = grade;
   }
   setEvals(evals);
+
+  // Auto-advance after short delay
+  setTimeout(function() {
+    carnetNext();
+  }, 300);
 }
 
-function toggleAbsent(sid) {
-  var evals = getEvals();
-  if (!evals[_groupId]) evals[_groupId] = {};
-  if (!evals[_groupId][_sessionDate]) evals[_groupId][_sessionDate] = {};
-  if (!evals[_groupId][_sessionDate][sid]) evals[_groupId][_sessionDate][sid] = {};
-  evals[_groupId][_sessionDate][sid]._absent = !evals[_groupId][_sessionDate][sid]._absent;
-  setEvals(evals);
-  renderGrid();
-}
-
-function saveComment(sid, comment) {
+function saveCarnetComment(sid, comment) {
   var evals = getEvals();
   if (!evals[_groupId]) evals[_groupId] = {};
   if (!evals[_groupId][_sessionDate]) evals[_groupId][_sessionDate] = {};
@@ -473,86 +461,133 @@ function saveComment(sid, comment) {
   setEvals(evals);
 }
 
-// ─── STUDENT PHOTOS ───
-function addStudentPhoto(studentId) {
-  var input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'image/*';
-  input.capture = 'environment';
-  input.addEventListener('change', function(e) {
-    var file = e.target.files[0];
-    if (!file) return;
-    var reader = new FileReader();
-    reader.onload = function(ev) {
-      var img = new Image();
-      img.onload = function() {
-        var canvas = document.createElement('canvas');
-        var maxSize = 150;
-        var w = img.width, h = img.height;
-        if (w > h) { h = maxSize * h / w; w = maxSize; }
-        else { w = maxSize * w / h; h = maxSize; }
-        canvas.width = w; canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        var dataUrl = canvas.toDataURL('image/jpeg', 0.7);
-        var photos = getPhotos();
-        photos[studentId] = dataUrl;
-        setPhotos(photos);
-        renderGrid();
-      };
-      img.src = ev.target.result;
-    };
-    reader.readAsDataURL(file);
+function carnetPrev() {
+  var groups = getGroups();
+  var group = groups.find(function(g) { return g.id === _groupId; });
+  if (!group) return;
+  _carnetIdx = (_carnetIdx - 1 + group.students.length) % group.students.length;
+  renderCarnetCard();
+}
+
+function carnetNext() {
+  var groups = getGroups();
+  var group = groups.find(function(g) { return g.id === _groupId; });
+  if (!group) return;
+  _carnetIdx = (_carnetIdx + 1) % group.students.length;
+  renderCarnetCard();
+}
+
+// ═══════════════════════════════════
+// RESULTATS
+// ═══════════════════════════════════
+function initResultsScreen() {
+  populateGroupSelects();
+  var sel = document.getElementById('results-group-select');
+  if (sel && _groupId) sel.value = _groupId;
+  renderResultsGrid();
+}
+
+function onResultsGroupChange() {
+  _groupId = document.getElementById('results-group-select').value || null;
+  renderResultsGrid();
+}
+
+function renderResultsGrid() {
+  var wrapper = document.getElementById('results-grid-wrapper');
+  if (!wrapper || !_groupId) {
+    if (wrapper) wrapper.innerHTML = '<p class="empty-msg">' + t('noData') + '</p>';
+    return;
+  }
+  var groups = getGroups();
+  var group = groups.find(function(g) { return g.id === _groupId; });
+  if (!group) return;
+
+  var criteria = getCriteria();
+  var evals = getEvals();
+  var groupEvals = evals[_groupId] || {};
+  var dates = Object.keys(groupEvals).sort().reverse();
+
+  if (dates.length === 0 || criteria.length === 0) {
+    wrapper.innerHTML = '<p class="empty-msg">' + t('noData') + '</p>';
+    return;
+  }
+
+  var html = '<table class="results-table"><thead><tr>';
+  html += '<th>' + t('students') + '</th>';
+  criteria.forEach(function(c) {
+    var text = _lang === 'en' && c.en ? c.en : c.fr;
+    html += '<th>' + esc(text.length > 18 ? text.substring(0, 16) + '..' : text) + '</th>';
   });
-  input.click();
+  html += '</tr></thead><tbody>';
+
+  group.students.forEach(function(s) {
+    html += '<tr><td>' + esc(s.name) + '</td>';
+    criteria.forEach(function(c, ci) {
+      // Latest eval for this criterion
+      var val = '';
+      for (var i = 0; i < dates.length; i++) {
+        var sd = groupEvals[dates[i]][s.id];
+        if (sd && sd['c' + ci]) { val = sd['c' + ci]; break; }
+      }
+      if (val) {
+        html += '<td><span class="result-badge ' + SCALE_COLORS[val] + '">' + val + '</span></td>';
+      } else {
+        html += '<td>-</td>';
+      }
+    });
+    html += '</tr>';
+  });
+
+  html += '</tbody></table>';
+  wrapper.innerHTML = html;
 }
 
-// ─── ADD / REMOVE CRITERIA (columns) ───
-function addColumnPrompt() {
-  var name = prompt(t('addColPrompt'));
-  if (!name || !name.trim()) return;
-  var criteria = getCriteria();
-  criteria.push({ fr: name.trim(), en: name.trim(), custom: true });
-  setCriteria(criteria);
-  renderGrid();
-}
-
-function removeCriteria(idx) {
-  var criteria = getCriteria();
-  criteria.splice(idx, 1);
-  setCriteria(criteria);
-  renderGrid();
-}
-
-// ─── GROUPS CRUD ───
+// ═══════════════════════════════════
+// GROUPS CRUD
+// ═══════════════════════════════════
 var _editingGroupId = null;
 
 function createGroup() {
   _editingGroupId = null;
+  _selectedColor = 'cyan-blue';
   document.getElementById('group-name-input').value = '';
   document.getElementById('group-students-input').value = '';
-  document.getElementById('group-modal-title').innerHTML = t('newGroup');
+  document.getElementById('group-modal-title').textContent = t('newGroup');
+  document.getElementById('delete-group-btn').style.display = 'none';
+  resetColorPicker();
   document.getElementById('group-modal').classList.remove('hidden');
   document.getElementById('group-name-input').focus();
 }
 
-function editCurrentGroup() {
-  if (!_groupId) return createGroup();
+function editGroup(id) {
   var groups = getGroups();
-  var g = groups.find(function(x) { return x.id === _groupId; });
+  var g = groups.find(function(x) { return x.id === id; });
   if (!g) return;
-  _editingGroupId = _groupId;
+  _editingGroupId = id;
+  _selectedColor = g.color || 'cyan-blue';
   document.getElementById('group-name-input').value = g.name;
   document.getElementById('group-students-input').value = g.students.map(function(s) { return s.name; }).join('\n');
-  document.getElementById('group-modal-title').innerHTML = t('editGroup');
+  document.getElementById('group-modal-title').textContent = t('editGroup');
+  document.getElementById('delete-group-btn').style.display = 'inline-block';
+  resetColorPicker();
   document.getElementById('group-modal').classList.remove('hidden');
-  document.getElementById('group-name-input').focus();
+}
+
+function pickColor(c) {
+  _selectedColor = c;
+  resetColorPicker();
+}
+
+function resetColorPicker() {
+  document.querySelectorAll('.color-swatch').forEach(function(s) {
+    s.classList.toggle('active', s.dataset.color === _selectedColor);
+  });
 }
 
 function saveGroup() {
   var name = document.getElementById('group-name-input').value.trim();
   var text = document.getElementById('group-students-input').value.trim();
   if (!name) return;
-
   var names = text.split('\n').map(function(s) { return s.trim(); }).filter(Boolean);
   var groups = getGroups();
 
@@ -561,42 +596,37 @@ function saveGroup() {
     if (idx >= 0) {
       var existing = groups[idx].students;
       groups[idx].name = name;
+      groups[idx].color = _selectedColor;
       groups[idx].students = names.map(function(n) {
         var found = existing.find(function(e) { return e.name === n; });
         return found || { id: genId(), name: n };
       });
     }
   } else {
-    var newGroup = {
-      id: genId(),
-      name: name,
+    var ng = { id: genId(), name: name, color: _selectedColor,
       students: names.map(function(n) { return { id: genId(), name: n }; })
     };
-    groups.push(newGroup);
-    _groupId = newGroup.id;
+    groups.push(ng);
+    _groupId = ng.id;
     localStorage.setItem('evaleps-lastgroup', _groupId);
   }
-
   setGroups(groups);
   closeGroupModal();
-  renderGroupTabs();
-  renderGrid();
+  refreshAll();
   showToast(t('saved'));
 }
 
 function deleteCurrentGroup() {
-  if (!_groupId) return;
-  if (!confirm(t('confirmDelete'))) return;
-  var groups = getGroups().filter(function(g) { return g.id !== _groupId; });
+  if (!_editingGroupId) return;
+  if (!confirm(t('deleteConfirm'))) return;
+  var groups = getGroups().filter(function(g) { return g.id !== _editingGroupId; });
   setGroups(groups);
-  var evals = getEvals();
-  delete evals[_groupId];
-  setEvals(evals);
-  _groupId = null;
-  localStorage.removeItem('evaleps-lastgroup');
+  var evals = getEvals(); delete evals[_editingGroupId]; setEvals(evals);
+  var att = getAttendance(); delete att[_editingGroupId]; setAttendance(att);
+  var beh = getBehavior(); delete beh[_editingGroupId]; setBehavior(beh);
+  if (_groupId === _editingGroupId) { _groupId = null; localStorage.removeItem('evaleps-lastgroup'); }
   closeGroupModal();
-  renderGroupTabs();
-  renderGrid();
+  refreshAll();
   showToast(t('deleted'));
 }
 
@@ -607,227 +637,268 @@ function closeGroupModal() {
 
 function importStudentList() {
   var input = document.createElement('input');
-  input.type = 'file';
-  input.accept = '.csv,.txt';
+  input.type = 'file'; input.accept = '.csv,.txt';
   input.addEventListener('change', function(e) {
-    var file = e.target.files[0];
-    if (!file) return;
+    var file = e.target.files[0]; if (!file) return;
     var reader = new FileReader();
     reader.onload = function(ev) {
       var lines = ev.target.result.split(/[\n\r]+/)
-        .map(function(l) {
-          var parts = l.split(',');
-          if (parts.length === 2 && parts[0].trim() && parts[1].trim()) return parts[1].trim() + ' ' + parts[0].trim();
-          return l.trim();
-        })
+        .map(function(l) { var p = l.split(','); return p.length === 2 && p[0].trim() && p[1].trim() ? p[1].trim() + ' ' + p[0].trim() : l.trim(); })
         .filter(function(n) { return n && n.length > 1; });
       var ta = document.getElementById('group-students-input');
-      var existing = ta.value.trim();
-      ta.value = existing ? existing + '\n' + lines.join('\n') : lines.join('\n');
-      showToast(lines.length + ' eleves importes');
+      var ex = ta.value.trim();
+      ta.value = ex ? ex + '\n' + lines.join('\n') : lines.join('\n');
+      showToast(lines.length + ' eleves');
     };
     reader.readAsText(file);
   });
   input.click();
 }
 
-// ─── LEXIQUE MODAL ───
+// ═══════════════════════════════════
+// PHOTOS
+// ═══════════════════════════════════
+function addStudentPhoto(studentId) {
+  var input = document.createElement('input');
+  input.type = 'file'; input.accept = 'image/*'; input.capture = 'environment';
+  input.addEventListener('change', function(e) {
+    var file = e.target.files[0]; if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      var img = new Image();
+      img.onload = function() {
+        var canvas = document.createElement('canvas');
+        var sz = 150, w = img.width, h = img.height;
+        if (w > h) { h = sz * h / w; w = sz; } else { w = sz * w / h; h = sz; }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        var photos = getPhotos();
+        photos[studentId] = canvas.toDataURL('image/jpeg', 0.7);
+        setPhotos(photos);
+        refreshCurrentScreen();
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+  input.click();
+}
+
+// ═══════════════════════════════════
+// CRITERIA
+// ═══════════════════════════════════
+function addColumnPrompt() {
+  var name = prompt(t('addCriteria'));
+  if (!name || !name.trim()) return;
+  var criteria = getCriteria();
+  criteria.push({ fr: name.trim(), en: name.trim(), custom: true });
+  setCriteria(criteria);
+  renderCriteriaTags();
+  renderCarnetCard();
+}
+
+function removeCriteria(idx) {
+  var criteria = getCriteria();
+  criteria.splice(idx, 1);
+  setCriteria(criteria);
+  if (_carnetCritIdx >= criteria.length) _carnetCritIdx = Math.max(0, criteria.length - 1);
+  renderCriteriaTags();
+  renderCarnetCard();
+}
+
+// ─── LEXIQUE ───
 function openLexiqueModal() {
   renderLexique();
   document.getElementById('lexique-modal').classList.remove('hidden');
 }
-
 function closeLexiqueModal() {
   document.getElementById('lexique-modal').classList.add('hidden');
-  renderGrid();
+  renderCriteriaTags();
+  renderCarnetCard();
 }
 
 function renderLexique() {
   var container = document.getElementById('lexique-content');
-  var currentCriteria = getCriteria();
-  var selectedFrs = currentCriteria.map(function(c) { return c.fr; });
+  var sel = getCriteria().map(function(c) { return c.fr; });
   var html = '';
 
   // Quick assess
-  html += '<div class="lexique-competence">';
-  html += '<h3 class="lexique-comp-title">' + (_lang === 'en' ? '⚡ Quick Assessment' : '⚡ Evaluation rapide') + '</h3>';
+  html += '<h3 class="lexique-comp-title">⚡ ' + (_lang === 'en' ? 'Quick Assessment' : 'Evaluation rapide') + '</h3>';
   html += '<div class="lexique-items">';
   QUICK_ASSESS.forEach(function(qa) {
     var text = _lang === 'en' ? qa.en : qa.fr;
-    var sel = selectedFrs.includes(qa.fr);
-    html += '<div class="lexique-item' + (sel ? ' selected' : '') + '" data-fr="' + esc(qa.fr) + '" data-en="' + esc(qa.en) + '">' +
-      '<span class="lexique-item-check">✓</span>' +
-      '<span class="lexique-item-text">' + esc(text) + '</span></div>';
+    var s = sel.includes(qa.fr);
+    html += '<div class="lexique-item' + (s ? ' selected' : '') + '" data-fr="' + esc(qa.fr) + '" data-en="' + esc(qa.en) + '">' +
+      '<span class="lexique-item-check">✓</span><span class="lexique-item-text">' + esc(text) + '</span></div>';
   });
-  html += '</div></div>';
+  html += '</div>';
 
-  // Competences
   LEXIQUE_PFEQ.forEach(function(comp) {
-    html += '<div class="lexique-competence">';
     html += '<h3 class="lexique-comp-title">' + esc(_lang === 'en' ? comp.competence_en : comp.competence) + '</h3>';
     comp.composantes.forEach(function(compo) {
       html += '<h4 class="lexique-category">' + esc(_lang === 'en' ? compo.nom_en : compo.nom) + '</h4>';
       html += '<div class="lexique-items">';
       compo.criteres.forEach(function(crit) {
         var text = _lang === 'en' ? crit.en : crit.fr;
-        var sel = selectedFrs.includes(crit.fr);
-        html += '<div class="lexique-item' + (sel ? ' selected' : '') + '" data-fr="' + esc(crit.fr) + '" data-en="' + esc(crit.en) + '">' +
-          '<span class="lexique-item-check">✓</span>' +
-          '<span class="lexique-item-text">' + esc(text) + '</span></div>';
+        var s = sel.includes(crit.fr);
+        html += '<div class="lexique-item' + (s ? ' selected' : '') + '" data-fr="' + esc(crit.fr) + '" data-en="' + esc(crit.en) + '">' +
+          '<span class="lexique-item-check">✓</span><span class="lexique-item-text">' + esc(text) + '</span></div>';
       });
       html += '</div>';
     });
-    html += '</div>';
   });
 
   container.innerHTML = html;
-
-  // Click to toggle
   container.querySelectorAll('.lexique-item').forEach(function(item) {
     item.addEventListener('click', function() {
-      var fr = item.dataset.fr;
-      var en = item.dataset.en;
+      var fr = item.dataset.fr, en = item.dataset.en;
       var criteria = getCriteria();
       var idx = criteria.findIndex(function(c) { return c.fr === fr; });
-      if (idx >= 0) {
-        criteria.splice(idx, 1);
-        item.classList.remove('selected');
-      } else {
-        criteria.push({ fr: fr, en: en });
-        item.classList.add('selected');
-      }
+      if (idx >= 0) { criteria.splice(idx, 1); item.classList.remove('selected'); }
+      else { criteria.push({ fr: fr, en: en }); item.classList.add('selected'); }
       setCriteria(criteria);
     });
   });
 }
 
-// ─── EXPORT PDF ───
+// ═══════════════════════════════════
+// EXPORT
+// ═══════════════════════════════════
 function exportPDF() {
   var groups = getGroups();
   var group = groups.find(function(g) { return g.id === _groupId; });
   if (!group) return;
-  var evals = getEvals();
   var criteria = getCriteria();
-
+  var evals = getEvals();
   var groupEvals = evals[_groupId] || {};
   var dates = Object.keys(groupEvals).sort();
-  if (dates.length === 0) dates = [_sessionDate];
+  if (dates.length === 0) return;
 
-  var html = '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
-    '<title>EvalEPS — ' + esc(group.name) + '</title>' +
-    '<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">' +
-    '<style>' +
-    'body{font-family:Nunito,sans-serif;margin:20px;color:#222;}' +
-    'h1{font-family:Fredoka,sans-serif;color:#0077CC;text-align:center;font-size:1.4rem;}' +
-    'h2{font-family:Fredoka,sans-serif;color:#0077CC;margin:20px 0 6px;font-size:1.1rem;}' +
-    'table{width:100%;border-collapse:collapse;font-size:0.8rem;margin-bottom:16px;}' +
-    'th{background:#f0f7ff;padding:6px 4px;text-align:center;border:1px solid #ddd;font-family:Fredoka,sans-serif;font-size:0.7rem;color:#0077CC;}' +
-    'th:first-child{text-align:left;}' +
-    'td{padding:5px;border:1px solid #ddd;text-align:center;}' +
-    'td:first-child{text-align:left;font-weight:700;}' +
-    '.g{display:inline-block;padding:2px 6px;border-radius:3px;color:#fff;font-weight:700;font-size:0.75rem;}' +
-    '.footer{text-align:center;margin-top:24px;font-size:0.75rem;color:#999;}' +
-    '.footer a{color:#0077CC;}' +
-    '@media print{@page{margin:10mm;}}' +
-    '</style></head><body>';
-
-  html += '<h1>📋 ' + esc(group.name) + ' — EvalEPS</h1>';
+  var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>EvalEPS — ' + esc(group.name) + '</title>' +
+    '<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Boogaloo&display=swap" rel="stylesheet">' +
+    '<style>body{font-family:Boogaloo,sans-serif;margin:20px;color:#111;}' +
+    'h1{font-family:Bangers,cursive;color:#00D4FF;text-align:center;font-size:2rem;letter-spacing:3px;}' +
+    'h2{font-family:Bangers,cursive;color:#2962FF;font-size:1.3rem;margin:16px 0 6px;}' +
+    'table{width:100%;border-collapse:collapse;font-size:0.85rem;margin-bottom:16px;}' +
+    'th{background:#1a1a2e;color:#00D4FF;padding:6px;border:2px solid #111;font-family:Bangers,cursive;font-size:0.8rem;text-align:center;}' +
+    'th:first-child{text-align:left;}td{padding:5px;border:1px solid #333;text-align:center;}' +
+    'td:first-child{text-align:left;font-weight:700;}.g{padding:2px 8px;border-radius:4px;border:2px solid #111;font-family:Bangers,cursive;}' +
+    '.footer{text-align:center;margin-top:20px;font-size:0.8rem;color:#999;}' +
+    '@media print{@page{margin:10mm;}}</style></head><body>';
+  html += '<h1>' + esc(group.name) + ' — EVALEPS</h1>';
 
   dates.forEach(function(date) {
     var sd = groupEvals[date] || {};
-    html += '<h2>' + date + '</h2>';
-    html += '<table><thead><tr><th>' + t('student') + '</th>';
+    html += '<h2>' + date + '</h2><table><thead><tr><th>Eleve</th>';
     criteria.forEach(function(c) {
-      var text = _lang === 'en' && c.en ? c.en : c.fr;
-      html += '<th>' + esc(text.length > 20 ? text.substring(0, 18) + '..' : text) + '</th>';
+      var tx = _lang === 'en' && c.en ? c.en : c.fr;
+      html += '<th>' + esc(tx.length > 18 ? tx.substring(0, 16) + '..' : tx) + '</th>';
     });
-    html += '<th>' + t('note') + '</th></tr></thead><tbody>';
-
+    html += '<th>Note</th></tr></thead><tbody>';
     group.students.forEach(function(s) {
       var d = sd[s.id] || {};
-      if (d._absent) {
-        html += '<tr style="opacity:0.35;"><td>' + esc(s.name) + '</td>';
-        criteria.forEach(function() { html += '<td>ABS</td>'; });
-        html += '<td></td></tr>';
-        return;
-      }
       html += '<tr><td>' + esc(s.name) + '</td>';
       criteria.forEach(function(c, ci) {
         var v = d['c' + ci] || '';
-        html += v ? '<td><span class="g" style="background:' + gradeColor(v) + ';">' + esc(v) + '</span></td>' : '<td></td>';
+        html += v ? '<td><span class="g" style="background:' + gradeColor(v) + ';">' + v + '</span></td>' : '<td></td>';
       });
-      html += '<td style="font-size:0.7rem;text-align:left;">' + esc(d._comment || '') + '</td></tr>';
+      html += '<td style="font-size:0.75rem;">' + esc(d._comment || '') + '</td></tr>';
     });
     html += '</tbody></table>';
   });
-
-  html += '<div class="footer"><a href="https://zonetotalsport.ca">zonetotalsport.ca</a> — EvalEPS</div>';
-  html += '</body></html>';
-
-  var w = window.open('', '_blank');
-  w.document.write(html);
-  w.document.close();
+  html += '<div class="footer">zonetotalsport.ca — EvalEPS</div></body></html>';
+  var w = window.open('', '_blank'); w.document.write(html); w.document.close();
   setTimeout(function() { w.print(); }, 400);
   showToast(t('exported'));
 }
 
-// ─── EXPORT CSV ───
 function exportCSV() {
   var groups = getGroups();
   var group = groups.find(function(g) { return g.id === _groupId; });
   if (!group) return;
-  var evals = getEvals();
   var criteria = getCriteria();
+  var evals = getEvals();
   var groupEvals = evals[_groupId] || {};
-
-  var lines = [];
-  var header = ['Date', 'Eleve'];
-  criteria.forEach(function(c) { header.push(c.fr); });
-  header.push('Absent', 'Commentaire');
-  lines.push(header.join(','));
-
+  var lines = [['Date', 'Eleve'].concat(criteria.map(function(c) { return c.fr; })).concat(['Commentaire']).join(',')];
   Object.keys(groupEvals).sort().forEach(function(date) {
     var sd = groupEvals[date];
     group.students.forEach(function(s) {
       var d = sd[s.id] || {};
       var row = [date, '"' + s.name + '"'];
       criteria.forEach(function(c, ci) { row.push(d['c' + ci] || ''); });
-      row.push(d._absent ? 'OUI' : '');
       row.push('"' + (d._comment || '') + '"');
       lines.push(row.join(','));
     });
   });
-
   var blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
   var a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'evaleps_' + (group.name.replace(/\s+/g, '_')) + '_' + todayStr() + '.csv';
+  a.download = 'evaleps_' + group.name.replace(/\s+/g, '_') + '_' + todayStr() + '.csv';
   a.click();
   showToast(t('exported'));
 }
 
-// ─── UTILITIES ───
+function printResults() { window.print(); }
+
+// ═══════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════
+function populateGroupSelects() {
+  var groups = getGroups();
+  ['plan-group-select', 'carnet-group-select', 'results-group-select'].forEach(function(id) {
+    var sel = document.getElementById(id);
+    if (!sel) return;
+    sel.innerHTML = '<option value="">' + t('selectGroup') + '</option>';
+    groups.forEach(function(g) {
+      sel.innerHTML += '<option value="' + g.id + '"' + (g.id === _groupId ? ' selected' : '') + '>' + esc(g.name) + ' (' + g.students.length + ')</option>';
+    });
+  });
+}
+
+function refreshAll() {
+  var activeScreen = document.querySelector('.screen.active');
+  var id = activeScreen ? activeScreen.id.replace('screen-', '') : 'hub';
+  switchScreen(id);
+}
+
+function refreshCurrentScreen() {
+  var activeScreen = document.querySelector('.screen.active');
+  if (!activeScreen) return;
+  var id = activeScreen.id.replace('screen-', '');
+  if (id === 'hub') renderHub();
+  if (id === 'plan') renderPlanGrid();
+  if (id === 'carnet') renderCarnetCard();
+  if (id === 'results') renderResultsGrid();
+}
+
 function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
 function esc(s) { return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : ''; }
 function gradeColor(v) {
-  var c = { A:'#2E7D32','5':'#2E7D32','++':'#2E7D32',ok:'#2E7D32', B:'#66BB6A','4':'#66BB6A','+':'#66BB6A',
-    C:'#FF8C00','3':'#FF8C00','=':'#FF8C00','~':'#FF8C00', D:'#EF6C00','2':'#EF6C00','-':'#EF6C00',
-    E:'#D32F2F','1':'#D32F2F','--':'#D32F2F',no:'#D32F2F' };
+  var c = { A:'#00C853', B:'#66ff99', C:'#FFD600', D:'#FF6D00', E:'#FF1744' };
   return c[v] || '#999';
 }
 function showToast(msg) {
-  var t = document.getElementById('toast');
-  if (!t) return;
-  t.textContent = msg; t.classList.remove('hidden');
-  clearTimeout(t._timer);
-  t._timer = setTimeout(function() { t.classList.add('hidden'); }, 2200);
+  var el = document.getElementById('toast');
+  if (!el) return;
+  el.textContent = msg; el.classList.remove('hidden');
+  clearTimeout(el._timer);
+  el._timer = setTimeout(function() { el.classList.add('hidden'); }, 2200);
 }
 
 // ─── INIT ───
 document.addEventListener('DOMContentLoaded', function() {
   var savedLang = localStorage.getItem('evaleps-lang') || 'fr';
-  setLang(savedLang);
+  _lang = savedLang;
+  var langSel = document.getElementById('lang-select');
+  if (langSel) langSel.value = savedLang;
 
-  // If returning user (has groups), skip hero
-  if (getGroups().length > 0) openNotebook();
+  var lastGroup = localStorage.getItem('evaleps-lastgroup');
+  var groups = getGroups();
+  if (lastGroup && groups.some(function(g) { return g.id === lastGroup; })) {
+    _groupId = lastGroup;
+  } else if (groups.length > 0) {
+    _groupId = groups[0].id;
+  }
+
+  switchScreen('hub');
 });

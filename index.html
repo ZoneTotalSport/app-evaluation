@@ -3,215 +3,208 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <meta name="description" content="Carnet d'evaluation — Education physique. Simple comme un cahier papier." />
-  <meta name="theme-color" content="#0077CC" />
+  <meta name="description" content="EvalEPS — Gestion de classe ultra-simple pour educateurs physiques. Style pop art." />
+  <meta name="theme-color" content="#00D4FF" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>EvalEPS — Zone Total Sport</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Boogaloo&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <!-- Gym background -->
-  <div id="gymBg" aria-hidden="true"></div>
-
-  <!-- APP -->
+  <!-- APP SHELL -->
   <div id="app">
 
     <!-- HEADER -->
-    <header class="header">
-      <div class="header-inner">
-        <div class="header-brand">
-          <img src="img/bucheron-salut.png" alt="" class="header-mascot" />
-          <div class="brand-text">
-            <span class="brand-name">ZONE TOTAL SPORT</span>
-            <span class="brand-tag" data-i18n="appName">EvalEPS</span>
-          </div>
-        </div>
-        <div class="header-actions">
-          <select id="lang-select" class="lang-select" onchange="setLang(this.value)">
-            <option value="fr">FR</option>
-            <option value="en">EN</option>
-          </select>
-        </div>
+    <header class="app-header">
+      <div class="header-left">
+        <img src="img/bucheron-salut.png" alt="" class="header-mascot" />
+        <span class="header-title">EvalEPS</span>
+      </div>
+      <div class="header-right">
+        <select id="lang-select" class="lang-pill" onchange="setLang(this.value)">
+          <option value="fr">FR</option>
+          <option value="en">EN</option>
+        </select>
       </div>
     </header>
 
-    <!-- HERO (landing page) -->
-    <section class="hero" id="hero-section">
-      <div class="hero-content">
-        <h1 class="hero-title" data-i18n="heroTitle">
-          CARNET D'EVALUATION<br />
-          <span class="hero-accent" data-i18n="heroAccent">EDUCATION PHYSIQUE</span>
-        </h1>
-        <p class="hero-desc" data-i18n="heroDesc">
-          Simple comme un cahier papier. Tape pour noter.
-        </p>
-        <div class="hero-features">
-          <div class="hero-feature">
-            <span class="hf-icon">📋</span>
-            <span data-i18n="feat1">Grille tactile — <strong>tape pour noter</strong></span>
-          </div>
-          <div class="hero-feature">
-            <span class="hf-icon">📚</span>
-            <span data-i18n="feat2"><strong>Lexique PFEQ</strong> integre</span>
-          </div>
-          <div class="hero-feature">
-            <span class="hf-icon">📱</span>
-            <span data-i18n="feat3"><strong>Tablette et ordinateur</strong></span>
-          </div>
-          <div class="hero-feature">
-            <span class="hf-icon">📄</span>
-            <span data-i18n="feat4"><strong>PDF et impression</strong> en un clic</span>
-          </div>
+    <!-- SCREENS -->
+    <main class="screen-container" id="screen-container">
+
+      <!-- SCREEN: AUJOURD'HUI (HUB) -->
+      <section class="screen active" id="screen-hub">
+        <div class="hub-greeting">
+          <h1 class="hub-title" id="hub-greeting-text">BONJOUR COACH!</h1>
+          <p class="hub-subtitle" id="hub-date-text"></p>
         </div>
-        <!-- COMMENT CA MARCHE -->
-        <div class="how-section">
-          <h2 class="how-title" data-i18n="howTitle">Comment ca marche ?</h2>
-          <div class="how-steps">
-            <div class="how-step">
-              <div class="how-step-num">1</div>
-              <div class="how-step-icon">👥</div>
-              <h3 data-i18n="howStep1Title">Cree ton groupe</h3>
-              <p data-i18n="howStep1Desc">Ajoute le nom de ton groupe et entre tes eleves (un par ligne). Tu peux aussi importer un fichier CSV ou TXT.</p>
-            </div>
-            <div class="how-step">
-              <div class="how-step-num">2</div>
-              <div class="how-step-icon">🎯</div>
-              <h3 data-i18n="howStep2Title">Choisis tes criteres</h3>
-              <p data-i18n="howStep2Desc">Ajoute des colonnes avec le bouton <strong>+ Colonne</strong> ou pioche dans le <strong>lexique PFEQ</strong> integre (3 competences, evaluation rapide).</p>
-            </div>
-            <div class="how-step">
-              <div class="how-step-num">3</div>
-              <div class="how-step-icon">👆</div>
-              <h3 data-i18n="howStep3Title">Tape pour noter</h3>
-              <p data-i18n="howStep3Desc">Tape sur une case pour faire defiler les notes (A > B > C > D > E > vide). Choisis ton echelle : lettres, chiffres, symboles ou coches.</p>
-            </div>
-            <div class="how-step">
-              <div class="how-step-num">4</div>
-              <div class="how-step-icon">📄</div>
-              <h3 data-i18n="howStep4Title">Exporte en un clic</h3>
-              <p data-i18n="howStep4Desc">Genere un <strong>PDF</strong> pour imprimer ou un <strong>CSV</strong> pour Excel. Tes donnees sont sauvegardees automatiquement sur ton appareil.</p>
-            </div>
+
+        <!-- Quick stats -->
+        <div class="hub-stats" id="hub-stats">
+          <div class="stat-pill stat-cyan-blue">
+            <span class="stat-num" id="stat-groups">0</span>
+            <span class="stat-label">Groupes</span>
           </div>
-          <div class="how-extras">
-            <div class="how-extra">
-              <span>📅</span> <span data-i18n="howExtra1">Change la date pour consulter ou modifier une <strong>seance precedente</strong></span>
-            </div>
-            <div class="how-extra">
-              <span>🚫</span> <span data-i18n="howExtra2">Marque un eleve <strong>absent</strong> en tapant la colonne ABS</span>
-            </div>
-            <div class="how-extra">
-              <span>💬</span> <span data-i18n="howExtra3">Ajoute une <strong>note</strong> personnalisee pour chaque eleve</span>
-            </div>
-            <div class="how-extra">
-              <span>🗑️</span> <span data-i18n="howExtra4">Survole un en-tete de colonne pour <strong>supprimer</strong> un critere</span>
-            </div>
+          <div class="stat-pill stat-cyan-green">
+            <span class="stat-num" id="stat-students">0</span>
+            <span class="stat-label">Eleves</span>
+          </div>
+          <div class="stat-pill stat-cyan-orange">
+            <span class="stat-num" id="stat-evals">0</span>
+            <span class="stat-label">Evaluations</span>
           </div>
         </div>
 
-        <div class="hero-cta">
-          <button class="btn-primary" onclick="openNotebook()" data-i18n="ctaStart">Ouvrir mon carnet</button>
+        <!-- Group cards -->
+        <div class="hub-section-title">MES GROUPES</div>
+        <div class="hub-groups" id="hub-groups">
+          <!-- Filled by JS -->
         </div>
-      </div>
-    </section>
 
-    <!-- NOTEBOOK (main view — single screen) -->
-    <main class="notebook hidden" id="notebook">
+        <!-- Add group button -->
+        <button class="big-add-btn" onclick="createGroup()">
+          <span class="big-add-icon">+</span>
+          <span>NOUVEAU GROUPE</span>
+        </button>
+      </section>
 
-      <!-- GROUP TABS -->
-      <div class="group-tabs" id="group-tabs">
-        <!-- Filled by JS -->
-      </div>
-
-      <!-- TOOLBAR -->
-      <div class="toolbar">
-        <div class="toolbar-row">
-          <!-- Date -->
-          <div class="toolbar-group">
-            <select id="date-select" class="toolbar-select" onchange="onDateChange()">
-              <option value="today" data-i18n="today">Aujourd'hui</option>
-            </select>
-          </div>
-
-          <!-- Scale -->
-          <div class="toolbar-group">
-            <select id="scale-select" class="toolbar-select" onchange="setScale(this.value)">
-              <option value="ABCDE">A B C D E</option>
-              <option value="12345">1 2 3 4 5</option>
-              <option value="symbols">++ + = - --</option>
-              <option value="check">&#10003; ~ &#10007;</option>
-            </select>
-          </div>
-
-          <!-- Actions -->
-          <div class="toolbar-group toolbar-actions">
-            <button class="toolbar-btn" onclick="openLexiqueModal()">📚 <span data-i18n="pfeq">PFEQ</span></button>
-            <button class="toolbar-btn" onclick="addColumnPrompt()">+ <span data-i18n="addCol">Colonne</span></button>
-            <button class="toolbar-btn" onclick="editCurrentGroup()">✏️ <span data-i18n="editGrp">Groupe</span></button>
-            <button class="toolbar-btn" onclick="exportPDF()">📄 PDF</button>
-            <button class="toolbar-btn" onclick="exportCSV()">📊 CSV</button>
+      <!-- SCREEN: PLAN DE CLASSE -->
+      <section class="screen" id="screen-plan">
+        <div class="screen-top-bar">
+          <h2 class="screen-title">PLAN DE CLASSE</h2>
+          <div class="screen-top-actions">
+            <select id="plan-group-select" class="comic-select" onchange="onPlanGroupChange()"></select>
           </div>
         </div>
-      </div>
+        <div class="plan-legend">
+          <span class="legend-item"><span class="legend-dot present"></span> Present</span>
+          <span class="legend-item"><span class="legend-dot absent"></span> Absent (1 tap)</span>
+          <span class="legend-item"><span class="legend-dot late"></span> Retard (2 taps)</span>
+          <span class="legend-item"><span class="legend-arrow up"></span> +1</span>
+          <span class="legend-item"><span class="legend-arrow down"></span> -1</span>
+        </div>
+        <div class="plan-grid" id="plan-grid">
+          <p class="empty-msg">Selectionne un groupe ci-dessus</p>
+        </div>
+        <div class="plan-date-bar">
+          <select id="plan-date-select" class="comic-select" onchange="onPlanDateChange()"></select>
+        </div>
+      </section>
 
-      <!-- THE GRID — the notebook page -->
-      <div class="grid-wrapper" id="grid-wrapper">
-        <p class="grid-empty" id="grid-empty" data-i18n="gridEmpty">
-          Choisis un groupe pour ouvrir ton carnet.
-        </p>
-      </div>
+      <!-- SCREEN: CARNET DE NOTES -->
+      <section class="screen" id="screen-carnet">
+        <div class="screen-top-bar">
+          <h2 class="screen-title">CARNET DE NOTES</h2>
+          <div class="screen-top-actions">
+            <select id="carnet-group-select" class="comic-select" onchange="onCarnetGroupChange()"></select>
+          </div>
+        </div>
+        <div class="carnet-criteria-bar" id="carnet-criteria-bar">
+          <button class="comic-btn cyan-blue" onclick="openLexiqueModal()">📚 PFEQ</button>
+          <button class="comic-btn cyan-green" onclick="addColumnPrompt()">+ CRITERE</button>
+          <div class="carnet-criteria-tags" id="carnet-criteria-tags"></div>
+        </div>
+        <div class="carnet-card-container" id="carnet-card-container">
+          <p class="empty-msg">Selectionne un groupe et des criteres pour commencer</p>
+        </div>
+        <div class="carnet-nav" id="carnet-nav">
+          <button class="comic-btn cyan-orange" onclick="carnetPrev()">◀ PRECEDENT</button>
+          <span class="carnet-counter" id="carnet-counter">0/0</span>
+          <button class="comic-btn cyan-orange" onclick="carnetNext()">SUIVANT ▶</button>
+        </div>
+      </section>
+
+      <!-- SCREEN: RESULTATS / EXPORT -->
+      <section class="screen" id="screen-results">
+        <div class="screen-top-bar">
+          <h2 class="screen-title">RESULTATS</h2>
+          <div class="screen-top-actions">
+            <select id="results-group-select" class="comic-select" onchange="onResultsGroupChange()"></select>
+          </div>
+        </div>
+        <div class="results-actions-bar">
+          <button class="comic-btn cyan-blue" onclick="exportPDF()">📄 PDF</button>
+          <button class="comic-btn cyan-green" onclick="exportCSV()">📊 CSV</button>
+          <button class="comic-btn cyan-orange" onclick="printResults()">🖨️ IMPRIMER</button>
+        </div>
+        <div class="results-grid-wrapper" id="results-grid-wrapper">
+          <p class="empty-msg">Selectionne un groupe pour voir les resultats</p>
+        </div>
+      </section>
 
     </main>
 
-    <!-- FOOTER -->
-    <footer class="footer">
-      <a href="https://zonetotalsport.ca" target="_blank">
-        <img src="img/logo-zonetotalsport.png" alt="ZoneTotalSport.ca" class="footer-logo" />
-      </a>
-    </footer>
+    <!-- BOTTOM TAB BAR -->
+    <nav class="tab-bar">
+      <button class="tab active" data-screen="hub" onclick="switchScreen('hub')">
+        <span class="tab-icon">🏠</span>
+        <span class="tab-label">Aujourd'hui</span>
+      </button>
+      <button class="tab" data-screen="plan" onclick="switchScreen('plan')">
+        <span class="tab-icon">👥</span>
+        <span class="tab-label">Classe</span>
+      </button>
+      <button class="tab" data-screen="carnet" onclick="switchScreen('carnet')">
+        <span class="tab-icon">📋</span>
+        <span class="tab-label">Notes</span>
+      </button>
+      <button class="tab" data-screen="results" onclick="switchScreen('results')">
+        <span class="tab-icon">📊</span>
+        <span class="tab-label">Resultats</span>
+      </button>
+    </nav>
 
   </div><!-- /app -->
 
-  <!-- MODAL LEXIQUE PFEQ -->
-  <div id="lexique-modal" class="modal hidden">
-    <div class="modal-backdrop" onclick="closeLexiqueModal()"></div>
+  <!-- MODAL: CREATE/EDIT GROUP -->
+  <div id="group-modal" class="modal hidden">
+    <div class="modal-backdrop" onclick="closeGroupModal()"></div>
     <div class="modal-box">
-      <div class="modal-box-header">
-        <h2 data-i18n="lexiqueTitle">📚 Lexique PFEQ</h2>
-        <button class="modal-close" onclick="closeLexiqueModal()">✕</button>
+      <div class="modal-header">
+        <h2 id="group-modal-title">NOUVEAU GROUPE</h2>
+        <button class="modal-close" onclick="closeGroupModal()">✕</button>
       </div>
-      <div id="lexique-content" class="lexique-content">
-        <!-- Filled by JS -->
+      <div class="modal-body">
+        <div class="comic-field">
+          <label>NOM DU GROUPE</label>
+          <input type="text" id="group-name-input" class="comic-input" placeholder="Ex: 3e annee Groupe A" />
+        </div>
+        <div class="comic-field">
+          <label>COULEUR</label>
+          <div class="color-picker" id="color-picker">
+            <button class="color-swatch cyan-blue active" data-color="cyan-blue" onclick="pickColor('cyan-blue')"></button>
+            <button class="color-swatch cyan-green" data-color="cyan-green" onclick="pickColor('cyan-green')"></button>
+            <button class="color-swatch cyan-orange" data-color="cyan-orange" onclick="pickColor('cyan-orange')"></button>
+            <button class="color-swatch cyan-yellow" data-color="cyan-yellow" onclick="pickColor('cyan-yellow')"></button>
+          </div>
+        </div>
+        <div class="comic-field">
+          <label>ELEVES (un par ligne)</label>
+          <textarea id="group-students-input" class="comic-textarea" rows="8" placeholder="Alexis B.&#10;Camille D.&#10;Emile F."></textarea>
+        </div>
+        <div class="modal-actions">
+          <button class="comic-btn cyan-green big" onclick="saveGroup()">SAUVEGARDER</button>
+          <button class="comic-btn cyan-orange" onclick="importStudentList()">📥 IMPORTER</button>
+          <button class="comic-btn" onclick="closeGroupModal()">ANNULER</button>
+          <button class="comic-btn danger" id="delete-group-btn" onclick="deleteCurrentGroup()" style="display:none;">🗑️ SUPPRIMER</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- MODAL CREATE/EDIT GROUP -->
-  <div id="group-modal" class="modal hidden">
-    <div class="modal-backdrop" onclick="closeGroupModal()"></div>
-    <div class="modal-box modal-box-sm">
-      <div class="modal-box-header">
-        <h2 id="group-modal-title" data-i18n="newGroup">👥 Nouveau groupe</h2>
-        <button class="modal-close" onclick="closeGroupModal()">✕</button>
+  <!-- MODAL: LEXIQUE PFEQ -->
+  <div id="lexique-modal" class="modal hidden">
+    <div class="modal-backdrop" onclick="closeLexiqueModal()"></div>
+    <div class="modal-box modal-lg">
+      <div class="modal-header">
+        <h2>📚 LEXIQUE PFEQ</h2>
+        <button class="modal-close" onclick="closeLexiqueModal()">✕</button>
       </div>
-      <div class="modal-box-body">
-        <div class="form-field">
-          <label data-i18n="groupName">Nom du groupe</label>
-          <input type="text" id="group-name-input" class="input" placeholder="Ex: 3e annee Groupe A" />
-        </div>
-        <div class="form-field">
-          <label data-i18n="groupStudents">Eleves (un par ligne)</label>
-          <textarea id="group-students-input" class="textarea" rows="10" placeholder="Alexis B.&#10;Camille D.&#10;Emile F.&#10;..."></textarea>
-        </div>
-        <div class="form-actions">
-          <button class="btn-primary" onclick="saveGroup()" data-i18n="save">Sauvegarder</button>
-          <button class="btn-secondary" onclick="importStudentList()" data-i18n="import">📥 Importer</button>
-          <button class="btn-secondary" onclick="closeGroupModal()" data-i18n="cancel">Annuler</button>
-        </div>
+      <div class="modal-body" id="lexique-content">
+        <!-- Filled by JS -->
       </div>
     </div>
   </div>
