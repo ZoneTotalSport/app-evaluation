@@ -41,8 +41,8 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
 /* ===== GYM BACKGROUND ===== */
 #gymBg {
   position: fixed; inset: 0; z-index: 0;
-  background: url('img/gym-bg-roots.jpg') center/cover no-repeat;
-  opacity: 0.30;
+  background: url('img/gym-bg-eval.jpg') center/cover no-repeat;
+  opacity: 0.35;
   pointer-events: none;
 }
 
