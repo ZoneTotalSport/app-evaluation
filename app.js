@@ -1,1049 +1,1469 @@
 /* ============================================================
-   EvalEPS — Carnet de Notes Complet
-   5 types: grade, check, rating, badge, counter
-   + Chronos, Scores, Notes vocales
+   Carnet EPS — Dual Mode
+   MODE "Aujourd'hui" : Cartes (présence, tenue, comportement +/-)
+   MODE "Évaluation"  : Liste/tableau avec critères en haut
+   MODE "Chrono"      : Chronomètre par élève
+   MODE "Compteur"    : +/- par élève
+   MODE "Résumé"      : Bilan de la journée
+   Onglets groupes à DROITE
+   Critères personnalisés par l'enseignant
+   Zoom +/-
    zonetotalsport.ca
    ============================================================ */
 'use strict';
 
-// ─── i18n ───
-var I18N = {
-  fr: {
-    greeting: 'BONJOUR COACH!',
-    newGroup: 'NOUVEAU GROUPE', editGroup: 'MODIFIER LE GROUPE',
-    save: 'SAUVEGARDER', cancel: 'ANNULER', import: 'IMPORTER',
-    delete: 'SUPPRIMER', deleteConfirm: 'Supprimer ce groupe ?',
-    saved: 'SAUVEGARDÉ!', deleted: 'SUPPRIMÉ!', exported: 'PDF GÉNÉRÉ!',
-    noCriteria: 'Ajoute des critères (📚 PFEQ ou 📝 Critère)',
-    today: "Aujourd'hui", namePN: 'P.N', nameNP: 'N.P',
-    present: 'Présent', absent: 'Absent', late: 'Retard',
-    oui: 'Oui', non: 'Non',
-    recording: 'Enregistrement...', voiceSaved: 'Note vocale sauvegardée',
-  },
-  en: {
-    greeting: 'HELLO COACH!',
-    newGroup: 'NEW GROUP', editGroup: 'EDIT GROUP',
-    save: 'SAVE', cancel: 'CANCEL', import: 'IMPORT',
-    delete: 'DELETE', deleteConfirm: 'Delete this group?',
-    saved: 'SAVED!', deleted: 'DELETED!', exported: 'PDF GENERATED!',
-    noCriteria: 'Add criteria (📚 PFEQ or 📝 Criterion)',
-    today: 'Today', namePN: 'F.L', nameNP: 'L.F',
-    present: 'Present', absent: 'Absent', late: 'Late',
-    oui: 'Yes', non: 'No',
-    recording: 'Recording...', voiceSaved: 'Voice note saved',
-  }
-};
-var _lang = 'fr';
-function t(k) { return (I18N[_lang] && I18N[_lang][k]) || I18N.fr[k] || k; }
-function setLang(l) {
-  _lang = l; localStorage.setItem('evaleps-lang', l);
-  var s = document.getElementById('lang-select'); if (s) s.value = l;
-  renderAll();
+// ═══════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════
+var SCALE = ['A','B','C','D','E'];
+
+// Default "Aujourd'hui" items the teacher can toggle on/off
+var TODAY_DEFAULTS = [
+  { key: 'presence', label: 'Présence', type: 'presence', on: true },
+  { key: 'tenue', label: 'Tenue sportive', type: 'yesno', on: true },
+  { key: 'materiel', label: 'Matériel', type: 'yesno', on: false },
+  { key: 'securite', label: 'Sécurité', type: 'yesno', on: false },
+  { key: 'comportement', label: 'Comportement', type: 'badge', on: true },
+  { key: 'effort', label: 'Effort', type: 'stars', on: false },
+  { key: 'participation', label: 'Participation', type: 'stars', on: false, default: 3 },
+  { key: 'ecoute', label: 'Écoute', type: 'stars', on: false },
+  { key: 'fairplay', label: 'Fair-play', type: 'stars', on: false },
+  { key: 'autonomie', label: 'Autonomie', type: 'stars', on: false },
+];
+
+// PFEQ — 3 compétences et leurs composantes (intentions pédagogiques)
+var PFEQ_COMPETENCES = [
+  { key: 'agir', label: '🏃 AGIR', desc: 'Agir dans divers contextes de pratique d\'activités physiques', items: [
+    { key: 'agir_execution', label: 'Exécution d\'actions motrices' },
+    { key: 'agir_principes', label: 'Application de principes liés à l\'exécution' },
+    { key: 'agir_efficacite', label: 'Efficacité des actions motrices' },
+    { key: 'agir_planif', label: 'Planification de sa démarche' },
+    { key: 'agir_evaluation', label: 'Évaluation de sa démarche' },
+    { key: 'agir_equilibre', label: 'Équilibre et coordination' },
+    { key: 'agir_locomotion', label: 'Locomotion (courir, sauter, ramper)' },
+    { key: 'agir_manipulation', label: 'Manipulation d\'objets' },
+    { key: 'agir_securite', label: 'Respect des règles de sécurité' },
+  ]},
+  { key: 'interagir', label: '🤝 INTERAGIR', desc: 'Interagir dans divers contextes de pratique d\'activités physiques', items: [
+    { key: 'inter_coop', label: 'Coopération avec les partenaires' },
+    { key: 'inter_opp', label: 'Opposition face aux adversaires' },
+    { key: 'inter_comm', label: 'Communication motrice' },
+    { key: 'inter_sync', label: 'Synchronisation des actions' },
+    { key: 'inter_strat', label: 'Élaboration de stratégies' },
+    { key: 'inter_roles', label: 'Application des rôles (attaque/défense)' },
+    { key: 'inter_ethique', label: 'Éthique sportive et fair-play' },
+    { key: 'inter_eval', label: 'Évaluation de la démarche collective' },
+  ]},
+  { key: 'sante', label: '❤️ SANTÉ', desc: 'Adopter un mode de vie sain et actif', items: [
+    { key: 'sante_condition', label: 'Condition physique' },
+    { key: 'sante_habitudes', label: 'Habitudes de vie saines' },
+    { key: 'sante_hygiene', label: 'Hygiène et propreté' },
+    { key: 'sante_stress', label: 'Gestion du stress' },
+    { key: 'sante_alimentation', label: 'Saine alimentation et hydratation' },
+    { key: 'sante_securite', label: 'Sécurité dans la pratique' },
+    { key: 'sante_effort', label: 'Persévérance et engagement dans l\'effort' },
+    { key: 'sante_bienetre', label: 'Bien-être physique et mental' },
+  ]},
+];
+
+var COUNTER_ITEMS = [
+  { key: 'score', label: 'Score' },
+  { key: 'reussites', label: 'Réussites' },
+  { key: 'tentatives', label: 'Tentatives' },
+];
+
+var QUICK_CRITERIA = [
+  'Lancer précis','Attraper','Dribbler','Frapper','Équilibre','Course','Sauter',
+  'Réception','Passe','Tir au but','Feinte','Démarquage','Communication',
+  'Stratégie','Créativité','Persévérance','Respect des règles','Entraide',
+];
+
+// ═══════════════════════════════════
+// STATE
+// ═══════════════════════════════════
+var _groupId = null;
+var _mode = 'aujourdhui';
+var _sessionDate = todayStr();
+var _selectedColor = 'cyan';
+var _editingGroupId = null;
+var _chronos = {};
+var _voiceRecorders = {};
+var _zoomLevel = 100;
+
+function todayStr() { return new Date().toISOString().slice(0,10); }
+function esc(s) { var d=document.createElement('div');d.textContent=s;return d.innerHTML; }
+
+// ═══════════════════════════════════
+// STORAGE
+// ═══════════════════════════════════
+function getGroups(){try{return JSON.parse(localStorage.getItem('carneteps-groups')||'[]');}catch(e){return[];}}
+function setGroups(g){localStorage.setItem('carneteps-groups',JSON.stringify(g));}
+function getData(){try{return JSON.parse(localStorage.getItem('carneteps-data')||'{}');}catch(e){return{};}}
+function setData(d){localStorage.setItem('carneteps-data',JSON.stringify(d));}
+function getPhotos(){try{return JSON.parse(localStorage.getItem('carneteps-photos')||'{}');}catch(e){return{};}}
+function setPhotos(p){localStorage.setItem('carneteps-photos',JSON.stringify(p));}
+function getVoice(){try{return JSON.parse(localStorage.getItem('carneteps-voice')||'{}');}catch(e){return{};}}
+function setVoice(v){localStorage.setItem('carneteps-voice',JSON.stringify(v));}
+function getCustomCriteria(){try{return JSON.parse(localStorage.getItem('carneteps-custom')||'[]');}catch(e){return[];}}
+function setCustomCriteria(c){localStorage.setItem('carneteps-custom',JSON.stringify(c));}
+function getTodayToggles(){try{return JSON.parse(localStorage.getItem('carneteps-toggles')||'null');}catch(e){return null;}}
+function setTodayToggles(t){localStorage.setItem('carneteps-toggles',JSON.stringify(t));}
+function getPfeqSelected(){try{return JSON.parse(localStorage.getItem('carneteps-pfeq')||'[]');}catch(e){return[];}}
+function setPfeqSelected(arr){localStorage.setItem('carneteps-pfeq',JSON.stringify(arr));}
+// Évaluation labels per group+date: { groupId: { date: "Dribbler" } }
+function getEvalLabels(){try{return JSON.parse(localStorage.getItem('carneteps-evallabels')||'{}');}catch(e){return{};}}
+function setEvalLabels(o){localStorage.setItem('carneteps-evallabels',JSON.stringify(o));}
+function getEvalLabel(gid,date){var o=getEvalLabels();return(o[gid]&&o[gid][date])||'';}
+function setEvalLabel(gid,date,label){var o=getEvalLabels();if(!o[gid])o[gid]={};o[gid][date]=label;setEvalLabels(o);}
+
+function getVal(sid,key){
+  var d=getData();
+  try{return d[_groupId][_sessionDate][sid][key];}catch(e){return undefined;}
+}
+function setVal(sid,key,val){
+  var d=getData();
+  if(!d[_groupId])d[_groupId]={};
+  if(!d[_groupId][_sessionDate])d[_groupId][_sessionDate]={};
+  if(!d[_groupId][_sessionDate][sid])d[_groupId][_sessionDate][sid]={};
+  d[_groupId][_sessionDate][sid][key]=val;
+  setData(d);
 }
 
-// ─── LEXIQUE PFEQ ───
-var LEXIQUE_PFEQ = [
-  { competence: 'Comp. 1 — Agir', competence_en: 'Comp. 1 — To act', composantes: [
-    { nom: 'Actions motrices', nom_en: 'Motor actions', criteres: [
-      { fr: 'Courir à différentes vitesses', en: 'Run at different speeds', type: 'rating' },
-      { fr: 'Sauter de différentes façons', en: 'Jump in different ways', type: 'rating' },
-      { fr: 'Lancer avec précision', en: 'Throw accurately', type: 'rating' },
-      { fr: 'Attraper un objet en mouvement', en: 'Catch a moving object', type: 'rating' },
-      { fr: 'Frapper avec main/pied/outil', en: 'Strike with hand/foot/tool', type: 'rating' },
-      { fr: 'Dribler de façon contrôlée', en: 'Dribble in controlled way', type: 'rating' },
-      { fr: 'Maintenir son équilibre', en: 'Maintain balance', type: 'rating' },
-      { fr: 'Roulades et rotations', en: 'Rolls and rotations', type: 'rating' },
-      { fr: 'Se recevoir sécuritairement', en: 'Land safely', type: 'check' },
-    ]},
-    { nom: 'Planification et évaluation', nom_en: 'Planning and evaluation', criteres: [
-      { fr: 'Choisit les actions appropriées', en: 'Chooses appropriate actions', type: 'rating' },
-      { fr: 'Identifie ses ajustements', en: 'Identifies adjustments needed', type: 'grade' },
-      { fr: 'Reconnaît réussites et difficultés', en: 'Recognizes successes/difficulties', type: 'grade' },
-    ]},
-  ]},
-  { competence: 'Comp. 2 — Interagir', competence_en: 'Comp. 2 — To interact', composantes: [
-    { nom: 'Coopération et opposition', nom_en: 'Cooperation and opposition', criteres: [
-      { fr: 'Synchronise avec partenaires', en: 'Synchronizes with partners', type: 'rating' },
-      { fr: 'Se démarque pour recevoir', en: 'Gets open to receive', type: 'rating' },
-      { fr: 'Utilise des feintes', en: 'Uses feints', type: 'rating' },
-      { fr: "Anticipe l'adversaire", en: 'Anticipates opponent', type: 'rating' },
-      { fr: 'Passe avec précision', en: 'Passes accurately', type: 'rating' },
-      { fr: 'Pression défensive', en: 'Defensive pressure', type: 'rating' },
-    ]},
-    { nom: 'Éthique sportive', nom_en: 'Sports ethics', criteres: [
-      { fr: 'Accepte victoire et défaite', en: 'Accepts victory and defeat', type: 'badge' },
-      { fr: 'Respecte les adversaires', en: 'Respects opponents', type: 'badge' },
-      { fr: 'Joue selon les règles', en: 'Plays within rules', type: 'check' },
-      { fr: 'Encourage ses partenaires', en: 'Encourages partners', type: 'badge' },
-    ]},
-  ]},
-  { competence: 'Comp. 3 — Mode de vie sain', competence_en: 'Comp. 3 — Healthy lifestyle', composantes: [
-    { nom: 'Habitudes', nom_en: 'Habits', criteres: [
-      { fr: "S'engage activement", en: 'Actively engages', type: 'rating' },
-      { fr: 'Échauffement et retour au calme', en: 'Warm-up and cool-down', type: 'check' },
-      { fr: 'Sécurité', en: 'Safety', type: 'check' },
-      { fr: 'Hydratation', en: 'Hydration', type: 'check' },
-    ]},
-  ]},
-];
-var QUICK_ASSESS = [
-  { fr: 'Présence', en: 'Attendance', type: 'check', subtype: 'presence' },
-  { fr: 'Tenue sportive', en: 'Sportswear', type: 'check' },
-  { fr: 'Comportement', en: 'Behavior', type: 'badge' },
-  { fr: 'Effort', en: 'Effort', type: 'rating' },
-  { fr: 'Participation', en: 'Participation', type: 'rating' },
-  { fr: 'Écoute', en: 'Listening', type: 'badge' },
-  { fr: 'Respect des pairs', en: 'Peer respect', type: 'badge' },
-  { fr: 'Esprit sportif', en: 'Sportsmanship', type: 'badge' },
-  { fr: 'Sécurité', en: 'Safety', type: 'check' },
-  { fr: 'Autonomie', en: 'Autonomy', type: 'rating' },
-  { fr: 'Tirs réussis', en: 'Successful shots', type: 'counter' },
-  { fr: 'Passes consécutives', en: 'Consecutive passes', type: 'counter' },
-  { fr: 'Avertissements', en: 'Warnings', type: 'counter' },
-];
+// ═══════════════════════════════════
+// INIT
+// ═══════════════════════════════════
+document.addEventListener('DOMContentLoaded', function(){
+  _groupId = localStorage.getItem('carneteps-lastgroup')||null;
+  _mode = localStorage.getItem('carneteps-mode')||'aujourdhui';
+  _zoomLevel = parseInt(localStorage.getItem('carneteps-zoom')||'100');
+  applyZoom();
 
-// ─── SCALES & TYPES ───
-var SCALE = ['A', 'B', 'C', 'D', 'E'];
-var SCALE_BG = { A: '#2E7D32', B: '#66BB6A', C: '#FFD600', D: '#FF8C00', E: '#D32F2F' };
-var TYPE_ICONS = { grade: '🔤', check: '✅', rating: '⭐', badge: '🏷️', counter: '🔢' };
+  var t=document.getElementById('course-title');
+  var saved=localStorage.getItem('carneteps-title');
+  if(saved&&t)t.textContent=saved;
+  if(t)t.addEventListener('input',function(){localStorage.setItem('carneteps-title',t.textContent);});
 
-// Criterion types:
-// grade: A-E (click to cycle)
-// check: present/absent/late OR oui/non (click to cycle)
-// rating: 1-5 stars (click star to set)
-// badge: +1/-1 behavioral (positive/negative buttons)
-// counter: incremental +/- number
-
-// ─── STATE ───
-var _groupId = null;
-var _sessionDate = todayStr();
-var _selectedColor = 'c-blue';
-var _nameOrder = 'pn';
-var _selectedCritType = 'grade';
-
-function todayStr() { return new Date().toISOString().slice(0, 10); }
-
-// ─── STORAGE ───
-function getGroups() { try { return JSON.parse(localStorage.getItem('evaleps-groups') || '[]'); } catch(e) { return []; } }
-function setGroups(g) { localStorage.setItem('evaleps-groups', JSON.stringify(g)); }
-function getCriteria() { try { return JSON.parse(localStorage.getItem('evaleps-criteria') || '[]'); } catch(e) { return []; } }
-function setCriteria(c) { localStorage.setItem('evaleps-criteria', JSON.stringify(c)); }
-function getEvals() { try { return JSON.parse(localStorage.getItem('evaleps-evals') || '{}'); } catch(e) { return {}; } }
-function setEvals(e) { localStorage.setItem('evaleps-evals', JSON.stringify(e)); }
-function getPhotos() { try { return JSON.parse(localStorage.getItem('evaleps-photos') || '{}'); } catch(e) { return {}; } }
-function setPhotos(p) { localStorage.setItem('evaleps-photos', JSON.stringify(p)); }
-function getVoiceNotes() { try { return JSON.parse(localStorage.getItem('evaleps-voice') || '{}'); } catch(e) { return {}; } }
-function setVoiceNotes(v) { localStorage.setItem('evaleps-voice', JSON.stringify(v)); }
+  renderAll();
+});
 
 // ═══════════════════════════════════
 // RENDER ALL
 // ═══════════════════════════════════
-function renderAll() {
-  var groups = getGroups();
-  var emptyEl = document.getElementById('empty-state');
-  var notebook = document.querySelector('.notebook');
-  if (groups.length === 0) {
-    if (emptyEl) emptyEl.classList.remove('hidden');
-    if (notebook) notebook.style.display = 'none';
+function renderAll(){
+  var groups=getGroups();
+  var emptyEl=document.getElementById('hero-section');
+  var nb=document.getElementById('notebook');
+  var mt=document.getElementById('mode-tabs');
+
+  var hdr=document.querySelector('.top-header');
+  if(groups.length===0){
+    if(emptyEl)emptyEl.classList.remove('hidden');
+    if(nb)nb.style.display='none';
+    if(mt)mt.style.display='none';
+    if(hdr)hdr.style.display='none';
     return;
-  } else {
-    if (emptyEl) emptyEl.classList.add('hidden');
-    if (notebook) notebook.style.display = '';
   }
+  if(emptyEl)emptyEl.classList.add('hidden');
+  if(nb)nb.style.display='';
+  if(mt)mt.style.display='';
+  if(hdr)hdr.style.display='';
+
+  if(!_groupId||!groups.find(function(g){return g.id===_groupId;})){
+    _groupId=groups[0].id;
+  }
+
   renderGroupTabs();
-  renderCriteriaTabs();
-  renderStudentList();
-  renderGradeGrid();
   renderDateSelect();
-  renderNameOrderBtn();
+  setActiveMode(_mode);
+  renderContent();
 }
 
 // ═══════════════════════════════════
 // GROUP TABS (RIGHT)
 // ═══════════════════════════════════
-function renderGroupTabs() {
-  var container = document.getElementById('group-tabs');
-  if (!container) return;
-  var groups = getGroups();
-  var html = '';
-  groups.forEach(function(g) {
-    var color = g.color || 'c-blue';
-    var active = g.id === _groupId ? ' active' : '';
-    html += '<div class="group-tab ' + color + active + '" onclick="selectGroup(\'' + g.id + '\')" title="' + esc(g.name) + '">';
-    html += '<span class="tab-edit" onclick="event.stopPropagation();editGroup(\'' + g.id + '\')">✏️</span>';
-    html += esc(g.name.length > 14 ? g.name.substring(0, 12) + '..' : g.name);
-    html += '</div>';
+function renderGroupTabs(){
+  var c=document.getElementById('group-tabs');if(!c)return;
+  var groups=getGroups();
+  var html='';
+  groups.forEach(function(g){
+    var color=g.color||'cyan';
+    var active=g.id===_groupId?' active':'';
+    var lbl=g.name.length>10?g.name.substring(0,9)+'..':g.name;
+    html+='<div class="group-tab gt-'+color+active+'" onclick="selectGroup(\''+g.id+'\')" title="'+esc(g.name)+'" ondblclick="event.stopPropagation();editGroup(\''+g.id+'\')">';
+    html+=esc(lbl);
+    html+='<span class="gt-edit">✏️</span>';
+    html+='</div>';
   });
-  container.innerHTML = html;
+  c.innerHTML=html;
 }
 
-function selectGroup(id) {
-  _groupId = id;
-  localStorage.setItem('evaleps-lastgroup', id);
-  _sessionDate = todayStr();
-  renderAll();
+function selectGroup(id){
+  _groupId=id;localStorage.setItem('carneteps-lastgroup',id);
+  stopAllChronos();renderAll();
 }
 
 // ═══════════════════════════════════
-// CRITERIA TABS (TOP)
+// DATE
 // ═══════════════════════════════════
-function renderCriteriaTabs() {
-  var container = document.getElementById('criteria-tabs');
-  if (!container) return;
-  var criteria = getCriteria();
-  if (criteria.length === 0) {
-    container.innerHTML = '<div class="criteria-empty">' + t('noCriteria') + '</div>';
-    return;
+function renderDateSelect(){
+  var sel=document.getElementById('date-select');if(!sel)return;
+  var dates=getAvailableDates().sort().reverse();
+  var html='';
+  dates.forEach(function(d){
+    var lbl=d===todayStr()?"Aujourd'hui":d;
+    html+='<option value="'+d+'"'+(d===_sessionDate?' selected':'')+'>'+lbl+'</option>';
+  });
+  sel.innerHTML=html;
+}
+function getAvailableDates(){
+  var d=getData(),dates={};
+  if(d[_groupId])Object.keys(d[_groupId]).forEach(function(dt){dates[dt]=true;});
+  dates[todayStr()]=true;
+  return Object.keys(dates);
+}
+function onDateChange(){_sessionDate=document.getElementById('date-select').value;stopAllChronos();renderContent();}
+function prevDate(){
+  var dates=getAvailableDates().sort(),i=dates.indexOf(_sessionDate);
+  if(i>0){_sessionDate=dates[i-1];document.getElementById('date-select').value=_sessionDate;stopAllChronos();renderContent();}
+}
+function nextDate(){
+  var dates=getAvailableDates().sort(),i=dates.indexOf(_sessionDate);
+  if(i<dates.length-1){_sessionDate=dates[i+1];document.getElementById('date-select').value=_sessionDate;stopAllChronos();renderContent();}
+}
+
+// ═══════════════════════════════════
+// MODE SWITCHING
+// ═══════════════════════════════════
+function switchMode(m){_mode=m;localStorage.setItem('carneteps-mode',m);setActiveMode(m);renderContent();}
+function setActiveMode(m){
+  document.querySelectorAll('.mtab').forEach(function(t){t.classList.toggle('active',t.getAttribute('data-mode')===m);});
+}
+
+// ═══════════════════════════════════
+// RENDER CONTENT (dispatch by mode)
+// ═══════════════════════════════════
+function renderContent(){
+  var area=document.getElementById('content-area');
+  var toolbar=document.getElementById('today-toolbar');
+  var critbar=document.getElementById('criteria-bar');
+  if(!area)return;
+
+  // Show/hide toolbars
+  toolbar.classList.toggle('hidden',_mode!=='aujourdhui');
+  critbar.classList.toggle('hidden',_mode!=='evaluation');
+
+  switch(_mode){
+    case 'aujourdhui': renderTodayToolbar(); renderTodayCards(area); break;
+    case 'evaluation': renderCriteriaBar(); renderEvalTable(area); break;
+    case 'chrono': renderChronoTable(area); break;
+    case 'compteur': renderCounterTable(area); break;
+    case 'resume': renderResume(area); break;
   }
-  var html = '';
-  criteria.forEach(function(c, i) {
-    var text = _lang === 'en' && c.en ? c.en : c.fr;
-    var display = text.length > 16 ? text.substring(0, 14) + '..' : text;
-    var typeIcon = TYPE_ICONS[c.type || 'grade'] || '🔤';
-    html += '<div class="criteria-tab" title="' + esc(text) + ' (' + (c.type || 'grade') + ')">';
-    html += '<span class="crit-type-icon">' + typeIcon + '</span>';
-    html += esc(display);
-    html += '<span class="crit-x" onclick="removeCriteria(' + i + ')">✕</span>';
-    html += '</div>';
+}
+
+// ═══════════════════════════════════
+// GET ACTIVE TODAY ITEMS
+// ═══════════════════════════════════
+function getActiveTodayItems(){
+  var toggles=getTodayToggles();
+  var items=TODAY_DEFAULTS.map(function(d){
+    var on=d.on;
+    if(toggles&&toggles[d.key]!==undefined)on=toggles[d.key];
+    return {key:d.key,label:d.label,type:d.type,on:on};
   });
-  container.innerHTML = html;
-}
-
-// ═══════════════════════════════════
-// STUDENT LIST (LEFT)
-// ═══════════════════════════════════
-function renderStudentList() {
-  var container = document.getElementById('student-list');
-  if (!container || !_groupId) { if (container) container.innerHTML = ''; return; }
-
-  var groups = getGroups();
-  var group = groups.find(function(g) { return g.id === _groupId; });
-  if (!group) { container.innerHTML = ''; return; }
-
-  var photos = getPhotos();
-  var voiceNotes = getVoiceNotes();
-  var groupVoice = (voiceNotes[_groupId] && voiceNotes[_groupId][_sessionDate]) || {};
-  var html = '';
-  group.students.forEach(function(s, i) {
-    var photoSrc = photos[s.id];
-    var displayName = formatName(s.name);
-    var hasVoice = !!groupVoice[s.id];
-    html += '<div class="student-row" data-sid="' + s.id + '">';
-    html += '<span class="student-num">' + (i + 1) + '</span>';
-    html += '<div class="student-photo" onclick="addStudentPhoto(\'' + s.id + '\')">';
-    if (photoSrc) html += '<img src="' + photoSrc + '" />';
-    else html += '📷';
-    html += '</div>';
-    html += '<span class="student-name">' + esc(displayName) + '</span>';
-    html += '<button class="student-voice-btn' + (hasVoice ? ' has-note' : '') + '" onclick="toggleVoiceNote(\'' + s.id + '\')" title="Note vocale">';
-    html += hasVoice ? '🔊' : '🎙️';
-    html += '</button>';
-    html += '</div>';
+  // Add custom criteria
+  var custom=getCustomCriteria();
+  custom.forEach(function(c){
+    var on=true;
+    if(toggles&&toggles[c.key]!==undefined)on=toggles[c.key];
+    items.push({key:c.key,label:c.label,type:c.type||'stars',on:on});
   });
-  container.innerHTML = html;
+  return items;
 }
 
-function formatName(name) {
-  if (_nameOrder === 'np') {
-    var parts = name.trim().split(/\s+/);
-    if (parts.length >= 2) {
-      var last = parts.pop();
-      return last + ', ' + parts.join(' ');
-    }
-  }
-  return name;
+function toggleTodayItem(key){
+  var toggles=getTodayToggles()||{};
+  var items=getActiveTodayItems();
+  var item=items.find(function(i){return i.key===key;});
+  if(item)toggles[key]=!item.on;
+  setTodayToggles(toggles);
+  renderContent();
 }
 
 // ═══════════════════════════════════
-// GRADE GRID (CENTER) — Multi-type cells
+// TODAY TOOLBAR (what to observe)
 // ═══════════════════════════════════
-function renderGradeGrid() {
-  var container = document.getElementById('grade-grid');
-  if (!container || !_groupId) { if (container) container.innerHTML = ''; return; }
+function renderTodayToolbar(){
+  var container=document.getElementById('today-checks');if(!container)return;
+  var items=getActiveTodayItems();
+  var html='';
+  items.forEach(function(item){
+    html+='<button class="today-chip'+(item.on?' on':'')+'" onclick="toggleTodayItem(\''+item.key+'\')">'+esc(item.label)+'</button>';
+  });
+  container.innerHTML=html;
+}
 
-  var groups = getGroups();
-  var group = groups.find(function(g) { return g.id === _groupId; });
-  if (!group) { container.innerHTML = ''; return; }
+// ═══════════════════════════════════
+// MODE 1: AUJOURD'HUI — CARD GRID
+// ═══════════════════════════════════
+function renderTodayCards(area){
+  var group=getGroups().find(function(g){return g.id===_groupId;});
+  if(!group){area.innerHTML='';return;}
 
-  var criteria = getCriteria();
-  if (criteria.length === 0) { container.innerHTML = ''; return; }
+  var items=getActiveTodayItems().filter(function(i){return i.on;});
+  var photos=getPhotos();
+  var voice=getVoice();
+  var gv=(voice[_groupId]&&voice[_groupId][_sessionDate])||{};
+  var color=group.color||'cyan';
 
-  var evals = getEvals();
-  var sessionEvals = (evals[_groupId] && evals[_groupId][_sessionDate]) || {};
+  var html='<div class="card-grid">';
+  group.students.forEach(function(s,i){
+    var photoSrc=photos[s.id];
+    var hasVoice=!!gv[s.id];
 
-  var html = '';
-  group.students.forEach(function(s) {
-    var sd = sessionEvals[s.id] || {};
-    html += '<div class="grade-row" data-sid="' + s.id + '">';
-    criteria.forEach(function(c, ci) {
-      var type = c.type || 'grade';
-      var val = sd['c' + ci];
-      html += '<div class="grade-cell" data-type="' + type + '">';
-      html += renderCell(type, val, s.id, ci, c);
-      html += '</div>';
+    html+='<div class="scard" data-color="'+color+'">';
+    var isSttActive=!!_sttRecognitions[s.id];
+    html+='<button class="scard-voice'+(hasVoice?' has-note':'')+(isSttActive?' stt-active':'')+'" onclick="toggleVoiceNote(\''+s.id+'\')" oncontextmenu="event.preventDefault();startStt(\''+s.id+'\')" title="Clic=audio, Clic droit=texte">'+(isSttActive?'✍️':hasVoice?'🔊':'🎙️')+'</button>';
+
+    // Header
+    html+='<div class="scard-head">';
+    html+='<div class="scard-avatar" onclick="addPhoto(\''+s.id+'\')">';
+    html+=(photoSrc?'<img src="'+photoSrc+'" />':'👤');
+    html+='</div>';
+    html+='<div class="scard-name">'+esc(s.name)+renderSparkline(s.id)+'</div>';
+    html+='<div class="scard-num">'+(i+1)+'</div>';
+    html+='</div>';
+
+    // Body — active items
+    html+='<div class="scard-body">';
+    items.forEach(function(item){
+      html+=renderCardItem(s.id,item);
     });
-    html += '</div>';
+    // Color evaluation buttons
+    html+=renderColorEvalButtons(s.id);
+    // STT note display
+    var sttNote=getSttNote(s.id);
+    if(sttNote)html+='<div class="stt-text">📝 '+esc(sttNote)+'</div>';
+    html+='</div>';
+
+    // Color strip at bottom
+    var colorEv=getColorEval(s.id);
+    if(colorEv)html+='<div class="scard-color-strip strip-'+colorEv+'"></div>';
+
+    html+='</div>';
   });
-  container.innerHTML = html;
-  syncScroll();
+  html+='</div>';
+  area.innerHTML=html;
 }
 
-function renderCell(type, val, sid, ci, crit) {
-  if (type === 'grade') {
-    if (val) return '<span class="grade-badge g-' + val + '" onclick="cycleGrade(\'' + sid + '\',' + ci + ')">' + val + '</span>';
-    return '<span class="grade-empty" onclick="cycleGrade(\'' + sid + '\',' + ci + ')"></span>';
+function renderCardItem(sid,item){
+  var html='<div class="scard-row">';
+  html+='<span class="scard-label">'+esc(item.label)+'</span>';
+
+  if(item.type==='presence'){
+    var v=getVal(sid,'check_presence')||'';
+    html+='<div class="scard-btns">';
+    html+=tbtn(sid,'presence','present','P',v);
+    html+=tbtn(sid,'presence','absent','A',v);
+    html+=tbtn(sid,'presence','retard','R',v);
+    html+='</div>';
+  } else if(item.type==='yesno'){
+    var v=getVal(sid,'check_'+item.key)||'';
+    html+='<div class="scard-btns">';
+    html+=tbtn(sid,item.key,'oui','✓',v);
+    html+=tbtn(sid,item.key,'non','✗',v);
+    html+='</div>';
+  } else if(item.type==='badge'){
+    var pos=getVal(sid,'obs_'+item.key+'_pos')||0;
+    var neg=getVal(sid,'obs_'+item.key+'_neg')||0;
+    html+='<div class="scard-obs">';
+    html+='<button class="obs-btn obs-plus" onclick="addObs(\''+sid+'\',\''+item.key+'\',1)">+1</button>';
+    html+='<span class="obs-val" style="color:var(--green-dk);">+'+pos+'</span>';
+    html+='<span class="obs-val" style="color:var(--red);">−'+neg+'</span>';
+    html+='<button class="obs-btn obs-minus" onclick="addObs(\''+sid+'\',\''+item.key+'\',-1)">−1</button>';
+    html+='</div>';
+  } else if(item.type==='stars'){
+    var v=getVal(sid,'eval_'+item.key);
+    if(v===undefined && item.default) v=item.default;
+    v=v||0;
+    html+='<div class="scard-stars">';
+    for(var i=1;i<=5;i++){
+      html+='<button class="scard-star'+(i<=v?' on':'')+'" onclick="setEval(\''+sid+'\',\''+item.key+'\','+i+')">⭐</button>';
+    }
+    html+='</div>';
+  } else if(item.type==='grade'){
+    var v=getVal(sid,'grade_'+item.key)||'';
+    var cls=v?'g-'+v:'g-empty';
+    html+='<button class="grade-btn '+cls+'" onclick="cycleGrade(\''+sid+'\',\''+item.key+'\')">'+(v||'—')+'</button>';
   }
-  if (type === 'check') {
-    var isPresence = crit && crit.subtype === 'presence';
-    if (isPresence) {
-      var states = ['present', 'absent', 'late'];
-      var labels = { present: t('present'), absent: t('absent'), late: t('late') };
-      var st = val || '';
-      if (st) return '<span class="check-badge ' + st + '" onclick="cycleCheck(\'' + sid + '\',' + ci + ',true)">' + labels[st] + '</span>';
-      return '<span class="grade-empty" onclick="cycleCheck(\'' + sid + '\',' + ci + ',true)"></span>';
+
+  html+='</div>';
+  return html;
+}
+
+function tbtn(sid,key,state,label,curVal){
+  var cls='tbtn '+(curVal===state?'tbtn-'+state[0]:'tbtn-off');
+  return '<button class="'+cls+'" onclick="setCheck(\''+sid+'\',\''+key+'\',\''+state+'\')">'+label+'</button>';
+}
+
+function setCheck(sid,key,val){
+  var cur=getVal(sid,'check_'+key);
+  setVal(sid,'check_'+key,cur===val?'':val);
+  renderContent();
+}
+function setEval(sid,key,val){
+  var cur=getVal(sid,'eval_'+key)||0;
+  setVal(sid,'eval_'+key,cur===val?0:val);
+  renderContent();
+}
+function addObs(sid,key,amount){
+  var k=amount>0?'obs_'+key+'_pos':'obs_'+key+'_neg';
+  var val=getVal(sid,k)||0;
+  setVal(sid,k,Math.max(0,val+1));
+  renderContent();
+}
+function cycleGrade(sid,key){
+  var cur=getVal(sid,'grade_'+key)||'';
+  var idx=SCALE.indexOf(cur);
+  setVal(sid,'grade_'+key,idx<0?SCALE[0]:(idx>=SCALE.length-1?'':SCALE[idx+1]));
+  renderContent();
+}
+
+// ═══════════════════════════════════
+// MODE 2: ÉVALUATION — TABLE LIST
+// ═══════════════════════════════════
+function renderCriteriaBar(){
+  var bar=document.getElementById('criteria-bar');if(!bar)return;
+  var group=getGroups().find(function(g){return g.id===_groupId;});
+
+  // Ligne 1: nom du groupe centré + bouton critères
+  var html='<div class="crit-bar-top">';
+  html+='<span class="crit-group-name">'+esc(group?group.name:'')+'</span>';
+  html+='<button class="today-add-btn" onclick="openCriteriaManager()">📝 CRITÈRES</button>';
+  html+='</div>';
+
+  // Ligne 2: onglets des moyens d'action évalués (un par date avec données)
+  var dates=getAvailableDates().sort();
+  var evalLabels=getEvalLabels();
+  var gLabels=(evalLabels[_groupId])||{};
+  var evalDates=[];
+  dates.forEach(function(dt){
+    var label=gLabels[dt]||'';
+    var d=getData();
+    var hasData=d[_groupId]&&d[_groupId][dt]&&Object.keys(d[_groupId][dt]).length>0;
+    if(label||hasData) evalDates.push({date:dt,label:label});
+  });
+
+  html+='<div class="crit-bar-tabs">';
+  evalDates.forEach(function(ed){
+    var isCurrent=ed.date===_sessionDate;
+    var tabLabel=ed.label||ed.date;
+    html+='<button class="crit-tab'+(isCurrent?' crit-tab-active':'')+'" onclick="switchEvalDate(\''+ed.date+'\')" ondblclick="editEvalTab(\''+ed.date+'\')" title="'+ed.date+' — Double-cliquer pour renommer">';
+    html+=esc(tabLabel);
+    html+='</button>';
+  });
+  // New eval button
+  if(!evalDates.find(function(ed){return ed.date===_sessionDate;})){
+    html+='<button class="crit-tab crit-tab-active" ondblclick="editEvalTab(\''+_sessionDate+'\')" title="Double-cliquer pour nommer">+ Nouvelle éval.</button>';
+  }
+  html+='</div>';
+
+  bar.innerHTML=html;
+}
+
+function switchEvalDate(date){
+  _sessionDate=date;
+  document.getElementById('date-select').value=date;
+  renderContent();
+}
+
+function editEvalTab(date){
+  var cur=getEvalLabel(_groupId,date)||'';
+  var val=prompt('Nom du moyen d\'action évalué :',cur);
+  if(val!==null){
+    setEvalLabel(_groupId,date,val.trim());
+    renderContent();
+  }
+}
+
+function onEvalLabelChange(val){
+  setEvalLabel(_groupId,_sessionDate,val.trim());
+  renderCriteriaBar();
+}
+
+function getAllEvalCriteria(){
+  // PFEQ items selected by the teacher
+  var selected=getPfeqSelected();
+  var items=[];
+  selected.forEach(function(key){
+    PFEQ_COMPETENCES.forEach(function(comp){
+      comp.items.forEach(function(it){
+        if(it.key===key){items.push({key:'pfeq_'+it.key,label:it.label,type:'grade',_source:'pfeq',_pfeqKey:it.key});}
+      });
+    });
+  });
+  // Custom criteria
+  var custom=getCustomCriteria();
+  custom.forEach(function(c,i){items.push({key:'eval_'+c.key,label:c.label,type:c.type||'stars',_source:'custom',_customIdx:i});});
+  return items;
+}
+
+function removeEvalCriterion(key,source){
+  if(source==='pfeq'){
+    // Remove from PFEQ selected
+    var pfeqKey=key.replace('pfeq_','');
+    var selected=getPfeqSelected();
+    var idx=selected.indexOf(pfeqKey);
+    if(idx>=0){selected.splice(idx,1);setPfeqSelected(selected);}
+  } else if(source==='custom'){
+    // Remove from custom criteria by matching key
+    var cKey=key.replace('eval_','');
+    var custom=getCustomCriteria();
+    custom=custom.filter(function(c){return c.key!==cKey;});
+    setCustomCriteria(custom);
+  }
+  renderContent();
+}
+
+function renderEvalTable(area){
+  var group=getGroups().find(function(g){return g.id===_groupId;});
+  if(!group){area.innerHTML='';return;}
+
+  var items=getAllEvalCriteria();
+  var voice=getVoice();
+  var gv=(voice[_groupId]&&voice[_groupId][_sessionDate])||{};
+  var color=group.color||'cyan';
+  var nCols=items.length;
+
+  var html='<table class="eval-table" id="eval-table-main">';
+
+  // Colgroup for resizable columns
+  html+='<colgroup>';
+  html+='<col class="col-eleve" />';
+  for(var c=0;c<nCols;c++) html+='<col class="col-crit" />';
+  html+='<col class="col-actions" />';
+  html+='</colgroup>';
+
+  // THEAD row 1: criteria names + ✕ + add button
+  html+='<thead><tr>';
+  html+='<th class="th-eleve" rowspan="1">ÉLÈVE</th>';
+  items.forEach(function(c,idx){
+    html+='<th draggable="true" class="th-draggable th-resizable" data-crit-idx="'+idx+'" ondragstart="onCritDragStart(event,'+idx+')" ondragover="onCritDragOver(event)" ondrop="onCritDrop(event,'+idx+')">';
+    html+='<div class="th-crit">';
+    html+='<span>'+esc(c.label)+'</span>';
+    html+='<button class="th-remove" onclick="removeEvalCriterion(\''+c.key+'\',\''+c._source+'\')" title="Retirer">✕</button>';
+    html+='</div>';
+    html+='<div class="th-resize-handle" onmousedown="startColResize(event,'+idx+')"></div>';
+    html+='</th>';
+  });
+  html+='<th class="th-actions"><button class="th-add-btn" onclick="openCriteriaManager()" title="Ajouter un critère">+</button> 🎙️</th>';
+  html+='</tr></thead><tbody>';
+
+  group.students.forEach(function(s,i){
+    var hasVoice=!!gv[s.id];
+    html+='<tr class="row-'+color+'">';
+    var colorEv=getColorEval(s.id);
+    var colorBg=colorEv?'background:'+COLOR_EVAL_HEX[colorEv]+'22;':'';
+    html+='<td class="td-eleve" style="'+colorBg+'"><div class="sid-cell">';
+    html+='<span class="sid-num">'+(i+1)+'</span>';
+    if(colorEv)html+='<span class="spark-dot sd-'+colorEv+'" style="flex-shrink:0;" title="'+esc(getColorMeanings()[colorEv])+'"></span>';
+    html+='<span class="sid-photo" title="Photo">👤</span>';
+    html+='<span class="sid-name">'+esc(s.name)+'</span>';
+    html+=renderSparkline(s.id);
+    html+='</div></td>';
+
+    items.forEach(function(c){
+      html+='<td>';
+      if(c.type==='grade'){
+        var v=getVal(s.id,c.key)||'';
+        var cls=v?'g-'+v:'g-empty';
+        html+='<button class="grade-btn '+cls+'" onclick="cycleEvalGrade(\''+s.id+'\',\''+c.key+'\')"> '+(v||'—')+'</button>';
+      } else if(c.type==='stars'){
+        var v=getVal(s.id,c.key)||0;
+        html+='<div class="stars-cell">';
+        for(var j=1;j<=5;j++){
+          html+='<button class="scard-star'+(j<=v?' on':'')+'" onclick="setEvalVal(\''+s.id+'\',\''+c.key+'\','+j+')">⭐</button>';
+        }
+        html+='</div>';
+      } else if(c.type==='check'){
+        var v=getVal(s.id,c.key)||'';
+        html+='<div class="scard-btns">';
+        html+=evalTbtn(s.id,c.key,'oui','✓',v);
+        html+=evalTbtn(s.id,c.key,'non','✗',v);
+        html+='</div>';
+      } else if(c.type==='badge'){
+        var pos=getVal(s.id,c.key+'_pos')||0;
+        var neg=getVal(s.id,c.key+'_neg')||0;
+        html+='<div class="scard-obs">';
+        html+='<button class="obs-btn obs-plus" onclick="addEvalObs(\''+s.id+'\',\''+c.key+'\',1)" style="width:28px;height:28px;font-size:0.85rem;">+</button>';
+        html+='<span class="obs-val" style="font-size:0.9rem;">'+pos+'</span>';
+        html+='<span class="obs-val" style="font-size:0.9rem;color:var(--red);">'+neg+'</span>';
+        html+='<button class="obs-btn obs-minus" onclick="addEvalObs(\''+s.id+'\',\''+c.key+'\',-1)" style="width:28px;height:28px;font-size:0.85rem;">−</button>';
+        html+='</div>';
+      }
+      html+='</td>';
+    });
+
+    html+='<td class="td-actions"><button class="voice-btn'+(hasVoice?' has-note':'')+'" onclick="toggleVoiceNote(\''+s.id+'\')">'+(hasVoice?'🔊':'🎙️')+'</button></td>';
+    html+='</tr>';
+  });
+
+  html+='</tbody></table>';
+  area.innerHTML=html;
+}
+
+// Column resize by dragging
+var _resizeCol=null,_resizeStartX=0,_resizeStartW=0;
+function startColResize(e,colIdx){
+  e.preventDefault();e.stopPropagation();
+  var table=document.getElementById('eval-table-main');if(!table)return;
+  var cols=table.querySelectorAll('colgroup col.col-crit');
+  if(!cols[colIdx])return;
+  var th=table.querySelectorAll('thead th.th-draggable')[colIdx];
+  _resizeCol=cols[colIdx];
+  _resizeStartX=e.clientX;
+  _resizeStartW=th.offsetWidth;
+  document.addEventListener('mousemove',doColResize);
+  document.addEventListener('mouseup',stopColResize);
+}
+function doColResize(e){
+  if(!_resizeCol)return;
+  var diff=e.clientX-_resizeStartX;
+  var newW=Math.max(80,_resizeStartW+diff);
+  _resizeCol.style.width=newW+'px';
+}
+function stopColResize(){
+  _resizeCol=null;
+  document.removeEventListener('mousemove',doColResize);
+  document.removeEventListener('mouseup',stopColResize);
+}
+
+// Drag-and-drop criteria columns reorder
+var _dragCritIdx=null;
+function onCritDragStart(e,idx){_dragCritIdx=idx;e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',idx);}
+function onCritDragOver(e){e.preventDefault();e.dataTransfer.dropEffect='move';}
+function onCritDrop(e,targetIdx){
+  e.preventDefault();
+  if(_dragCritIdx===null||_dragCritIdx===targetIdx)return;
+  // Reorder: move item from _dragCritIdx to targetIdx
+  // We need to reorder both pfeq and custom lists
+  var items=getAllEvalCriteria();
+  if(_dragCritIdx<0||_dragCritIdx>=items.length||targetIdx<0||targetIdx>=items.length)return;
+
+  // Build combined ordered key list
+  var ordered=items.map(function(c){return{source:c._source,key:c._source==='pfeq'?c._pfeqKey:c.key.replace('eval_','')};});
+  var moved=ordered.splice(_dragCritIdx,1)[0];
+  ordered.splice(targetIdx,0,moved);
+
+  // Rebuild pfeq and custom lists from new order
+  var newPfeq=[];
+  var newCustom=[];
+  var oldCustom=getCustomCriteria();
+  ordered.forEach(function(o){
+    if(o.source==='pfeq'){newPfeq.push(o.key);}
+    else{
+      var found=oldCustom.find(function(c){return c.key===o.key;});
+      if(found)newCustom.push(found);
+    }
+  });
+  setPfeqSelected(newPfeq);
+  setCustomCriteria(newCustom);
+  _dragCritIdx=null;
+  renderContent();
+}
+
+function cycleEvalGrade(sid,key){
+  var cur=getVal(sid,key)||'';
+  var idx=SCALE.indexOf(cur);
+  setVal(sid,key,idx<0?SCALE[0]:(idx>=SCALE.length-1?'':SCALE[idx+1]));
+  renderContent();
+}
+function setEvalVal(sid,key,val){
+  var cur=getVal(sid,key)||0;
+  setVal(sid,key,cur===val?0:val);
+  renderContent();
+}
+function evalTbtn(sid,key,state,label,curVal){
+  var cls='tbtn '+(curVal===state?'tbtn-'+state[0]:'tbtn-off');
+  return '<button class="'+cls+'" onclick="setEvalCheck(\''+sid+'\',\''+key+'\',\''+state+'\')">'+label+'</button>';
+}
+function setEvalCheck(sid,key,val){
+  var cur=getVal(sid,key);
+  setVal(sid,key,cur===val?'':val);
+  renderContent();
+}
+function addEvalObs(sid,key,amount){
+  var k=amount>0?key+'_pos':key+'_neg';
+  var val=getVal(sid,k)||0;
+  setVal(sid,k,Math.max(0,val+1));
+  renderContent();
+}
+
+// ═══════════════════════════════════
+// MODE 3: CHRONO
+// ═══════════════════════════════════
+function renderChronoTable(area){
+  var group=getGroups().find(function(g){return g.id===_groupId;});
+  if(!group){area.innerHTML='';return;}
+  var color=group.color||'cyan';
+
+  // Global chrono display
+  var gc=_chronos['_global']||{running:false,elapsed:0};
+  var globalDisplay=formatTime(gc.running?(gc.elapsed+(Date.now()-gc.startTime)):gc.elapsed);
+  var isRunning=gc.running;
+
+  var html='<div style="display:flex;align-items:center;justify-content:center;gap:12px;padding:10px;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);">';
+  html+='<span style="font-family:Bangers;font-size:2.2rem;color:#fff;letter-spacing:2px;" id="chrono-_global">'+globalDisplay+'</span>';
+  if(!isRunning){
+    html+='<button class="chrono-btn c-start" onclick="chronoStartAll()" style="font-size:1.1rem;padding:8px 20px;">▶ START TOUS</button>';
+  } else {
+    html+='<button class="chrono-btn c-stop" onclick="chronoStopAll()" style="font-size:1.1rem;padding:8px 20px;">⏸ STOP TOUS</button>';
+  }
+  html+='<button class="chrono-btn c-reset" onclick="chronoResetAll()" style="font-size:1.1rem;padding:8px 16px;">↺ RESET</button>';
+  html+='</div>';
+
+  // Find max laps for column headers
+  var maxLaps=0;
+  group.students.forEach(function(s){
+    var laps=_chronos['laps_'+s.id]||[];
+    if(laps.length>maxLaps)maxLaps=laps.length;
+  });
+  var displayCols=Math.max(maxLaps,3); // minimum 3 columns visible
+
+  // Per-student laps in labeled columns
+  html+='<table class="eval-table"><thead><tr><th>ÉLÈVE</th><th>🏁 LAP</th>';
+  for(var c=1;c<=displayCols;c++){
+    html+='<th>Tour '+c+'</th>';
+  }
+  html+='</tr></thead><tbody>';
+
+  group.students.forEach(function(s,i){
+    var laps=_chronos['laps_'+s.id]||[];
+
+    html+='<tr class="row-'+color+'">';
+    html+='<td><div class="sid-cell"><span class="sid-num">'+(i+1)+'</span><span class="sid-name">'+esc(s.name)+'</span></div></td>';
+
+    // Lap button
+    html+='<td style="text-align:center;">';
+    if(isRunning){
+      html+='<button class="chrono-btn c-lap" onclick="chronoLapStudent(\''+s.id+'\')" style="font-size:1rem;padding:6px 16px;">🏁 TOUR!</button>';
     } else {
-      if (val === 'oui') return '<span class="check-badge oui" onclick="cycleCheck(\'' + sid + '\',' + ci + ',false)">' + t('oui') + '</span>';
-      if (val === 'non') return '<span class="check-badge non" onclick="cycleCheck(\'' + sid + '\',' + ci + ',false)">' + t('non') + '</span>';
-      return '<span class="grade-empty" onclick="cycleCheck(\'' + sid + '\',' + ci + ',false)"></span>';
+      html+='<span style="color:#999;">—</span>';
     }
-  }
-  if (type === 'rating') {
-    var rating = parseInt(val) || 0;
-    var html = '<div class="stars-container">';
-    for (var i = 1; i <= 5; i++) {
-      html += '<span class="star' + (i <= rating ? ' filled' : '') + '" onclick="setRating(\'' + sid + '\',' + ci + ',' + i + ')">★</span>';
+    html+='</td>';
+
+    // One cell per tour column
+    for(var c=0;c<displayCols;c++){
+      html+='<td style="text-align:center;font-family:Bangers;font-size:0.95rem;">';
+      if(c<laps.length){
+        var prev=c>0?laps[c-1]:0;
+        var split=laps[c]-prev;
+        html+='<div style="line-height:1.3;">'+formatTime(laps[c])+'</div>';
+        html+='<div style="font-size:0.75rem;color:#666;font-family:sans-serif;">('+formatTime(split)+')</div>';
+      } else {
+        html+='<span style="color:#ccc;">—</span>';
+      }
+      html+='</td>';
     }
-    html += '</div>';
-    return html;
-  }
-  if (type === 'badge') {
-    var bval = parseInt(val) || 0;
-    var html = '<div class="badge-container">';
-    html += '<button class="badge-btn positive" onclick="addBadge(\'' + sid + '\',' + ci + ',1)">+</button>';
-    if (bval !== 0) {
-      html += '<span class="badge-count ' + (bval > 0 ? 'pos' : 'neg') + '">' + (bval > 0 ? '+' : '') + bval + '</span>';
-    }
-    html += '<button class="badge-btn negative" onclick="addBadge(\'' + sid + '\',' + ci + ',-1)">−</button>';
-    html += '</div>';
-    return html;
-  }
-  if (type === 'counter') {
-    var cval = parseInt(val) || 0;
-    var html = '<div class="counter-container">';
-    html += '<button class="counter-btn" onclick="addCounter(\'' + sid + '\',' + ci + ',-1)">−</button>';
-    html += '<span class="counter-num">' + cval + '</span>';
-    html += '<button class="counter-btn" onclick="addCounter(\'' + sid + '\',' + ci + ',1)">+</button>';
-    html += '</div>';
-    return html;
-  }
-  return '<span class="grade-empty"></span>';
-}
-
-// ─── Cell interactions ───
-function getEvalPath(sid, ci) {
-  var evals = getEvals();
-  if (!evals[_groupId]) evals[_groupId] = {};
-  if (!evals[_groupId][_sessionDate]) evals[_groupId][_sessionDate] = {};
-  if (!evals[_groupId][_sessionDate][sid]) evals[_groupId][_sessionDate][sid] = {};
-  return evals;
-}
-
-function cycleGrade(sid, ci) {
-  var evals = getEvalPath(sid, ci);
-  var cur = evals[_groupId][_sessionDate][sid]['c' + ci] || '';
-  var idx = SCALE.indexOf(cur);
-  var next = idx < 0 ? SCALE[0] : (idx + 1 >= SCALE.length ? '' : SCALE[idx + 1]);
-  if (next) evals[_groupId][_sessionDate][sid]['c' + ci] = next;
-  else delete evals[_groupId][_sessionDate][sid]['c' + ci];
-  setEvals(evals);
-  renderGradeGrid();
-}
-
-function cycleCheck(sid, ci, isPresence) {
-  var evals = getEvalPath(sid, ci);
-  var cur = evals[_groupId][_sessionDate][sid]['c' + ci] || '';
-  if (isPresence) {
-    var states = ['present', 'absent', 'late', ''];
-    var idx = states.indexOf(cur);
-    var next = states[(idx + 1) % states.length];
-    if (next) evals[_groupId][_sessionDate][sid]['c' + ci] = next;
-    else delete evals[_groupId][_sessionDate][sid]['c' + ci];
-  } else {
-    var states2 = ['oui', 'non', ''];
-    var idx2 = states2.indexOf(cur);
-    var next2 = states2[(idx2 + 1) % states2.length];
-    if (next2) evals[_groupId][_sessionDate][sid]['c' + ci] = next2;
-    else delete evals[_groupId][_sessionDate][sid]['c' + ci];
-  }
-  setEvals(evals);
-  renderGradeGrid();
-}
-
-function setRating(sid, ci, stars) {
-  var evals = getEvalPath(sid, ci);
-  var cur = parseInt(evals[_groupId][_sessionDate][sid]['c' + ci]) || 0;
-  if (cur === stars) {
-    delete evals[_groupId][_sessionDate][sid]['c' + ci];
-  } else {
-    evals[_groupId][_sessionDate][sid]['c' + ci] = String(stars);
-  }
-  setEvals(evals);
-  renderGradeGrid();
-}
-
-function addBadge(sid, ci, delta) {
-  var evals = getEvalPath(sid, ci);
-  var cur = parseInt(evals[_groupId][_sessionDate][sid]['c' + ci]) || 0;
-  var next = cur + delta;
-  if (next === 0) delete evals[_groupId][_sessionDate][sid]['c' + ci];
-  else evals[_groupId][_sessionDate][sid]['c' + ci] = String(next);
-  setEvals(evals);
-  renderGradeGrid();
-}
-
-function addCounter(sid, ci, delta) {
-  var evals = getEvalPath(sid, ci);
-  var cur = parseInt(evals[_groupId][_sessionDate][sid]['c' + ci]) || 0;
-  var next = Math.max(0, cur + delta);
-  if (next === 0) delete evals[_groupId][_sessionDate][sid]['c' + ci];
-  else evals[_groupId][_sessionDate][sid]['c' + ci] = String(next);
-  setEvals(evals);
-  renderGradeGrid();
-}
-
-// Sync scroll
-function syncScroll() {
-  var studentList = document.getElementById('student-list');
-  var gradeGrid = document.getElementById('grade-grid');
-  if (!studentList || !gradeGrid) return;
-  gradeGrid.onscroll = function() { studentList.scrollTop = gradeGrid.scrollTop; };
-  studentList.onscroll = function() { gradeGrid.scrollTop = studentList.scrollTop; };
-}
-
-// ═══════════════════════════════════
-// DATE SELECT
-// ═══════════════════════════════════
-function renderDateSelect() {
-  var sel = document.getElementById('date-select');
-  if (!sel) return;
-  var evals = getEvals();
-  var groupEvals = _groupId ? (evals[_groupId] || {}) : {};
-  var dates = Object.keys(groupEvals).sort().reverse();
-  var today = todayStr();
-  sel.innerHTML = '<option value="' + today + '">' + t('today') + '</option>';
-  dates.forEach(function(d) {
-    if (d === today) return;
-    sel.innerHTML += '<option value="' + d + '"' + (d === _sessionDate ? ' selected' : '') + '>' + d + '</option>';
+    html+='</tr>';
   });
+  html+='</tbody></table>';
+  area.innerHTML=html;
+  updateAllChronoDisplays();
 }
 
-function onDateChange() {
-  _sessionDate = document.getElementById('date-select').value || todayStr();
-  renderGradeGrid();
-  renderStudentList();
+// Global chrono for all students
+function chronoStartAll(){
+  if(!_chronos['_global'])_chronos['_global']={running:false,elapsed:0};
+  _chronos['_global'].running=true;
+  _chronos['_global'].startTime=Date.now();
+  startChronoTick();
+  renderContent();
+}
+
+function chronoStopAll(){
+  var gc=_chronos['_global'];
+  if(gc&&gc.running){gc.elapsed+=Date.now()-gc.startTime;gc.running=false;}
+  // Save final time for all students
+  var group=getGroups().find(function(g){return g.id===_groupId;});
+  if(group&&gc){
+    group.students.forEach(function(s){setVal(s.id,'chrono_time',gc.elapsed);});
+  }
+  renderContent();
+}
+
+function chronoResetAll(){
+  _chronos['_global']={running:false,elapsed:0};
+  var group=getGroups().find(function(g){return g.id===_groupId;});
+  if(group){
+    group.students.forEach(function(s){
+      _chronos['laps_'+s.id]=[];
+      setVal(s.id,'chrono_time',0);
+      setVal(s.id,'chrono_laps',[]);
+    });
+  }
+  renderContent();
+}
+
+function chronoLapStudent(sid){
+  var gc=_chronos['_global'];
+  if(!gc||!gc.running)return;
+  var currentTime=gc.elapsed+(Date.now()-gc.startTime);
+  if(!_chronos['laps_'+sid])_chronos['laps_'+sid]=[];
+  _chronos['laps_'+sid].push(currentTime);
+  setVal(sid,'chrono_laps',_chronos['laps_'+sid].map(formatTime));
+  renderContent();
+}
+
+function formatTime(ms){var s=Math.floor(ms/1000),m=Math.floor(s/60);s%=60;var t=Math.floor((ms%1000)/100);return(m<10?'0':'')+m+':'+(s<10?'0':'')+s+'.'+t;}
+function stopAllChronos(){var gc=_chronos['_global'];if(gc&&gc.running){gc.elapsed+=Date.now()-gc.startTime;gc.running=false;}}
+var _chronoTick=null;
+function startChronoTick(){if(_chronoTick)return;_chronoTick=setInterval(updateAllChronoDisplays,100);}
+function updateAllChronoDisplays(){
+  var gc=_chronos['_global'];
+  if(gc&&gc.running){
+    var el=document.getElementById('chrono-_global');
+    if(el)el.textContent=formatTime(gc.elapsed+(Date.now()-gc.startTime));
+  } else if(_chronoTick){clearInterval(_chronoTick);_chronoTick=null;}
 }
 
 // ═══════════════════════════════════
-// NAME ORDER
+// MODE 4: COMPTEUR
 // ═══════════════════════════════════
-function renderNameOrderBtn() {
-  var btn = document.getElementById('name-order-btn');
-  if (btn) btn.textContent = _nameOrder === 'pn' ? t('namePN') : t('nameNP');
+function renderCounterTable(area){
+  var group=getGroups().find(function(g){return g.id===_groupId;});
+  if(!group){area.innerHTML='';return;}
+  var color=group.color||'cyan';
+
+  var html='<table class="eval-table"><thead><tr><th>ÉLÈVE</th>';
+  COUNTER_ITEMS.forEach(function(c){html+='<th>'+c.label+'</th>';});
+  html+='</tr></thead><tbody>';
+
+  group.students.forEach(function(s,i){
+    html+='<tr class="row-'+color+'">';
+    html+='<td><div class="sid-cell"><span class="sid-num">'+(i+1)+'</span><span class="sid-name">'+esc(s.name)+'</span></div></td>';
+    COUNTER_ITEMS.forEach(function(c){
+      var v=getVal(s.id,'num_'+c.key)||0;
+      html+='<td><div class="counter-cell">';
+      html+='<button class="ctr-btn ctr-minus" onclick="addNum(\''+s.id+'\',\''+c.key+'\',-1)">−</button>';
+      html+='<span class="ctr-val">'+v+'</span>';
+      html+='<button class="ctr-btn ctr-plus" onclick="addNum(\''+s.id+'\',\''+c.key+'\',1)">+</button>';
+      html+='</div></td>';
+    });
+    html+='</tr>';
+  });
+  html+='</tbody></table>';
+  area.innerHTML=html;
 }
-function toggleNameOrder() {
-  _nameOrder = _nameOrder === 'pn' ? 'np' : 'pn';
-  localStorage.setItem('evaleps-nameorder', _nameOrder);
-  renderStudentList();
-  renderNameOrderBtn();
+function addNum(sid,key,amount){var v=getVal(sid,'num_'+key)||0;setVal(sid,'num_'+key,Math.max(0,v+amount));renderContent();}
+
+// ═══════════════════════════════════
+// MODE 5: RÉSUMÉ
+// ═══════════════════════════════════
+function renderResume(area){
+  var group=getGroups().find(function(g){return g.id===_groupId;});
+  if(!group){area.innerHTML='';return;}
+
+  var dates=getAvailableDates().sort().reverse();
+
+  var html='<div class="resume-wrap">';
+
+  // Dates
+  html+='<div class="resume-section"><h3>📅 JOURNÉES ('+dates.length+')</h3><ul class="resume-list">';
+  dates.forEach(function(d){
+    var lbl=d===todayStr()?"Aujourd'hui — "+d:d;
+    var cur=d===_sessionDate;
+    html+='<li'+(cur?' style="font-weight:bold;background:rgba(0,212,255,0.1);"':'')+'>';
+    html+='<button class="tbtn'+(cur?' tbtn-p':' tbtn-off')+'" onclick="_sessionDate=\''+d+'\';document.getElementById(\'date-select\').value=\''+d+'\';renderContent();" style="font-size:0.8rem;padding:3px 10px;">'+lbl+'</button>';
+    html+='</li>';
+  });
+  html+='</ul></div>';
+
+  // Summary for current date
+  html+='<div class="resume-section"><h3>📋 RÉSUMÉ — '+(_sessionDate===todayStr()?"AUJOURD'HUI":_sessionDate)+'</h3>';
+  var pres=0,abs=0,ret=0;
+  group.students.forEach(function(s){var v=getVal(s.id,'check_presence')||'';if(v==='present')pres++;else if(v==='absent')abs++;else if(v==='retard')ret++;});
+  html+='<p style="margin:6px 0;">☑️ <strong>Présences:</strong> <span class="resume-badge" style="background:var(--green);">'+pres+' P</span> <span class="resume-badge" style="background:var(--red);color:#fff;">'+abs+' A</span> <span class="resume-badge" style="background:var(--orange);">'+ret+' R</span> / '+group.students.length+'</p>';
+  html+='</div>';
+
+  // Per student detail
+  html+='<div class="resume-section"><h3>👥 DÉTAIL PAR ÉLÈVE</h3><ul class="resume-list">';
+  group.students.forEach(function(s,i){
+    var p=getVal(s.id,'check_presence')||'';
+    var details=[];
+    if(p){var bg=p==='present'?'var(--green)':p==='absent'?'var(--red)':'var(--orange)';var col=p==='absent'?'#fff':'#000';details.push('<span class="resume-badge" style="background:'+bg+';color:'+col+';">'+p.charAt(0).toUpperCase()+'</span>');}
+
+    // Collect all eval/obs data
+    var allItems=getActiveTodayItems().filter(function(x){return x.on;});
+    allItems.forEach(function(item){
+      if(item.type==='stars'){var v=getVal(s.id,'eval_'+item.key);if(v)details.push(item.label+':'+v+'★');}
+      if(item.type==='badge'){var pos=getVal(s.id,'obs_'+item.key+'_pos')||0;var neg=getVal(s.id,'obs_'+item.key+'_neg')||0;if(pos||neg)details.push(item.label+':<span style="color:var(--green-dk);">+'+pos+'</span>/<span style="color:var(--red);">−'+neg+'</span>');}
+    });
+
+    // Show selected PFEQ criteria in resume
+    getPfeqSelected().forEach(function(key){
+      var v=getVal(s.id,'pfeq_'+key);
+      if(v) details.push(key.replace(/_/g,' ')+':'+v);
+    });
+
+    html+='<li><strong>'+(i+1)+'. '+esc(s.name)+'</strong>';
+    if(details.length)html+=' — '+details.join(' ');
+    html+='</li>';
+  });
+  html+='</ul></div></div>';
+  area.innerHTML=html;
 }
 
 // ═══════════════════════════════════
 // VOICE NOTES
 // ═══════════════════════════════════
-var _currentRecording = null;
-var _mediaRecorder = null;
+function toggleVoiceNote(sid){
+  if(_voiceRecorders[sid]){_voiceRecorders[sid].stop();return;}
+  var voice=getVoice();
+  var existing=voice[_groupId]&&voice[_groupId][_sessionDate]&&voice[_groupId][_sessionDate][sid];
+  if(existing){new Audio(existing).play();return;}
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast('Micro non disponible');return;}
+  navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
+    var rec=new MediaRecorder(stream),chunks=[];
+    rec.ondataavailable=function(e){chunks.push(e.data);};
+    rec.onstop=function(){stream.getTracks().forEach(function(t){t.stop();});var blob=new Blob(chunks,{type:'audio/webm'});var reader=new FileReader();reader.onloadend=function(){var v=getVoice();if(!v[_groupId])v[_groupId]={};if(!v[_groupId][_sessionDate])v[_groupId][_sessionDate]={};v[_groupId][_sessionDate][sid]=reader.result;setVoice(v);delete _voiceRecorders[sid];toast('Note vocale sauvegardée!');renderContent();};reader.readAsDataURL(blob);};
+    rec.start();_voiceRecorders[sid]=rec;
+    setTimeout(function(){if(_voiceRecorders[sid])_voiceRecorders[sid].stop();},10000);
+    toast('Enregistrement... (10s)');
+  }).catch(function(){toast('Accès micro refusé');});
+}
 
-function toggleVoiceNote(sid) {
-  var voiceNotes = getVoiceNotes();
-  var groupVoice = (voiceNotes[_groupId] && voiceNotes[_groupId][_sessionDate]) || {};
+// ═══════════════════════════════════
+// PHOTO
+// ═══════════════════════════════════
+function addPhoto(sid){
+  var input=document.createElement('input');input.type='file';input.accept='image/*';input.capture='environment';
+  input.onchange=function(){var file=input.files[0];if(!file)return;var reader=new FileReader();reader.onload=function(e){var img=new Image();img.onload=function(){var c=document.createElement('canvas'),sz=120;c.width=sz;c.height=sz;var ctx=c.getContext('2d');var mn=Math.min(img.width,img.height);ctx.drawImage(img,(img.width-mn)/2,(img.height-mn)/2,mn,mn,0,0,sz,sz);var photos=getPhotos();photos[sid]=c.toDataURL('image/jpeg',0.7);setPhotos(photos);renderContent();};img.src=e.target.result;};reader.readAsDataURL(file);};
+  input.click();
+}
 
-  // If already has a note, play it or delete
-  if (groupVoice[sid]) {
-    if (confirm('Écouter la note vocale ?\n(Annuler pour supprimer)')) {
-      var audio = new Audio(groupVoice[sid]);
-      audio.play();
+// ═══════════════════════════════════
+// ZOOM
+// ═══════════════════════════════════
+function applyZoom(){document.documentElement.style.fontSize=(_zoomLevel/100*15)+'px';var el=document.getElementById('zoom-level');if(el)el.textContent=_zoomLevel+'%';}
+function zoomIn(){_zoomLevel=Math.min(200,_zoomLevel+10);localStorage.setItem('carneteps-zoom',_zoomLevel);applyZoom();}
+function zoomOut(){_zoomLevel=Math.max(60,_zoomLevel-10);localStorage.setItem('carneteps-zoom',_zoomLevel);applyZoom();}
+
+// ═══════════════════════════════════
+// CUSTOM CRITERIA MANAGER
+// ═══════════════════════════════════
+function openCriteriaManager(){renderPfeqSections();renderCriteriaList();renderQuickCriteria();document.getElementById('criteria-modal').classList.remove('hidden');document.getElementById('new-criterion-input').focus();}
+function closeCriteriaManager(){document.getElementById('criteria-modal').classList.add('hidden');renderContent();}
+
+function renderPfeqSections(){
+  var container=document.getElementById('pfeq-sections');if(!container)return;
+  var selected=getPfeqSelected();
+  var html='';
+  PFEQ_COMPETENCES.forEach(function(comp){
+    var colors={agir:'#2979FF',interagir:'#FF9100',sante:'#E91E63'};
+    var color=colors[comp.key]||'#333';
+    html+='<div class="pfeq-section" style="border-left:4px solid '+color+';margin-bottom:12px;padding:10px 14px;background:rgba(255,255,255,0.5);border-radius:8px;">';
+    html+='<div class="pfeq-section-title" style="font-family:Bangers;font-size:1.2rem;color:'+color+';letter-spacing:1px;margin-bottom:4px;">'+comp.label+'</div>';
+    html+='<div style="font-size:0.8rem;color:#666;margin-bottom:8px;">'+esc(comp.desc)+'</div>';
+    comp.items.forEach(function(item){
+      var checked=selected.indexOf(item.key)>=0;
+      html+='<label class="pfeq-check-label" style="display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;font-size:0.92rem;">';
+      html+='<input type="checkbox" class="pfeq-check" data-key="'+item.key+'" '+(checked?'checked':'')+' onchange="togglePfeqItem(\''+item.key+'\')" />';
+      html+='<span>'+esc(item.label)+'</span>';
+      html+='</label>';
+    });
+    html+='</div>';
+  });
+  container.innerHTML=html;
+}
+
+function togglePfeqItem(key){
+  var selected=getPfeqSelected();
+  var idx=selected.indexOf(key);
+  if(idx>=0){selected.splice(idx,1);}else{selected.push(key);}
+  setPfeqSelected(selected);
+}
+
+function addCustomCriterion(){
+  var input=document.getElementById('new-criterion-input');
+  var name=input.value.trim();if(!name)return;
+  var type=document.getElementById('new-criterion-type').value;
+  var criteria=getCustomCriteria();
+  criteria.push({key:'c'+Date.now(),label:name,type:type});
+  setCustomCriteria(criteria);
+  input.value='';renderCriteriaList();toast('"'+name+'" ajouté!');
+}
+
+function addQuickCriterion(name){
+  var criteria=getCustomCriteria();
+  if(criteria.find(function(c){return c.label===name;})){toast('Déjà ajouté!');return;}
+  criteria.push({key:'c'+Date.now(),label:name,type:'stars'});
+  setCustomCriteria(criteria);renderCriteriaList();renderQuickCriteria();toast('"'+name+'" ajouté!');
+}
+
+function removeCustomCriterion(idx){var c=getCustomCriteria();c.splice(idx,1);setCustomCriteria(c);renderCriteriaList();}
+
+function renderCriteriaList(){
+  var container=document.getElementById('custom-criteria-list');if(!container)return;
+  var criteria=getCustomCriteria();
+  if(!criteria.length){container.innerHTML='<div class="no-crit-msg">Aucun critère. Ajoute-en!</div>';return;}
+  var html='';
+  var typeLabels={stars:'⭐',check:'☑️',badge:'👀 +/-',grade:'🔤 A-E'};
+  criteria.forEach(function(c,i){
+    html+='<div class="custom-crit-item"><span class="cn">'+(typeLabels[c.type]||'⭐')+' '+esc(c.label)+'</span><span class="ct">('+c.type+')</span>';
+    html+='<button class="cx" onclick="removeCustomCriterion('+i+')">✕</button></div>';
+  });
+  container.innerHTML=html;
+}
+
+function renderQuickCriteria(){
+  var container=document.getElementById('quick-criteria');if(!container)return;
+  var existing=getCustomCriteria().map(function(c){return c.label;});
+  var html='';
+  QUICK_CRITERIA.forEach(function(name){
+    if(existing.indexOf(name)>=0)return;
+    html+='<button class="qc-btn" onclick="addQuickCriterion(\''+name+'\')">+ '+name+'</button>';
+  });
+  container.innerHTML=html;
+}
+
+// ═══════════════════════════════════
+// GROUP MANAGEMENT
+// ═══════════════════════════════════
+function createGroup(){_editingGroupId=null;document.getElementById('group-modal-title').textContent='NOUVEAU GROUPE';document.getElementById('group-name-input').value='';document.getElementById('group-students-input').value='';document.getElementById('delete-group-btn').style.display='none';pickColor('cyan');document.getElementById('group-modal').classList.remove('hidden');}
+function editGroup(id){var g=getGroups().find(function(g){return g.id===id;});if(!g)return;_editingGroupId=g.id;document.getElementById('group-modal-title').textContent='MODIFIER';document.getElementById('group-name-input').value=g.name;document.getElementById('group-students-input').value=g.students.map(function(s){return s.name;}).join('\n');document.getElementById('delete-group-btn').style.display='';pickColor(g.color||'cyan');document.getElementById('group-modal').classList.remove('hidden');}
+function closeGroupModal(){document.getElementById('group-modal').classList.add('hidden');}
+function pickColor(c){_selectedColor=c;document.querySelectorAll('.color-swatch').forEach(function(s){s.classList.toggle('active',s.getAttribute('data-color')===c);});}
+
+function saveGroup(){
+  var name=document.getElementById('group-name-input').value.trim();if(!name){toast('Nom requis!');return;}
+  var lines=document.getElementById('group-students-input').value.split('\n').map(function(l){return l.trim();}).filter(function(l){return l.length>0;});
+  var groups=getGroups();
+  if(_editingGroupId){
+    var idx=groups.findIndex(function(g){return g.id===_editingGroupId;});
+    if(idx>=0){var ex=groups[idx].students;groups[idx].name=name;groups[idx].color=_selectedColor;groups[idx].students=lines.map(function(n){var f=ex.find(function(s){return s.name===n;});return f||{id:'st-'+Date.now()+'-'+Math.random().toString(36).substr(2,5),name:n};});}
+  } else {
+    var ng={id:'grp-'+Date.now(),name:name,color:_selectedColor,students:lines.map(function(n){return{id:'st-'+Date.now()+'-'+Math.random().toString(36).substr(2,5),name:n};})};
+    groups.push(ng);_groupId=ng.id;localStorage.setItem('carneteps-lastgroup',_groupId);
+  }
+  setGroups(groups);closeGroupModal();toast('Sauvegardé!');renderAll();
+}
+
+function deleteCurrentGroup(){if(!confirm('Supprimer ce groupe?'))return;var groups=getGroups().filter(function(g){return g.id!==_editingGroupId;});setGroups(groups);_groupId=groups.length?groups[0].id:null;localStorage.setItem('carneteps-lastgroup',_groupId||'');closeGroupModal();toast('Supprimé!');renderAll();}
+
+// ═══════════════════════════════════
+// EXPORT PDF
+// ═══════════════════════════════════
+function exportPDF(){
+  var group=getGroups().find(function(g){return g.id===_groupId;});if(!group)return;
+  var title=document.getElementById('course-title').textContent||'Carnet EPS';
+  var css='body{font-family:Arial;margin:20px;color:#1a1a1a;}h1{font-size:24px;text-align:center;margin-bottom:4px;}h2{font-size:14px;text-align:center;color:#666;margin-bottom:10px;}h3{font-size:13px;margin:12px 0 4px;border-bottom:2px solid #00D4FF;padding-bottom:3px;}table{width:100%;border-collapse:collapse;margin-bottom:10px;}th,td{border:1px solid #333;padding:4px 6px;text-align:center;font-size:11px;}th{background:#00D4FF;font-weight:bold;}tr:nth-child(even){background:#f5f5f5;}.footer{text-align:center;margin-top:16px;font-size:10px;color:#888;}';
+
+  var html='<html><head><style>'+css+'</style></head><body>';
+  html+='<h1>'+esc(title)+'</h1><h2>'+esc(group.name)+' — '+_sessionDate+'</h2>';
+
+  // Présences
+  html+='<h3>☑️ Présences</h3><table><tr><th>#</th><th>Élève</th><th>Présence</th><th>Tenue</th><th>Matériel</th></tr>';
+  group.students.forEach(function(s,i){
+    html+='<tr><td>'+(i+1)+'</td><td style="text-align:left;">'+esc(s.name)+'</td>';
+    html+='<td>'+(getVal(s.id,'check_presence')||'—')+'</td>';
+    html+='<td>'+(getVal(s.id,'check_tenue')||'—')+'</td>';
+    html+='<td>'+(getVal(s.id,'check_materiel')||'—')+'</td></tr>';
+  });
+  html+='</table>';
+
+  // Evaluations
+  var allEval=getAllEvalCriteria();
+  if(allEval.length){
+    html+='<h3>⭐ Évaluations</h3><table><tr><th>#</th><th>Élève</th>';
+    allEval.forEach(function(c){html+='<th>'+c.label+'</th>';});
+    html+='</tr>';
+    group.students.forEach(function(s,i){
+      html+='<tr><td>'+(i+1)+'</td><td style="text-align:left;">'+esc(s.name)+'</td>';
+      allEval.forEach(function(c){
+        var v=getVal(s.id,c.key)||'—';
+        html+='<td>'+v+'</td>';
+      });
+      html+='</tr>';
+    });
+    html+='</table>';
+  }
+
+  html+='<div class="footer">zonetotalsport.ca — Carnet EPS</div></body></html>';
+  var win=window.open('','_blank');win.document.write(html);win.document.close();setTimeout(function(){win.print();},500);toast('PDF prêt!');
+}
+
+// ═══════════════════════════════════
+// EXPORT CSV
+// ═══════════════════════════════════
+function exportCSV(){
+  var group=getGroups().find(function(g){return g.id===_groupId;});if(!group)return;
+  var allEval=getAllEvalCriteria();
+  var headers=['#','Élève','Présence','Tenue','Matériel'];
+  allEval.forEach(function(c){headers.push(c.label);});
+  headers.push('Comport+','Comport−');
+  COUNTER_ITEMS.forEach(function(c){headers.push(c.label);});
+  headers.push('Chrono');
+
+  var rows=[headers.join(',')];
+  group.students.forEach(function(s,i){
+    var row=[(i+1),'"'+s.name+'"',getVal(s.id,'check_presence')||'',getVal(s.id,'check_tenue')||'',getVal(s.id,'check_materiel')||''];
+    allEval.forEach(function(c){row.push(getVal(s.id,c.key)||'');});
+    row.push(getVal(s.id,'obs_comportement_pos')||0,getVal(s.id,'obs_comportement_neg')||0);
+    COUNTER_ITEMS.forEach(function(c){row.push(getVal(s.id,'num_'+c.key)||0);});
+    row.push(formatTime(getVal(s.id,'chrono_time')||0));
+    rows.push(row.join(','));
+  });
+
+  var blob=new Blob(['\ufeff'+rows.join('\n')],{type:'text/csv;charset=utf-8;'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');a.href=url;a.download='carnet-eps-'+group.name.replace(/\s+/g,'-')+'-'+_sessionDate+'.csv';a.click();URL.revokeObjectURL(url);toast('CSV exporté!');
+}
+
+// ═══════════════════════════════════
+// TOAST
+// ═══════════════════════════════════
+function toast(msg){var el=document.getElementById('toast');el.textContent=msg;el.classList.remove('hidden');clearTimeout(el._timer);el._timer=setTimeout(function(){el.classList.add('hidden');},2500);}
+
+// ═══════════════════════════════════════════════════════
+// KILLER FEATURE 1: COLOR EVALUATION SYSTEM
+// ═══════════════════════════════════════════════════════
+var COLOR_EVAL_COLORS = ['green','yellow','red','purple'];
+var COLOR_EVAL_HEX = {green:'#4CAF50',yellow:'#FFD600',red:'#F44336',purple:'#9C27B0'};
+
+function getColorMeanings(){
+  try{return JSON.parse(localStorage.getItem('carneteps-colormeanings')||'null')||{green:'Excellent',yellow:'En progrès',red:'Difficulté',purple:'À observer'};}
+  catch(e){return{green:'Excellent',yellow:'En progrès',red:'Difficulté',purple:'À observer'};}
+}
+function setColorMeanings(m){localStorage.setItem('carneteps-colormeanings',JSON.stringify(m));}
+
+function getColorEval(sid){return getVal(sid,'color_eval')||'';}
+function setColorEval(sid,color){
+  var cur=getVal(sid,'color_eval')||'';
+  setVal(sid,'color_eval',cur===color?'':color);
+  renderContent();
+}
+
+function renderColorEvalButtons(sid){
+  var cur=getColorEval(sid);
+  var meanings=getColorMeanings();
+  var html='<div class="color-eval-row">';
+  COLOR_EVAL_COLORS.forEach(function(c){
+    html+='<button class="color-eval-btn ce-'+c+(cur===c?' active':'')+'" onclick="setColorEval(\''+sid+'\',\''+c+'\')" title="'+esc(meanings[c])+'"></button>';
+  });
+  html+='</div>';
+  return html;
+}
+
+function openColorSettings(){
+  var m=getColorMeanings();
+  document.getElementById('cm-green').value=m.green;
+  document.getElementById('cm-yellow').value=m.yellow;
+  document.getElementById('cm-red').value=m.red;
+  document.getElementById('cm-purple').value=m.purple;
+  document.getElementById('color-settings-modal').classList.remove('hidden');
+}
+function closeColorSettings(){document.getElementById('color-settings-modal').classList.add('hidden');}
+function saveColorMeanings(){
+  var m={
+    green:document.getElementById('cm-green').value.trim()||'Excellent',
+    yellow:document.getElementById('cm-yellow').value.trim()||'En progrès',
+    red:document.getElementById('cm-red').value.trim()||'Difficulté',
+    purple:document.getElementById('cm-purple').value.trim()||'À observer'
+  };
+  setColorMeanings(m);
+  closeColorSettings();
+  toast('Couleurs sauvegardées!');
+  renderContent();
+}
+
+// ═══════════════════════════════════════════════════════
+// KILLER FEATURE 2: RANDOM STUDENT PICKER
+// ═══════════════════════════════════════════════════════
+var _pickerTimer=null;
+function openPicker(){
+  var group=getGroups().find(function(g){return g.id===_groupId;});
+  if(!group||!group.students.length){toast('Aucun élève!');return;}
+
+  var overlay=document.getElementById('picker-overlay');
+  var nameEl=document.getElementById('picker-name');
+  overlay.classList.remove('hidden');
+  overlay.classList.add('picker-spinning');
+
+  var students=group.students.slice();
+  var count=0;
+  var total=20+Math.floor(Math.random()*10);
+  var speed=50;
+
+  clearInterval(_pickerTimer);
+  _pickerTimer=setInterval(function(){
+    nameEl.textContent=students[Math.floor(Math.random()*students.length)].name;
+    count++;
+    if(count>=total){
+      clearInterval(_pickerTimer);
+      var winner=students[Math.floor(Math.random()*students.length)];
+      nameEl.textContent=winner.name;
+      overlay.classList.remove('picker-spinning');
+    }
+  },speed);
+}
+function closePicker(){
+  clearInterval(_pickerTimer);
+  document.getElementById('picker-overlay').classList.add('hidden');
+}
+
+// ═══════════════════════════════════════════════════════
+// KILLER FEATURE 3: TEAM GENERATOR WITH CONFLICTS
+// ═══════════════════════════════════════════════════════
+var _teamCount=2;
+function getConflicts(){try{return JSON.parse(localStorage.getItem('carneteps-conflicts-'+_groupId)||'[]');}catch(e){return[];}}
+function setConflicts(c){localStorage.setItem('carneteps-conflicts-'+_groupId,JSON.stringify(c));}
+
+function openTeamModal(){
+  var group=getGroups().find(function(g){return g.id===_groupId;});
+  if(!group){toast('Aucun groupe!');return;}
+  _teamCount=2;
+  document.getElementById('team-count').textContent=_teamCount;
+  populateConflictSelects();
+  renderConflictList();
+  document.getElementById('team-results').innerHTML='';
+  document.getElementById('team-modal').classList.remove('hidden');
+}
+function closeTeamModal(){document.getElementById('team-modal').classList.add('hidden');}
+
+function changeTeamCount(d){
+  _teamCount=Math.max(2,Math.min(12,_teamCount+d));
+  document.getElementById('team-count').textContent=_teamCount;
+}
+
+function populateConflictSelects(){
+  var group=getGroups().find(function(g){return g.id===_groupId;});
+  if(!group)return;
+  var html='<option value="">— Choisir —</option>';
+  group.students.forEach(function(s){html+='<option value="'+s.id+'">'+esc(s.name)+'</option>';});
+  document.getElementById('conflict-a').innerHTML=html;
+  document.getElementById('conflict-b').innerHTML=html;
+}
+
+function addConflict(){
+  var a=document.getElementById('conflict-a').value;
+  var b=document.getElementById('conflict-b').value;
+  if(!a||!b||a===b){toast('Choisis 2 élèves différents');return;}
+  var conflicts=getConflicts();
+  if(conflicts.find(function(c){return(c[0]===a&&c[1]===b)||(c[0]===b&&c[1]===a);})){toast('Déjà ajouté!');return;}
+  conflicts.push([a,b]);
+  setConflicts(conflicts);
+  renderConflictList();
+}
+
+function removeConflict(idx){var c=getConflicts();c.splice(idx,1);setConflicts(c);renderConflictList();}
+
+function renderConflictList(){
+  var container=document.getElementById('conflict-list');
+  var conflicts=getConflicts();
+  var group=getGroups().find(function(g){return g.id===_groupId;});
+  if(!conflicts.length){container.innerHTML='<div style="font-size:0.85rem;color:#999;">Aucun conflit défini</div>';return;}
+  var html='';
+  conflicts.forEach(function(c,i){
+    var nameA='?',nameB='?';
+    if(group){
+      var sa=group.students.find(function(s){return s.id===c[0];});
+      var sb=group.students.find(function(s){return s.id===c[1];});
+      if(sa)nameA=sa.name;if(sb)nameB=sb.name;
+    }
+    html+='<span class="conflict-tag">'+esc(nameA)+' ≠ '+esc(nameB)+' <button onclick="removeConflict('+i+')">✕</button></span>';
+  });
+  container.innerHTML=html;
+}
+
+function generateTeams(){
+  var group=getGroups().find(function(g){return g.id===_groupId;});
+  if(!group)return;
+  var conflicts=getConflicts();
+  var students=group.students.slice();
+
+  // Shuffle
+  for(var i=students.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=students[i];students[i]=students[j];students[j]=t;}
+
+  var teams=[];
+  for(var i=0;i<_teamCount;i++)teams.push([]);
+
+  // Distribute with conflict avoidance (best effort)
+  students.forEach(function(s){
+    var bestTeam=0,bestSize=Infinity;
+    for(var t=0;t<_teamCount;t++){
+      var hasConflict=false;
+      teams[t].forEach(function(member){
+        conflicts.forEach(function(c){
+          if((c[0]===s.id&&c[1]===member.id)||(c[0]===member.id&&c[1]===s.id))hasConflict=true;
+        });
+      });
+      if(!hasConflict&&teams[t].length<bestSize){bestSize=teams[t].length;bestTeam=t;}
+    }
+    teams[bestTeam].push(s);
+  });
+
+  // Render results
+  var teamColors=['var(--cyan)','var(--green)','var(--orange)','var(--yellow)','var(--pink)','var(--blue)','#9C27B0','#795548','#607D8B','#E91E63','#00BCD4','#8BC34A'];
+  var html='';
+  teams.forEach(function(team,i){
+    html+='<div class="team-result-card" style="border-left:5px solid '+teamColors[i%teamColors.length]+';">';
+    html+='<h4>ÉQUIPE '+(i+1)+' ('+team.length+')</h4><ul>';
+    team.forEach(function(s){html+='<li>'+esc(s.name)+'</li>';});
+    html+='</ul></div>';
+  });
+  document.getElementById('team-results').innerHTML=html;
+}
+
+// ═══════════════════════════════════════════════════════
+// KILLER FEATURE 4: GAMIFIED FEEDBACK
+// ═══════════════════════════════════════════════════════
+function showFelicitations(){
+  var overlay=document.getElementById('felicitations-overlay');
+  overlay.classList.remove('hidden');
+  launchConfetti();
+  setTimeout(function(){overlay.classList.add('hidden');},3000);
+}
+
+function launchConfetti(){
+  var container=document.getElementById('confetti-container');
+  container.innerHTML='';
+  var colors=['#FF4081','#FFD600','#00E676','#2979FF','#FF9100','#00D4FF','#9C27B0','#F44336'];
+  for(var i=0;i<60;i++){
+    var c=document.createElement('div');
+    c.className='confetti';
+    c.style.left=Math.random()*100+'%';
+    c.style.background=colors[Math.floor(Math.random()*colors.length)];
+    c.style.width=(6+Math.random()*8)+'px';
+    c.style.height=(6+Math.random()*8)+'px';
+    c.style.animationDuration=(1.5+Math.random()*2)+'s';
+    c.style.animationDelay=(Math.random()*0.5)+'s';
+    container.appendChild(c);
+  }
+}
+
+var _calmeTimer=null;
+function startCalme(){
+  var overlay=document.getElementById('calme-overlay');
+  var numEl=document.getElementById('calme-number');
+  overlay.classList.remove('hidden');
+  var count=5;
+  numEl.textContent=count;
+  clearInterval(_calmeTimer);
+  _calmeTimer=setInterval(function(){
+    count--;
+    if(count<=0){
+      clearInterval(_calmeTimer);
+      numEl.textContent='✓';
+      setTimeout(function(){overlay.classList.add('hidden');},1200);
     } else {
-      delete voiceNotes[_groupId][_sessionDate][sid];
-      setVoiceNotes(voiceNotes);
-      renderStudentList();
+      numEl.textContent=count;
     }
-    return;
+  },1000);
+}
+
+// ═══════════════════════════════════════════════════════
+// KILLER FEATURE 5: VOICE-TO-TEXT (Speech Recognition)
+// ═══════════════════════════════════════════════════════
+function getSttNotes(){try{return JSON.parse(localStorage.getItem('carneteps-stt')||'{}');}catch(e){return{};}}
+function setSttNotes(n){localStorage.setItem('carneteps-stt',JSON.stringify(n));}
+function getSttNote(sid){
+  var notes=getSttNotes();
+  try{return notes[_groupId]&&notes[_groupId][_sessionDate]&&notes[_groupId][_sessionDate][sid]||'';}catch(e){return'';}
+}
+function setSttNote(sid,text){
+  var notes=getSttNotes();
+  if(!notes[_groupId])notes[_groupId]={};
+  if(!notes[_groupId][_sessionDate])notes[_groupId][_sessionDate]={};
+  notes[_groupId][_sessionDate][sid]=text;
+  setSttNotes(notes);
+}
+
+var _sttRecognitions={};
+function startStt(sid){
+  var SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SpeechRecognition){toast('Reconnaissance vocale non disponible');return;}
+
+  if(_sttRecognitions[sid]){_sttRecognitions[sid].stop();delete _sttRecognitions[sid];renderContent();return;}
+
+  var recognition=new SpeechRecognition();
+  recognition.lang='fr-CA';
+  recognition.continuous=false;
+  recognition.interimResults=false;
+  recognition.maxAlternatives=1;
+  _sttRecognitions[sid]=recognition;
+
+  recognition.onresult=function(event){
+    var transcript=event.results[0][0].transcript;
+    var existing=getSttNote(sid);
+    setSttNote(sid,(existing?existing+' ':'')+transcript);
+    delete _sttRecognitions[sid];
+    toast('Note ajoutée!');
+    renderContent();
+  };
+  recognition.onerror=function(){delete _sttRecognitions[sid];toast('Erreur micro');renderContent();};
+  recognition.onend=function(){delete _sttRecognitions[sid];renderContent();};
+  recognition.start();
+  toast('Parle maintenant...');
+  renderContent();
+}
+
+// ═══════════════════════════════════════════════════════
+// KILLER FEATURE 6: SPARKLINE PROGRESSION (3 dots)
+// ═══════════════════════════════════════════════════════
+function renderSparkline(sid){
+  var d=getData();
+  if(!d[_groupId])return'';
+  var dates=Object.keys(d[_groupId]).sort().reverse();
+  // Get last 3 dates (excluding today if no data)
+  var recentDates=[];
+  dates.forEach(function(dt){
+    if(recentDates.length>=3)return;
+    var studentData=d[_groupId][dt]&&d[_groupId][dt][sid];
+    if(studentData&&Object.keys(studentData).length>0)recentDates.push(dt);
+  });
+  if(recentDates.length===0)return'';
+
+  recentDates.reverse(); // oldest first
+
+  var html='<div class="sparkline-dots" title="Dernières évaluations">';
+  recentDates.forEach(function(dt){
+    var studentData=d[_groupId][dt][sid];
+    var score=calcDayScore(studentData);
+    var cls=score>=3?'sd-green':score>=2?'sd-yellow':'sd-red';
+    html+='<span class="spark-dot '+cls+'" title="'+dt+'"></span>';
+  });
+  // Pad with gray dots if fewer than 3
+  for(var i=recentDates.length;i<3;i++){
+    html+='<span class="spark-dot sd-gray"></span>';
   }
-
-  // Start recording
-  if (_mediaRecorder && _mediaRecorder.state === 'recording') {
-    _mediaRecorder.stop();
-    return;
-  }
-
-  navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream) {
-    _mediaRecorder = new MediaRecorder(stream);
-    var chunks = [];
-    _currentRecording = sid;
-
-    _mediaRecorder.ondataavailable = function(e) { chunks.push(e.data); };
-    _mediaRecorder.onstop = function() {
-      stream.getTracks().forEach(function(t) { t.stop(); });
-      var blob = new Blob(chunks, { type: 'audio/webm' });
-      var reader = new FileReader();
-      reader.onload = function(ev) {
-        var vn = getVoiceNotes();
-        if (!vn[_groupId]) vn[_groupId] = {};
-        if (!vn[_groupId][_sessionDate]) vn[_groupId][_sessionDate] = {};
-        vn[_groupId][_sessionDate][sid] = ev.target.result;
-        setVoiceNotes(vn);
-        _currentRecording = null;
-        renderStudentList();
-        showToast(t('voiceSaved'));
-      };
-      reader.readAsDataURL(blob);
-    };
-
-    _mediaRecorder.start();
-    showToast(t('recording'));
-    renderStudentList();
-
-    // Auto-stop after 10 seconds
-    setTimeout(function() {
-      if (_mediaRecorder && _mediaRecorder.state === 'recording') {
-        _mediaRecorder.stop();
-      }
-    }, 10000);
-  }).catch(function(err) {
-    showToast('Micro non disponible');
-  });
+  html+='</div>';
+  return html;
 }
 
-// ═══════════════════════════════════
-// CRITERIA
-// ═══════════════════════════════════
-function openAddCriterionModal() {
-  _selectedCritType = 'grade';
-  document.getElementById('criterion-name-input').value = '';
-  document.querySelectorAll('.type-option').forEach(function(o) {
-    o.classList.toggle('active', o.dataset.type === 'grade');
-  });
-  document.getElementById('criterion-modal').classList.remove('hidden');
-  document.getElementById('criterion-name-input').focus();
-}
-
-function closeCriterionModal() {
-  document.getElementById('criterion-modal').classList.add('hidden');
-}
-
-function pickCritType(type) {
-  _selectedCritType = type;
-  document.querySelectorAll('.type-option').forEach(function(o) {
-    o.classList.toggle('active', o.dataset.type === type);
-  });
-}
-
-function saveCriterion() {
-  var name = document.getElementById('criterion-name-input').value.trim();
-  if (!name) return;
-  var criteria = getCriteria();
-  criteria.push({ fr: name, en: name, type: _selectedCritType, custom: true });
-  setCriteria(criteria);
-  closeCriterionModal();
-  renderAll();
-  showToast(t('saved'));
-}
-
-function removeCriteria(idx) {
-  var criteria = getCriteria();
-  criteria.splice(idx, 1);
-  setCriteria(criteria);
-  renderAll();
-}
-
-// ─── LEXIQUE ───
-function openLexiqueModal() {
-  renderLexique();
-  document.getElementById('lexique-modal').classList.remove('hidden');
-}
-function closeLexiqueModal() {
-  document.getElementById('lexique-modal').classList.add('hidden');
-  renderAll();
-}
-
-function renderLexique() {
-  var container = document.getElementById('lexique-content');
-  var sel = getCriteria().map(function(c) { return c.fr; });
-  var html = '';
-
-  html += '<h3 class="lexique-comp-title">⚡ Évaluation rapide</h3>';
-  html += '<div class="lexique-items">';
-  QUICK_ASSESS.forEach(function(qa) {
-    var text = _lang === 'en' ? qa.en : qa.fr;
-    var s = sel.indexOf(qa.fr) >= 0;
-    var icon = TYPE_ICONS[qa.type] || '🔤';
-    html += '<div class="lexique-item' + (s ? ' selected' : '') + '" data-fr="' + esc(qa.fr) + '" data-en="' + esc(qa.en) + '" data-type="' + qa.type + '" data-subtype="' + (qa.subtype || '') + '">' +
-      '<span class="lexique-item-check">✓</span><span class="lexique-item-text">' + icon + ' ' + esc(text) + '</span></div>';
-  });
-  html += '</div>';
-
-  LEXIQUE_PFEQ.forEach(function(comp) {
-    html += '<h3 class="lexique-comp-title">' + esc(_lang === 'en' ? comp.competence_en : comp.competence) + '</h3>';
-    comp.composantes.forEach(function(compo) {
-      html += '<h4 class="lexique-category">' + esc(_lang === 'en' ? compo.nom_en : compo.nom) + '</h4>';
-      html += '<div class="lexique-items">';
-      compo.criteres.forEach(function(crit) {
-        var text = _lang === 'en' ? crit.en : crit.fr;
-        var s = sel.indexOf(crit.fr) >= 0;
-        var icon = TYPE_ICONS[crit.type || 'grade'] || '🔤';
-        html += '<div class="lexique-item' + (s ? ' selected' : '') + '" data-fr="' + esc(crit.fr) + '" data-en="' + esc(crit.en) + '" data-type="' + (crit.type || 'grade') + '">' +
-          '<span class="lexique-item-check">✓</span><span class="lexique-item-text">' + icon + ' ' + esc(text) + '</span></div>';
-      });
-      html += '</div>';
-    });
-  });
-
-  container.innerHTML = html;
-  container.querySelectorAll('.lexique-item').forEach(function(item) {
-    item.addEventListener('click', function() {
-      var fr = item.dataset.fr, en = item.dataset.en;
-      var type = item.dataset.type || 'grade';
-      var subtype = item.dataset.subtype || '';
-      var criteria = getCriteria();
-      var idx = criteria.findIndex(function(c) { return c.fr === fr; });
-      if (idx >= 0) { criteria.splice(idx, 1); item.classList.remove('selected'); }
-      else {
-        var entry = { fr: fr, en: en, type: type };
-        if (subtype) entry.subtype = subtype;
-        criteria.push(entry);
-        item.classList.add('selected');
-      }
-      setCriteria(criteria);
-    });
-  });
-}
-
-// ═══════════════════════════════════
-// CHRONOS & SCORES
-// ═══════════════════════════════════
-var _chronoIndivInterval = null;
-var _chronoIndivStart = 0;
-var _chronoIndivElapsed = 0;
-
-function toggleChronoPanel() {
-  document.getElementById('chrono-panel').classList.toggle('hidden');
-}
-
-function chronoIndivStart() {
-  if (_chronoIndivInterval) return;
-  _chronoIndivStart = Date.now() - _chronoIndivElapsed;
-  _chronoIndivInterval = setInterval(function() {
-    _chronoIndivElapsed = Date.now() - _chronoIndivStart;
-    var s = Math.floor(_chronoIndivElapsed / 1000);
-    var ms = Math.floor((_chronoIndivElapsed % 1000) / 100);
-    var m = Math.floor(s / 60);
-    s = s % 60;
-    document.getElementById('chrono-indiv-display').textContent =
-      String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0') + '.' + ms;
-  }, 100);
-}
-
-function chronoIndivStop() {
-  clearInterval(_chronoIndivInterval);
-  _chronoIndivInterval = null;
-}
-
-function chronoIndivReset() {
-  chronoIndivStop();
-  _chronoIndivElapsed = 0;
-  document.getElementById('chrono-indiv-display').textContent = '00:00.0';
-}
-
-// Group timer (countdown)
-var _chronoGroupInterval = null;
-var _chronoGroupRemaining = 300; // 5 min default
-var _chronoGroupTotal = 300;
-
-function chronoGroupUpdateDisplay() {
-  var m = Math.floor(Math.abs(_chronoGroupRemaining) / 60);
-  var s = Math.abs(_chronoGroupRemaining) % 60;
-  var prefix = _chronoGroupRemaining < 0 ? '-' : '';
-  document.getElementById('chrono-group-display').textContent =
-    prefix + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
-}
-
-function chronoGroupStart() {
-  if (_chronoGroupInterval) return;
-  _chronoGroupInterval = setInterval(function() {
-    _chronoGroupRemaining--;
-    chronoGroupUpdateDisplay();
-    if (_chronoGroupRemaining === 0) {
-      // Beep at zero
-      try {
-        var ctx = new (window.AudioContext || window.webkitAudioContext)();
-        var osc = ctx.createOscillator();
-        osc.frequency.value = 880;
-        osc.connect(ctx.destination);
-        osc.start(); osc.stop(ctx.currentTime + 0.5);
-      } catch(e) {}
+function calcDayScore(data){
+  if(!data)return 0;
+  var total=0,count=0;
+  Object.keys(data).forEach(function(k){
+    // Stars (1-5)
+    if(k.indexOf('eval_')===0||k.indexOf('pfeq_')===0){
+      var v=data[k];
+      if(typeof v==='number'&&v>0){total+=v;count++;}
+      else if(typeof v==='string'&&'ABCDE'.indexOf(v)>=0){total+=(5-'ABCDE'.indexOf(v));count++;}
     }
-  }, 1000);
-}
-
-function chronoGroupStop() {
-  clearInterval(_chronoGroupInterval);
-  _chronoGroupInterval = null;
-}
-
-function chronoGroupAdjust(delta) {
-  _chronoGroupRemaining += delta;
-  if (_chronoGroupRemaining < 0 && !_chronoGroupInterval) _chronoGroupRemaining = 0;
-  _chronoGroupTotal = Math.max(_chronoGroupTotal, _chronoGroupRemaining);
-  chronoGroupUpdateDisplay();
-}
-
-// Engagement chrono
-var _engageInterval = null;
-var _engageActive = 0;
-var _engageInactive = 0;
-var _engageIsActive = false;
-var _engageStartTime = 0;
-
-function chronoEngageToggle() {
-  var btn = document.getElementById('chrono-engage-btn');
-  if (!_engageIsActive) {
-    _engageIsActive = true;
-    _engageStartTime = Date.now();
-    btn.textContent = '⏸ EN MOUVEMENT';
-    btn.classList.add('stop');
-    btn.classList.remove('start');
-    if (!_engageInterval) {
-      _engageInterval = setInterval(updateEngageDisplay, 1000);
+    // Presence
+    if(k==='check_presence'){
+      if(data[k]==='present'){total+=5;count++;}
+      else if(data[k]==='retard'){total+=3;count++;}
+      else if(data[k]==='absent'){total+=1;count++;}
     }
-  } else {
-    _engageIsActive = false;
-    _engageActive += (Date.now() - _engageStartTime);
-    _engageStartTime = Date.now();
-    btn.textContent = '▶ EN MOUVEMENT';
-    btn.classList.add('start');
-    btn.classList.remove('stop');
-  }
-}
-
-function updateEngageDisplay() {
-  var now = Date.now();
-  var active = _engageActive + (_engageIsActive ? now - _engageStartTime : 0);
-  var total = active + _engageInactive + (!_engageIsActive && _engageStartTime ? now - _engageStartTime - _engageActive : 0);
-  if (total === 0) total = 1;
-  var activeS = Math.floor(active / 1000);
-  var m = Math.floor(activeS / 60);
-  var s = activeS % 60;
-  document.getElementById('chrono-engage-display').textContent =
-    String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
-  var pct = Math.round(active / (active + (now - _engageStartTime - (_engageIsActive ? 0 : active))) * 100) || 0;
-  document.getElementById('engage-stats').textContent =
-    'Actif: ' + pct + '% — Inactif: ' + (100 - pct) + '%';
-}
-
-function chronoEngageReset() {
-  clearInterval(_engageInterval);
-  _engageInterval = null;
-  _engageActive = 0;
-  _engageInactive = 0;
-  _engageIsActive = false;
-  _engageStartTime = 0;
-  document.getElementById('chrono-engage-display').textContent = '00:00';
-  document.getElementById('engage-stats').textContent = 'Actif: 0% — Inactif: 0%';
-  var btn = document.getElementById('chrono-engage-btn');
-  btn.textContent = '▶ EN MOUVEMENT';
-  btn.classList.add('start');
-  btn.classList.remove('stop');
-}
-
-// Team scores
-var _teamScores = { a: 0, b: 0 };
-
-function teamScore(team, delta) {
-  _teamScores[team] = Math.max(0, _teamScores[team] + delta);
-  document.getElementById('team-' + team + '-score').textContent = _teamScores[team];
-}
-
-function teamScoreReset() {
-  _teamScores = { a: 0, b: 0 };
-  document.getElementById('team-a-score').textContent = '0';
-  document.getElementById('team-b-score').textContent = '0';
-}
-
-// ═══════════════════════════════════
-// GROUPS CRUD
-// ═══════════════════════════════════
-var _editingGroupId = null;
-
-function createGroup() {
-  _editingGroupId = null;
-  _selectedColor = 'c-blue';
-  document.getElementById('group-name-input').value = '';
-  document.getElementById('group-students-input').value = '';
-  document.getElementById('group-modal-title').textContent = t('newGroup');
-  document.getElementById('delete-group-btn').style.display = 'none';
-  resetColorPicker();
-  document.getElementById('group-modal').classList.remove('hidden');
-  document.getElementById('group-name-input').focus();
-}
-
-function editGroup(id) {
-  var groups = getGroups();
-  var g = groups.find(function(x) { return x.id === id; });
-  if (!g) return;
-  _editingGroupId = id;
-  _selectedColor = g.color || 'c-blue';
-  document.getElementById('group-name-input').value = g.name;
-  document.getElementById('group-students-input').value = g.students.map(function(s) { return s.name; }).join('\n');
-  document.getElementById('group-modal-title').textContent = t('editGroup');
-  document.getElementById('delete-group-btn').style.display = 'inline-block';
-  resetColorPicker();
-  document.getElementById('group-modal').classList.remove('hidden');
-}
-
-function pickColor(c) { _selectedColor = c; resetColorPicker(); }
-function resetColorPicker() {
-  document.querySelectorAll('.color-swatch').forEach(function(s) {
-    s.classList.toggle('active', s.dataset.color === _selectedColor);
-  });
-}
-
-function saveGroup() {
-  var name = document.getElementById('group-name-input').value.trim();
-  var text = document.getElementById('group-students-input').value.trim();
-  if (!name) return;
-  var names = text.split('\n').map(function(s) { return s.trim(); }).filter(Boolean);
-  var groups = getGroups();
-  if (_editingGroupId) {
-    var idx = groups.findIndex(function(g) { return g.id === _editingGroupId; });
-    if (idx >= 0) {
-      var existing = groups[idx].students;
-      groups[idx].name = name;
-      groups[idx].color = _selectedColor;
-      groups[idx].students = names.map(function(n) {
-        var found = existing.find(function(e) { return e.name === n; });
-        return found || { id: genId(), name: n };
-      });
+    // Color eval
+    if(k==='color_eval'){
+      if(data[k]==='green'){total+=5;count++;}
+      else if(data[k]==='yellow'){total+=3;count++;}
+      else if(data[k]==='red'){total+=1;count++;}
+      else if(data[k]==='purple'){total+=2;count++;}
     }
-  } else {
-    var ng = { id: genId(), name: name, color: _selectedColor,
-      students: names.map(function(n) { return { id: genId(), name: n }; }) };
-    groups.push(ng);
-    _groupId = ng.id;
-    localStorage.setItem('evaleps-lastgroup', _groupId);
-  }
-  setGroups(groups);
-  closeGroupModal();
-  renderAll();
-  showToast(t('saved'));
-}
-
-function deleteCurrentGroup() {
-  if (!_editingGroupId || !confirm(t('deleteConfirm'))) return;
-  var groups = getGroups().filter(function(g) { return g.id !== _editingGroupId; });
-  setGroups(groups);
-  var evals = getEvals(); delete evals[_editingGroupId]; setEvals(evals);
-  if (_groupId === _editingGroupId) {
-    _groupId = groups.length > 0 ? groups[0].id : null;
-    if (_groupId) localStorage.setItem('evaleps-lastgroup', _groupId);
-    else localStorage.removeItem('evaleps-lastgroup');
-  }
-  closeGroupModal();
-  renderAll();
-  showToast(t('deleted'));
-}
-
-function closeGroupModal() {
-  document.getElementById('group-modal').classList.add('hidden');
-  _editingGroupId = null;
-}
-
-function importStudentList() {
-  var input = document.createElement('input');
-  input.type = 'file'; input.accept = '.csv,.txt';
-  input.addEventListener('change', function(e) {
-    var file = e.target.files[0]; if (!file) return;
-    var reader = new FileReader();
-    reader.onload = function(ev) {
-      var lines = ev.target.result.split(/[\n\r]+/)
-        .map(function(l) {
-          var p = l.split(',');
-          return p.length === 2 && p[0].trim() && p[1].trim()
-            ? p[1].trim() + ' ' + p[0].trim() : l.trim();
-        })
-        .filter(function(n) { return n && n.length > 1; });
-      var ta = document.getElementById('group-students-input');
-      var ex = ta.value.trim();
-      ta.value = ex ? ex + '\n' + lines.join('\n') : lines.join('\n');
-      showToast(lines.length + ' élèves');
-    };
-    reader.readAsText(file);
   });
-  input.click();
+  return count>0?total/count:0;
 }
-
-// ═══════════════════════════════════
-// PHOTOS
-// ═══════════════════════════════════
-function addStudentPhoto(studentId) {
-  var input = document.createElement('input');
-  input.type = 'file'; input.accept = 'image/*'; input.capture = 'environment';
-  input.addEventListener('change', function(e) {
-    var file = e.target.files[0]; if (!file) return;
-    var reader = new FileReader();
-    reader.onload = function(ev) {
-      var img = new Image();
-      img.onload = function() {
-        var canvas = document.createElement('canvas');
-        var sz = 150, w = img.width, h = img.height;
-        if (w > h) { h = sz * h / w; w = sz; } else { w = sz * w / h; h = sz; }
-        canvas.width = w; canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        var photos = getPhotos();
-        photos[studentId] = canvas.toDataURL('image/jpeg', 0.7);
-        setPhotos(photos);
-        renderStudentList();
-      };
-      img.src = ev.target.result;
-    };
-    reader.readAsDataURL(file);
-  });
-  input.click();
-}
-
-// ═══════════════════════════════════
-// EXPORT
-// ═══════════════════════════════════
-function exportPDF() {
-  var groups = getGroups();
-  var group = groups.find(function(g) { return g.id === _groupId; });
-  if (!group) return;
-  var criteria = getCriteria();
-  var evals = getEvals();
-  var groupEvals = evals[_groupId] || {};
-  var dates = Object.keys(groupEvals).sort();
-  if (dates.length === 0) return;
-
-  var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>EvalEPS — ' + esc(group.name) + '</title>' +
-    '<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Boogaloo&display=swap" rel="stylesheet">' +
-    '<style>body{font-family:Boogaloo,sans-serif;margin:20px;color:#111;}' +
-    'h1{font-family:Bangers,cursive;color:#0077CC;text-align:center;font-size:2rem;}' +
-    'h2{font-family:Bangers,cursive;color:#0077CC;font-size:1.3rem;margin:16px 0 6px;}' +
-    'table{width:100%;border-collapse:collapse;font-size:0.85rem;margin-bottom:16px;}' +
-    'th{background:#0077CC;color:#fff;padding:6px;border:1px solid #0066b3;font-family:Bangers,cursive;font-size:0.75rem;text-align:center;}' +
-    'th:first-child{text-align:left;}td{padding:5px;border:1px solid #ddd;text-align:center;}' +
-    'td:first-child{text-align:left;font-weight:700;}' +
-    '.stars{color:#FFD600;}.badge-pos{color:#2E7D32;}.badge-neg{color:#FF8C00;}' +
-    '.check-p{color:#2E7D32;font-weight:bold;}.check-a{color:#D32F2F;font-weight:bold;}.check-l{color:#FF8C00;font-weight:bold;}' +
-    '.footer{text-align:center;margin-top:20px;font-size:0.8rem;color:#999;}' +
-    '@media print{@page{margin:10mm;}}</style></head><body>';
-  html += '<h1>' + esc(group.name) + ' — EVALEPS</h1>';
-
-  dates.forEach(function(date) {
-    var sd = groupEvals[date] || {};
-    html += '<h2>' + date + '</h2><table><thead><tr><th>#</th><th>Élève</th>';
-    criteria.forEach(function(c) {
-      var tx = _lang === 'en' && c.en ? c.en : c.fr;
-      var icon = TYPE_ICONS[c.type || 'grade'] || '';
-      html += '<th>' + icon + ' ' + esc(tx.length > 16 ? tx.substring(0, 14) + '..' : tx) + '</th>';
-    });
-    html += '</tr></thead><tbody>';
-    group.students.forEach(function(s, i) {
-      var d = sd[s.id] || {};
-      html += '<tr><td>' + (i + 1) + '</td><td>' + esc(formatName(s.name)) + '</td>';
-      criteria.forEach(function(c, ci) {
-        var v = d['c' + ci] || '';
-        var type = c.type || 'grade';
-        if (!v) { html += '<td></td>'; return; }
-        if (type === 'grade') {
-          html += '<td style="background:' + (SCALE_BG[v] || '#999') + ';color:#fff;font-weight:bold;">' + v + '</td>';
-        } else if (type === 'check') {
-          var cls = v === 'present' || v === 'oui' ? 'check-p' : v === 'absent' || v === 'non' ? 'check-a' : 'check-l';
-          html += '<td class="' + cls + '">' + v + '</td>';
-        } else if (type === 'rating') {
-          html += '<td class="stars">' + '★'.repeat(parseInt(v)) + '☆'.repeat(5 - parseInt(v)) + '</td>';
-        } else if (type === 'badge') {
-          var bv = parseInt(v);
-          html += '<td class="' + (bv > 0 ? 'badge-pos' : 'badge-neg') + '">' + (bv > 0 ? '+' : '') + bv + '</td>';
-        } else if (type === 'counter') {
-          html += '<td>' + v + '</td>';
-        } else {
-          html += '<td>' + v + '</td>';
-        }
-      });
-      html += '</tr>';
-    });
-    html += '</tbody></table>';
-  });
-  html += '<div class="footer">zonetotalsport.ca — EvalEPS</div></body></html>';
-  var w = window.open('', '_blank'); w.document.write(html); w.document.close();
-  setTimeout(function() { w.print(); }, 400);
-  showToast(t('exported'));
-}
-
-function exportCSV() {
-  var groups = getGroups();
-  var group = groups.find(function(g) { return g.id === _groupId; });
-  if (!group) return;
-  var criteria = getCriteria();
-  var evals = getEvals();
-  var groupEvals = evals[_groupId] || {};
-  var headers = ['Date', '#', 'Élève'].concat(criteria.map(function(c) { return c.fr + ' (' + (c.type || 'grade') + ')'; }));
-  var lines = [headers.join(',')];
-  Object.keys(groupEvals).sort().forEach(function(date) {
-    var sd = groupEvals[date];
-    group.students.forEach(function(s, i) {
-      var d = sd[s.id] || {};
-      var row = [date, i + 1, '"' + formatName(s.name) + '"'];
-      criteria.forEach(function(c, ci) { row.push(d['c' + ci] || ''); });
-      lines.push(row.join(','));
-    });
-  });
-  var blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
-  var a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'evaleps_' + group.name.replace(/\s+/g, '_') + '_' + todayStr() + '.csv';
-  a.click();
-  showToast(t('exported'));
-}
-
-function printResults() { window.print(); }
-
-// ═══════════════════════════════════
-// HELPERS
-// ═══════════════════════════════════
-function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
-function esc(s) { return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : ''; }
-function showToast(msg) {
-  var el = document.getElementById('toast');
-  if (!el) return;
-  el.textContent = msg; el.classList.remove('hidden');
-  clearTimeout(el._timer);
-  el._timer = setTimeout(function() { el.classList.add('hidden'); }, 2200);
-}
-
-// ─── INIT ───
-document.addEventListener('DOMContentLoaded', function() {
-  var savedLang = localStorage.getItem('evaleps-lang') || 'fr';
-  _lang = savedLang;
-  var langSel = document.getElementById('lang-select');
-  if (langSel) langSel.value = savedLang;
-  _nameOrder = localStorage.getItem('evaleps-nameorder') || 'pn';
-  var lastGroup = localStorage.getItem('evaleps-lastgroup');
-  var groups = getGroups();
-  if (lastGroup && groups.some(function(g) { return g.id === lastGroup; })) {
-    _groupId = lastGroup;
-  } else if (groups.length > 0) {
-    _groupId = groups[0].id;
-  }
-  renderAll();
-});

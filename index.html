@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <meta name="description" content="EvalEPS — Carnet d'évaluation complet pour éducateurs physiques. zonetotalsport.ca" />
+  <meta name="description" content="Carnet EPS — Carnet de notes pour éducateurs physiques. zonetotalsport.ca" />
   <meta name="theme-color" content="#0077CC" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>EvalEPS — Zone Total Sport</title>
+  <title>Carnet EPS — Zone Total Sport</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Boogaloo&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Barriecito&family=Boogaloo&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -18,147 +18,138 @@
   <!-- GYM BACKGROUND -->
   <div id="gymBg"></div>
 
-  <!-- TOOLBAR -->
-  <header class="toolbar">
-    <div class="toolbar-left">
-      <img src="img/bucheron-salut.png" alt="" class="toolbar-mascot" />
-      <span class="toolbar-title">EvalEPS</span>
+  <!-- ===== HEADER ===== -->
+  <header class="top-header">
+    <div class="header-left">
+      <img src="img/bucheron-salut.png" alt="" class="header-mascot" />
+      <h1 class="header-title" contenteditable="true" id="course-title" spellcheck="false">CARNET EPS</h1>
     </div>
-    <div class="toolbar-center">
-      <button class="tool-btn" onclick="createGroup()" title="Nouveau groupe">➕ Groupe</button>
-      <button class="tool-btn" onclick="openLexiqueModal()" title="Critères PFEQ">📚 PFEQ</button>
-      <button class="tool-btn" onclick="openAddCriterionModal()" title="Ajouter critère">📝 Critère</button>
-      <span class="toolbar-sep"></span>
-      <button class="tool-btn chrono-btn" onclick="toggleChronoPanel()" title="Chronos & Scores">⏱️ Chrono</button>
-      <span class="toolbar-sep"></span>
-      <button class="tool-btn" onclick="exportPDF()" title="PDF">📄 PDF</button>
-      <button class="tool-btn" onclick="exportCSV()" title="CSV">📊 CSV</button>
-      <button class="tool-btn" onclick="printResults()" title="Imprimer">🖨️</button>
+    <div class="header-center">
+      <button class="export-btn export-pdf" onclick="exportPDF()">📄 PDF</button>
+      <button class="export-btn export-csv" onclick="exportCSV()">📊 CSV</button>
     </div>
-    <div class="toolbar-right">
-      <button class="tool-btn name-order-btn" onclick="toggleNameOrder()" id="name-order-btn" title="Ordre du nom">P.N</button>
-      <select id="date-select" class="tool-select" onchange="onDateChange()"></select>
-      <select id="lang-select" class="tool-select" onchange="setLang(this.value)">
-        <option value="fr">FR</option>
-        <option value="en">EN</option>
-      </select>
+    <div class="header-right">
+      <button class="zoom-btn" onclick="zoomOut()" title="Réduire">➖</button>
+      <span class="zoom-level" id="zoom-level">100%</span>
+      <button class="zoom-btn" onclick="zoomIn()" title="Agrandir">➕</button>
+      <span class="header-sep"></span>
+      <button class="date-arrow" onclick="prevDate()">◀</button>
+      <select id="date-select" class="header-select date-sel" onchange="onDateChange()"></select>
+      <button class="date-arrow" onclick="nextDate()">▶</button>
     </div>
   </header>
 
-  <!-- NOTEBOOK LAYOUT -->
-  <div class="notebook">
+  <!-- ===== MODE TABS (Aujourd'hui / Évaluation / Résumé) ===== -->
+  <nav class="mode-tabs" id="mode-tabs">
+    <button class="mtab active" data-mode="aujourdhui" onclick="switchMode('aujourdhui')">
+      ☑️ AUJOURD'HUI
+    </button>
+    <button class="mtab" data-mode="evaluation" onclick="switchMode('evaluation')">
+      ⭐ ÉVALUATION
+    </button>
+    <button class="mtab" data-mode="chrono" onclick="switchMode('chrono')">
+      ⏱️ CHRONO
+    </button>
+    <button class="mtab" data-mode="compteur" onclick="switchMode('compteur')">
+      🔢 COMPTEUR
+    </button>
+    <button class="mtab" data-mode="resume" onclick="switchMode('resume')">
+      📋 RÉSUMÉ
+    </button>
+  </nav>
 
-    <!-- LEFT: STUDENT LIST -->
-    <div class="notebook-left" id="notebook-left">
-      <div class="student-header">
-        <span class="sh-num">#</span>
-        <span class="sh-photo"></span>
-        <span class="sh-name">ÉLÈVE</span>
-        <span class="sh-voice">🎙️</span>
+  <!-- ===== NOTEBOOK LAYOUT ===== -->
+  <div class="notebook" id="notebook">
+
+    <!-- MAIN AREA -->
+    <div class="notebook-main" id="notebook-main">
+
+      <!-- CRITERIA BAR (top — for Évaluation mode) -->
+      <div class="criteria-bar hidden" id="criteria-bar"></div>
+
+      <!-- TODAY TOOLBAR (for Aujourd'hui mode: choose what to observe) -->
+      <div class="today-toolbar" id="today-toolbar">
+        <span class="today-label">Observer :</span>
+        <div class="today-checks" id="today-checks">
+          <!-- Filled by JS -->
+        </div>
+        <button class="today-add-btn" onclick="openCriteriaManager()" title="Gérer mes critères">📝 MES CRITÈRES</button>
       </div>
-      <div class="student-list" id="student-list">
-        <!-- Filled by JS -->
+
+      <!-- KILLER FEATURES TOOLBAR -->
+      <div class="killer-toolbar" id="killer-toolbar">
+        <button class="killer-btn kb-picker" onclick="openPicker()" title="Piger un élève au hasard">🎲 PIGER</button>
+        <button class="killer-btn kb-teams" onclick="openTeamModal()" title="Générer des équipes">👥 ÉQUIPES</button>
+        <button class="killer-btn kb-felicitations" onclick="showFelicitations()" title="Félicitations!">🏆 BRAVO!</button>
+        <button class="killer-btn kb-calme" onclick="startCalme()" title="Minuteur de calme">🧘 CALME</button>
+        <button class="killer-btn kb-color-settings" onclick="openColorSettings()" title="Couleurs d'évaluation">🎨 COULEURS</button>
+      </div>
+
+      <!-- CONTENT AREA -->
+      <div class="content-area" id="content-area">
+        <!-- Cards (Aujourd'hui) or Table (Évaluation) -->
       </div>
     </div>
 
-    <!-- CENTER: GRADE GRID -->
-    <div class="notebook-center" id="notebook-center">
-      <!-- CRITERIA TABS (TOP) -->
-      <div class="criteria-tabs" id="criteria-tabs">
-        <!-- Filled by JS -->
-      </div>
-      <!-- GRADE GRID -->
-      <div class="grade-grid" id="grade-grid">
-        <!-- Filled by JS -->
-      </div>
-    </div>
-
-    <!-- RIGHT: GROUP TABS -->
-    <div class="notebook-right" id="notebook-right">
-      <div class="group-tabs" id="group-tabs">
-        <!-- Filled by JS -->
-      </div>
-      <button class="group-tab-add" onclick="createGroup()" title="Nouveau groupe">+</button>
-    </div>
-
-  </div>
-
-  <!-- CHRONO & SCORES PANEL -->
-  <div class="chrono-panel hidden" id="chrono-panel">
-    <div class="chrono-header">
-      <span class="chrono-title">⏱️ CHRONOS & SCORES</span>
-      <button class="modal-close" onclick="toggleChronoPanel()">✕</button>
-    </div>
-    <div class="chrono-body">
-      <!-- Individual chrono -->
-      <div class="chrono-section">
-        <div class="chrono-label">CHRONO INDIVIDUEL</div>
-        <div class="chrono-display" id="chrono-indiv-display">00:00.0</div>
-        <div class="chrono-btns">
-          <button class="chrono-action start" onclick="chronoIndivStart()">▶</button>
-          <button class="chrono-action stop" onclick="chronoIndivStop()">⏸</button>
-          <button class="chrono-action reset" onclick="chronoIndivReset()">↺</button>
-        </div>
-      </div>
-      <!-- Group timer -->
-      <div class="chrono-section">
-        <div class="chrono-label">MINUTEUR DE GROUPE</div>
-        <div class="chrono-display big" id="chrono-group-display">05:00</div>
-        <div class="chrono-btns">
-          <button class="chrono-action" onclick="chronoGroupAdjust(-60)">-1m</button>
-          <button class="chrono-action" onclick="chronoGroupAdjust(-10)">-10s</button>
-          <button class="chrono-action start" onclick="chronoGroupStart()">▶</button>
-          <button class="chrono-action stop" onclick="chronoGroupStop()">⏸</button>
-          <button class="chrono-action" onclick="chronoGroupAdjust(10)">+10s</button>
-          <button class="chrono-action" onclick="chronoGroupAdjust(60)">+1m</button>
-        </div>
-      </div>
-      <!-- Engagement chrono -->
-      <div class="chrono-section">
-        <div class="chrono-label">TEMPS D'ENGAGEMENT MOTEUR</div>
-        <div class="chrono-display" id="chrono-engage-display">00:00</div>
-        <div class="chrono-btns">
-          <button class="chrono-action start" onclick="chronoEngageToggle()" id="chrono-engage-btn">▶ EN MOUVEMENT</button>
-          <button class="chrono-action reset" onclick="chronoEngageReset()">↺</button>
-        </div>
-        <div class="engage-stats" id="engage-stats">Actif: 0% — Inactif: 0%</div>
-      </div>
-      <!-- Team Scores -->
-      <div class="chrono-section">
-        <div class="chrono-label">SCORES D'ÉQUIPES</div>
-        <div class="score-board">
-          <div class="score-team team-a">
-            <input type="text" class="score-team-name" id="team-a-name" value="Équipe A" />
-            <div class="score-counter">
-              <button class="score-btn minus" onclick="teamScore('a',-1)">−</button>
-              <span class="score-num" id="team-a-score">0</span>
-              <button class="score-btn plus" onclick="teamScore('a',1)">+</button>
-            </div>
-          </div>
-          <div class="score-vs">VS</div>
-          <div class="score-team team-b">
-            <input type="text" class="score-team-name" id="team-b-name" value="Équipe B" />
-            <div class="score-counter">
-              <button class="score-btn minus" onclick="teamScore('b',-1)">−</button>
-              <span class="score-num" id="team-b-score">0</span>
-              <button class="score-btn plus" onclick="teamScore('b',1)">+</button>
-            </div>
-          </div>
-        </div>
-        <button class="chrono-action reset" onclick="teamScoreReset()" style="margin-top:8px;">↺ Réinitialiser</button>
-      </div>
+    <!-- RIGHT: Group tabs -->
+    <div class="group-tabs-col">
+      <div class="group-tabs" id="group-tabs"></div>
+      <button class="group-tab-add" onclick="createGroup()">+</button>
     </div>
   </div>
 
-  <!-- EMPTY STATE (no groups yet) -->
-  <div class="empty-state hidden" id="empty-state">
-    <img src="img/bucheron-salut.png" alt="" class="empty-mascot" />
-    <h1 class="empty-title">BONJOUR COACH!</h1>
-    <p class="empty-sub">Crée ton premier groupe pour commencer</p>
-    <button class="empty-btn" onclick="createGroup()">➕ NOUVEAU GROUPE</button>
-  </div>
+  <!-- ===== HERO / LANDING PAGE ===== -->
+  <section class="hero hidden" id="hero-section">
+    <div class="hero-content">
+      <div class="hero-badge"><span class="hero-dot"></span> PFEQ Qu&eacute;bec &middot; Maternelle &rarr; Secondaire 5</div>
+      <div class="hero-title-wrap">
+        <img src="img/bucheron-eval.png" alt="Bûcheron Évaluation" class="hero-mascot" />
+        <div>
+          <h1 class="hero-title">CARNET <span class="gradient-text">EPS</span></h1>
+          <p class="hero-subtitle">Le carnet de notes num&eacute;rique con&ccedil;u pour les enseignants d'&eacute;ducation physique en gymnase</p>
+        </div>
+      </div>
 
-  <!-- MODAL: CREATE/EDIT GROUP -->
+      <div class="hero-features">
+        <div class="hero-feature">
+          <span class="hero-feature-icon">☑️</span>
+          <span><strong>Pr&eacute;sences &amp; v&eacute;rifications</strong> — Tenue, mat&eacute;riel, s&eacute;curit&eacute; en un clic</span>
+        </div>
+        <div class="hero-feature">
+          <span class="hero-feature-icon">⭐</span>
+          <span><strong>&Eacute;value avec tes crit&egrave;res</strong> — &Eacute;toiles, notes A-E, +/- comportement, oui/non</span>
+        </div>
+        <div class="hero-feature">
+          <span class="hero-feature-icon">⏱️</span>
+          <span><strong>Chrono de groupe</strong> — Lance le temps pour tous, enregistre chaque tour</span>
+        </div>
+        <div class="hero-feature">
+          <span class="hero-feature-icon">📝</span>
+          <span><strong>Tes propres crit&egrave;res</strong> — Personnalise ce que tu observes en gymnase</span>
+        </div>
+        <div class="hero-feature">
+          <span class="hero-feature-icon">📄</span>
+          <span><strong>Exporte en PDF &amp; CSV</strong> — Imprime, partage ou archive tes donn&eacute;es</span>
+        </div>
+        <div class="hero-feature">
+          <span class="hero-feature-icon">🎙️</span>
+          <span><strong>Notes vocales</strong> — Enregistre des commentaires pour chaque &eacute;l&egrave;ve</span>
+        </div>
+      </div>
+
+      <div class="hero-cta">
+        <button class="btn-primary" onclick="createGroup()">
+          ➕ CR&Eacute;ER MON PREMIER GROUPE <span class="btn-arrow">→</span>
+        </button>
+      </div>
+
+      <div class="hero-footer">
+        <img src="img/logo-zonetotalsport.png" alt="Zone Total Sport" class="hero-logo" />
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== MODAL: GROUP ===== -->
   <div id="group-modal" class="modal hidden">
     <div class="modal-backdrop" onclick="closeGroupModal()"></div>
     <div class="modal-box">
@@ -173,79 +164,162 @@
         </div>
         <div class="form-field">
           <label>COULEUR</label>
-          <div class="color-picker" id="color-picker">
-            <button class="color-swatch c-blue active" data-color="c-blue" onclick="pickColor('c-blue')"></button>
-            <button class="color-swatch c-green" data-color="c-green" onclick="pickColor('c-green')"></button>
-            <button class="color-swatch c-orange" data-color="c-orange" onclick="pickColor('c-orange')"></button>
-            <button class="color-swatch c-pink" data-color="c-pink" onclick="pickColor('c-pink')"></button>
-            <button class="color-swatch c-purple" data-color="c-purple" onclick="pickColor('c-purple')"></button>
+          <div class="color-picker">
+            <button class="color-swatch" data-color="cyan" onclick="pickColor('cyan')" style="background:#00D4FF;"></button>
+            <button class="color-swatch" data-color="green" onclick="pickColor('green')" style="background:#00E676;"></button>
+            <button class="color-swatch" data-color="orange" onclick="pickColor('orange')" style="background:#FF9100;"></button>
+            <button class="color-swatch" data-color="yellow" onclick="pickColor('yellow')" style="background:#FFD600;"></button>
+            <button class="color-swatch" data-color="pink" onclick="pickColor('pink')" style="background:#FF4081;"></button>
+            <button class="color-swatch" data-color="blue" onclick="pickColor('blue')" style="background:#2979FF;"></button>
           </div>
         </div>
         <div class="form-field">
           <label>ÉLÈVES (un par ligne)</label>
-          <textarea id="group-students-input" class="form-textarea" rows="8" placeholder="Alexis Beaumont&#10;Camille Dupont&#10;Émile Fortin"></textarea>
+          <textarea id="group-students-input" class="form-textarea" rows="10" placeholder="Alexis Beaumont&#10;Camille Dupont&#10;Émile Fortin"></textarea>
         </div>
         <div class="modal-actions">
-          <button class="btn-primary" onclick="saveGroup()">💾 SAUVEGARDER</button>
-          <button class="btn-secondary" onclick="importStudentList()">📥 IMPORTER</button>
-          <button class="btn-secondary" onclick="closeGroupModal()">ANNULER</button>
-          <button class="btn-danger" id="delete-group-btn" onclick="deleteCurrentGroup()" style="display:none;">🗑️ SUPPRIMER</button>
+          <button class="export-btn export-pdf" onclick="saveGroup()">💾 SAUVEGARDER</button>
+          <button class="export-btn export-csv" onclick="closeGroupModal()">ANNULER</button>
+          <button class="export-btn btn-danger" id="delete-group-btn" onclick="deleteCurrentGroup()">🗑️ SUPPRIMER</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- MODAL: ADD CRITERION -->
-  <div id="criterion-modal" class="modal hidden">
-    <div class="modal-backdrop" onclick="closeCriterionModal()"></div>
-    <div class="modal-box">
+  <!-- ===== MODAL: CRITERIA MANAGER ===== -->
+  <div id="criteria-modal" class="modal hidden">
+    <div class="modal-backdrop" onclick="closeCriteriaManager()"></div>
+    <div class="modal-box modal-box-wide">
       <div class="modal-header">
-        <h2>📝 AJOUTER UN CRITÈRE</h2>
-        <button class="modal-close" onclick="closeCriterionModal()">✕</button>
+        <h2>📝 CRITÈRES D'ÉVALUATION</h2>
+        <button class="modal-close" onclick="closeCriteriaManager()">✕</button>
+      </div>
+      <div class="modal-body">
+
+        <!-- PFEQ COMPETENCES -->
+        <p style="font-size:0.95rem;color:#666;margin-bottom:12px;">Coche les intentions pédagogiques du programme que tu souhaites évaluer.</p>
+        <div id="pfeq-sections">
+          <!-- Rempli par JS: Agir, Interagir, Santé -->
+        </div>
+
+        <hr style="margin:18px 0;border:1px solid #ddd;" />
+
+        <!-- CUSTOM CRITERIA -->
+        <div class="form-field">
+          <label>✏️ AJOUTER UN CRITÈRE PERSONNALISÉ</label>
+          <div style="display:flex;gap:8px;">
+            <input type="text" id="new-criterion-input" class="form-input" placeholder="Ex: Réception à deux mains" style="flex:1;" onkeydown="if(event.key==='Enter')addCustomCriterion()" />
+            <select id="new-criterion-type" class="form-input" style="width:auto;">
+              <option value="stars">⭐ Étoiles</option>
+              <option value="check">☑️ Oui/Non</option>
+              <option value="badge">👀 +/-</option>
+              <option value="grade">🔤 A-E</option>
+            </select>
+            <button class="export-btn export-pdf" onclick="addCustomCriterion()" style="font-size:1rem;padding:6px 14px;">➕</button>
+          </div>
+        </div>
+        <div class="form-field">
+          <label>MES CRITÈRES</label>
+          <div id="custom-criteria-list"></div>
+        </div>
+        <hr style="margin:16px 0;border:1px solid #ddd;" />
+        <div class="form-field">
+          <label>CRITÈRES RAPIDES (cliquer pour ajouter)</label>
+          <div class="quick-criteria" id="quick-criteria"></div>
+        </div>
+        <div class="modal-actions">
+          <button class="export-btn export-csv" onclick="closeCriteriaManager()">FERMER</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== KILLER FEATURE: RANDOM PICKER OVERLAY ===== -->
+  <div id="picker-overlay" class="picker-overlay hidden">
+    <div class="picker-card">
+      <div class="picker-title">🎲 PIGER UN ÉLÈVE</div>
+      <div class="picker-name" id="picker-name">...</div>
+      <button class="picker-close" onclick="closePicker()">✕</button>
+    </div>
+  </div>
+
+  <!-- ===== KILLER FEATURE: FÉLICITATIONS OVERLAY ===== -->
+  <div id="felicitations-overlay" class="felicitations-overlay hidden">
+    <div class="felicitations-content">
+      <div class="felicitations-emoji">🎉🏆🎉</div>
+      <div class="felicitations-text">FÉLICITATIONS!</div>
+      <div class="confetti-container" id="confetti-container"></div>
+    </div>
+  </div>
+
+  <!-- ===== KILLER FEATURE: MINUTEUR DE CALME OVERLAY ===== -->
+  <div id="calme-overlay" class="calme-overlay hidden">
+    <div class="calme-content">
+      <div class="calme-circle" id="calme-circle">
+        <span class="calme-number" id="calme-number">5</span>
+      </div>
+      <div class="calme-text">ON SE CALME...</div>
+    </div>
+  </div>
+
+  <!-- ===== KILLER FEATURE: TEAM GENERATOR MODAL ===== -->
+  <div id="team-modal" class="modal hidden">
+    <div class="modal-backdrop" onclick="closeTeamModal()"></div>
+    <div class="modal-box modal-box-wide">
+      <div class="modal-header">
+        <h2>👥 GÉNÉRATEUR D'ÉQUIPES</h2>
+        <button class="modal-close" onclick="closeTeamModal()">✕</button>
       </div>
       <div class="modal-body">
         <div class="form-field">
-          <label>NOM DU CRITÈRE</label>
-          <input type="text" id="criterion-name-input" class="form-input" placeholder="Ex: Lancer avec précision" />
+          <label>NOMBRE D'ÉQUIPES</label>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <button class="ctr-btn ctr-minus" onclick="changeTeamCount(-1)" style="width:36px;height:36px;">−</button>
+            <span id="team-count" style="font-family:Bangers;font-size:1.8rem;min-width:40px;text-align:center;">2</span>
+            <button class="ctr-btn ctr-plus" onclick="changeTeamCount(1)" style="width:36px;height:36px;">+</button>
+          </div>
         </div>
         <div class="form-field">
-          <label>TYPE DE SAISIE</label>
-          <div class="type-picker" id="type-picker">
-            <button class="type-option active" data-type="grade" onclick="pickCritType('grade')">
-              <span class="type-icon">🔤</span><span class="type-label">Note A-E</span>
-            </button>
-            <button class="type-option" data-type="check" onclick="pickCritType('check')">
-              <span class="type-icon">✅</span><span class="type-label">Cocher</span>
-            </button>
-            <button class="type-option" data-type="rating" onclick="pickCritType('rating')">
-              <span class="type-icon">⭐</span><span class="type-label">Étoiles 1-5</span>
-            </button>
-            <button class="type-option" data-type="badge" onclick="pickCritType('badge')">
-              <span class="type-icon">🏷️</span><span class="type-label">Badge +/-</span>
-            </button>
-            <button class="type-option" data-type="counter" onclick="pickCritType('counter')">
-              <span class="type-icon">🔢</span><span class="type-label">Compteur</span>
-            </button>
+          <label>⚠️ CONFLITS (élèves à séparer)</label>
+          <div id="conflict-list"></div>
+          <div style="display:flex;gap:8px;margin-top:6px;">
+            <select id="conflict-a" class="form-input" style="flex:1;"></select>
+            <span style="font-family:Bangers;align-self:center;">≠</span>
+            <select id="conflict-b" class="form-input" style="flex:1;"></select>
+            <button class="export-btn export-pdf" onclick="addConflict()" style="font-size:0.9rem;padding:4px 10px;">➕</button>
           </div>
         </div>
         <div class="modal-actions">
-          <button class="btn-primary" onclick="saveCriterion()">💾 AJOUTER</button>
-          <button class="btn-secondary" onclick="closeCriterionModal()">ANNULER</button>
+          <button class="export-btn export-pdf" onclick="generateTeams()" style="font-size:1.1rem;">🎲 GÉNÉRER!</button>
+          <button class="export-btn export-csv" onclick="closeTeamModal()">FERMER</button>
         </div>
+        <div id="team-results" style="margin-top:14px;"></div>
       </div>
     </div>
   </div>
 
-  <!-- MODAL: LEXIQUE PFEQ -->
-  <div id="lexique-modal" class="modal hidden">
-    <div class="modal-backdrop" onclick="closeLexiqueModal()"></div>
-    <div class="modal-box modal-lg">
+  <!-- ===== KILLER FEATURE: COLOR EVAL SETTINGS MODAL ===== -->
+  <div id="color-settings-modal" class="modal hidden">
+    <div class="modal-backdrop" onclick="closeColorSettings()"></div>
+    <div class="modal-box">
       <div class="modal-header">
-        <h2>📚 LEXIQUE PFEQ</h2>
-        <button class="modal-close" onclick="closeLexiqueModal()">✕</button>
+        <h2>🎨 COULEURS D'ÉVALUATION</h2>
+        <button class="modal-close" onclick="closeColorSettings()">✕</button>
       </div>
-      <div class="modal-body" id="lexique-content">
-        <!-- Filled by JS -->
+      <div class="modal-body">
+        <div class="form-field">
+          <label>Personnalise la signification de chaque couleur :</label>
+          <div class="color-meaning-list">
+            <div class="color-meaning-row"><span class="color-dot" style="background:#4CAF50;"></span><input type="text" id="cm-green" class="form-input" value="Excellent" /></div>
+            <div class="color-meaning-row"><span class="color-dot" style="background:#FFD600;"></span><input type="text" id="cm-yellow" class="form-input" value="En progrès" /></div>
+            <div class="color-meaning-row"><span class="color-dot" style="background:#F44336;"></span><input type="text" id="cm-red" class="form-input" value="Difficulté" /></div>
+            <div class="color-meaning-row"><span class="color-dot" style="background:#9C27B0;"></span><input type="text" id="cm-purple" class="form-input" value="À observer" /></div>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="export-btn export-pdf" onclick="saveColorMeanings()">💾 SAUVEGARDER</button>
+          <button class="export-btn export-csv" onclick="closeColorSettings()">FERMER</button>
+        </div>
       </div>
     </div>
   </div>
@@ -253,6 +327,8 @@
   <!-- TOAST -->
   <div id="toast" class="toast hidden"></div>
 
+  <script src="../i18n.js"></script>
+  <script src="lang/translations.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
