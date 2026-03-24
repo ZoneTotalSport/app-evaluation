@@ -95,7 +95,7 @@ button{cursor:pointer;border:none;background:none;font-family:'Bangers',sans-ser
 /* (date line removed — info in tabs now) */
 
 /* Modal wide for criteria */
-.modal-box-wide{max-width:95vw;width:95vw;}
+.modal-box.modal-box-wide{max-width:96vw;width:96vw;}
 
 /* ========== CONTENT AREA ========== */
 .content-area{flex:1;overflow-y:auto;overflow-x:auto;padding:0;}
