@@ -530,6 +530,10 @@ function renderEvalTable(area){
   if(!group){area.innerHTML='';return;}
 
   var items=getAllEvalCriteria();
+  if(!items.length){
+    area.innerHTML='<div style="text-align:center;padding:40px 20px;"><div style="font-size:3rem;margin-bottom:12px;">📝</div><div style="font-family:Bangers;font-size:1.4rem;color:#666;letter-spacing:1px;">AUCUN CRITÈRE SÉLECTIONNÉ</div><div style="font-size:1rem;color:#999;margin:8px 0 16px;">Ajoute des critères PFEQ ou personnalisés pour commencer l\'évaluation.</div><button class="export-btn export-pdf" onclick="openCriteriaManager()" style="font-size:1.1rem;">📝 CHOISIR MES CRITÈRES</button></div>';
+    return;
+  }
   var voice=getVoice();
   var gv=(voice[_groupId]&&voice[_groupId][_sessionDate])||{};
   var color=group.color||'cyan';
