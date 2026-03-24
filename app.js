@@ -43,6 +43,24 @@ var PFEQ_COMPETENCES = [
     { key: 'agir_locomotion', label: 'Locomotion (courir, sauter, ramper)' },
     { key: 'agir_manipulation', label: 'Manipulation d\'objets' },
     { key: 'agir_securite', label: 'Respect des règles de sécurité' },
+    { key: 'agir_lancer', label: 'Lancer (précision, force, trajectoire)' },
+    { key: 'agir_attraper', label: 'Attraper (réception, amortissement)' },
+    { key: 'agir_frapper', label: 'Frapper (avec pied, main, raquette, bâton)' },
+    { key: 'agir_dribbler', label: 'Dribbler (ballon, rondelle)' },
+    { key: 'agir_sauter', label: 'Sauter (hauteur, longueur, enchaînement)' },
+    { key: 'agir_rouler', label: 'Rouler (roulade avant, arrière, latérale)' },
+    { key: 'agir_grimper', label: 'Grimper et suspension' },
+    { key: 'agir_esquiver', label: 'Esquiver et feinter' },
+    { key: 'agir_posture', label: 'Posture et alignement corporel' },
+    { key: 'agir_rythme', label: 'Rythme et tempo' },
+    { key: 'agir_enchainement', label: 'Enchaînement de mouvements' },
+    { key: 'agir_precision', label: 'Précision du geste technique' },
+    { key: 'agir_puissance', label: 'Puissance et force musculaire' },
+    { key: 'agir_souplesse', label: 'Souplesse et flexibilité' },
+    { key: 'agir_endurance', label: 'Endurance cardiovasculaire' },
+    { key: 'agir_vitesse', label: 'Vitesse de réaction et d\'exécution' },
+    { key: 'agir_agilite', label: 'Agilité et changements de direction' },
+    { key: 'agir_lateralite', label: 'Latéralité (main/pied dominant et non-dominant)' },
   ]},
   { key: 'interagir', label: '🤝 INTERAGIR', desc: 'Interagir dans divers contextes de pratique d\'activités physiques', items: [
     { key: 'inter_coop', label: 'Coopération avec les partenaires' },
@@ -53,6 +71,20 @@ var PFEQ_COMPETENCES = [
     { key: 'inter_roles', label: 'Application des rôles (attaque/défense)' },
     { key: 'inter_ethique', label: 'Éthique sportive et fair-play' },
     { key: 'inter_eval', label: 'Évaluation de la démarche collective' },
+    { key: 'inter_passe', label: 'Qualité des passes (précision, timing)' },
+    { key: 'inter_reception', label: 'Réception et contrôle du ballon' },
+    { key: 'inter_demarquage', label: 'Démarquage et occupation de l\'espace' },
+    { key: 'inter_marquage', label: 'Marquage et couverture défensive' },
+    { key: 'inter_transition', label: 'Transition attaque-défense' },
+    { key: 'inter_aide', label: 'Aide et entraide entre coéquipiers' },
+    { key: 'inter_arbitrage', label: 'Capacité d\'arbitrage et jugement' },
+    { key: 'inter_leadership', label: 'Leadership positif dans l\'équipe' },
+    { key: 'inter_conflits', label: 'Gestion des conflits' },
+    { key: 'inter_encouragement', label: 'Encouragement des pairs' },
+    { key: 'inter_adaptation', label: 'Adaptation aux actions adverses' },
+    { key: 'inter_lecture_jeu', label: 'Lecture du jeu et anticipation' },
+    { key: 'inter_creation_jeu', label: 'Création de jeu (feintes, passes décisives)' },
+    { key: 'inter_respect_regles', label: 'Respect des règles du jeu' },
   ]},
   { key: 'sante', label: '❤️ SANTÉ', desc: 'Adopter un mode de vie sain et actif', items: [
     { key: 'sante_condition', label: 'Condition physique' },
@@ -63,6 +95,16 @@ var PFEQ_COMPETENCES = [
     { key: 'sante_securite', label: 'Sécurité dans la pratique' },
     { key: 'sante_effort', label: 'Persévérance et engagement dans l\'effort' },
     { key: 'sante_bienetre', label: 'Bien-être physique et mental' },
+    { key: 'sante_echauffement', label: 'Échauffement et retour au calme' },
+    { key: 'sante_frequence_cardiaque', label: 'Connaissance de sa fréquence cardiaque' },
+    { key: 'sante_sommeil', label: 'Importance du sommeil' },
+    { key: 'sante_posture_quotidienne', label: 'Posture dans la vie quotidienne' },
+    { key: 'sante_gestion_effort', label: 'Gestion de l\'intensité de l\'effort' },
+    { key: 'sante_relaxation', label: 'Techniques de relaxation' },
+    { key: 'sante_image_corporelle', label: 'Image corporelle positive' },
+    { key: 'sante_objectifs', label: 'Fixation d\'objectifs personnels' },
+    { key: 'sante_autonomie', label: 'Autonomie dans la pratique' },
+    { key: 'sante_responsabilite', label: 'Responsabilité face à sa santé' },
   ]},
 ];
 
@@ -890,6 +932,21 @@ function renderEvalTable(area){
         html+='<span class="obs-val" style="font-size:0.9rem;color:var(--red);">'+neg+'</span>';
         html+='<button class="obs-btn obs-minus" onclick="addEvalObs(\''+s.id+'\',\''+c.key+'\',-1)" style="width:28px;height:28px;font-size:0.85rem;">−</button>';
         html+='</div>';
+      } else if(c.type==='color'){
+        var v=getVal(s.id,c.key)||'';
+        html+='<div class="color-eval-row" style="justify-content:center;">';
+        ['green','yellow','red','purple'].forEach(function(col){
+          html+='<button class="color-eval-btn ce-'+col+(v===col?' active':'')+'" onclick="setVal(\''+s.id+'\',\''+c.key+'\',\''+(v===col?'':col)+'\');renderContent()"></button>';
+        });
+        html+='</div>';
+      } else if(c.type==='number'){
+        var v=getVal(s.id,c.key);
+        if(v===undefined||v===null)v='';
+        html+='<input type="number" min="0" max="10" value="'+v+'" class="eval-number-input" onchange="setVal(\''+s.id+'\',\''+c.key+'\',parseInt(this.value)||0);renderContent()" />';
+      } else if(c.type==='percent'){
+        var v=getVal(s.id,c.key);
+        if(v===undefined||v===null)v='';
+        html+='<div style="display:flex;align-items:center;gap:2px;justify-content:center;"><input type="number" min="0" max="100" step="5" value="'+v+'" class="eval-number-input" style="width:55px;" onchange="setVal(\''+s.id+'\',\''+c.key+'\',parseInt(this.value)||0);renderContent()" /><span style="font-family:Bangers;font-size:0.9rem;">%</span></div>';
       }
       html+='</td>';
     });
@@ -1301,23 +1358,42 @@ function closeCriteriaManager(){document.getElementById('criteria-modal').classL
 function renderPfeqSections(){
   var container=document.getElementById('pfeq-sections');if(!container)return;
   var selected=getPfeqSelected();
-  var html='';
+  var html='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;">';
   PFEQ_COMPETENCES.forEach(function(comp){
     var colors={agir:'#2979FF',interagir:'#FF9100',sante:'#E91E63'};
     var color=colors[comp.key]||'#333';
-    html+='<div class="pfeq-section" style="border-left:4px solid '+color+';margin-bottom:12px;padding:10px 14px;background:rgba(255,255,255,0.5);border-radius:8px;">';
-    html+='<div class="pfeq-section-title" style="font-family:Bangers;font-size:1.2rem;color:'+color+';letter-spacing:1px;margin-bottom:4px;">'+comp.label+'</div>';
-    html+='<div style="font-size:0.8rem;color:#666;margin-bottom:8px;">'+esc(comp.desc)+'</div>';
+    html+='<div class="pfeq-section" style="border-left:5px solid '+color+';padding:12px 16px;background:rgba(255,255,255,0.6);border-radius:10px;">';
+    html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">';
+    html+='<div class="pfeq-section-title" style="font-family:Bangers;font-size:1.4rem;color:'+color+';letter-spacing:1px;">'+comp.label+' <span style="font-size:0.8rem;color:#999;">('+comp.items.length+')</span></div>';
+    html+='<button class="tbtn tbtn-off" style="font-size:0.75rem;padding:2px 8px;" onclick="toggleAllPfeq(\''+comp.key+'\')">Tout cocher</button>';
+    html+='</div>';
+    html+='<div style="font-size:0.85rem;color:#666;margin-bottom:8px;">'+esc(comp.desc)+'</div>';
+    html+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:2px;">';
     comp.items.forEach(function(item){
       var checked=selected.indexOf(item.key)>=0;
-      html+='<label class="pfeq-check-label" style="display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;font-size:0.92rem;">';
-      html+='<input type="checkbox" class="pfeq-check" data-key="'+item.key+'" '+(checked?'checked':'')+' onchange="togglePfeqItem(\''+item.key+'\')" />';
+      html+='<label class="pfeq-check-label" style="display:flex;align-items:center;gap:8px;padding:4px 6px;cursor:pointer;font-size:0.95rem;border-radius:6px;transition:background 0.1s;'+(checked?'background:rgba(0,212,255,0.12);':'')+'">';
+      html+='<input type="checkbox" class="pfeq-check" data-key="'+item.key+'" '+(checked?'checked':'')+' onchange="togglePfeqItem(\''+item.key+'\')" style="width:18px;height:18px;" />';
       html+='<span>'+esc(item.label)+'</span>';
       html+='</label>';
     });
-    html+='</div>';
+    html+='</div></div>';
   });
+  html+='</div>';
   container.innerHTML=html;
+}
+
+function toggleAllPfeq(compKey){
+  var comp=PFEQ_COMPETENCES.find(function(c){return c.key===compKey;});
+  if(!comp)return;
+  var selected=getPfeqSelected();
+  var allChecked=comp.items.every(function(it){return selected.indexOf(it.key)>=0;});
+  comp.items.forEach(function(it){
+    var idx=selected.indexOf(it.key);
+    if(allChecked){if(idx>=0)selected.splice(idx,1);}
+    else{if(idx<0)selected.push(it.key);}
+  });
+  setPfeqSelected(selected);
+  renderPfeqSections();
 }
 
 function togglePfeqItem(key){
@@ -1351,7 +1427,7 @@ function renderCriteriaList(){
   var criteria=getCustomCriteria();
   if(!criteria.length){container.innerHTML='<div class="no-crit-msg">Aucun critère. Ajoute-en!</div>';return;}
   var html='';
-  var typeLabels={stars:'⭐',check:'☑️',badge:'👀 +/-',grade:'🔤 A-E'};
+  var typeLabels={stars:'⭐',check:'☑️',badge:'👀 +/−',grade:'🔤 A-E',color:'🎨',number:'🔢 0-10',percent:'📊 %'};
   criteria.forEach(function(c,i){
     html+='<div class="custom-crit-item"><span class="cn">'+(typeLabels[c.type]||'⭐')+' '+esc(c.label)+'</span><span class="ct">('+c.type+')</span>';
     html+='<button class="cx" onclick="removeCustomCriterion('+i+')">✕</button></div>';

@@ -221,10 +221,13 @@
           <div style="display:flex;gap:8px;">
             <input type="text" id="new-criterion-input" class="form-input" placeholder="Ex: Réception à deux mains" style="flex:1;" onkeydown="if(event.key==='Enter')addCustomCriterion()" />
             <select id="new-criterion-type" class="form-input" style="width:auto;">
-              <option value="stars">⭐ Étoiles</option>
+              <option value="stars">⭐ Étoiles (1-5)</option>
               <option value="check">☑️ Oui/Non</option>
-              <option value="badge">👀 +/-</option>
-              <option value="grade">🔤 A-E</option>
+              <option value="badge">👀 +/−</option>
+              <option value="grade">🔤 Lettres (A-E)</option>
+              <option value="color">🎨 Couleurs</option>
+              <option value="number">🔢 Chiffre (0-10)</option>
+              <option value="percent">📊 Pourcentage (%)</option>
             </select>
             <button class="export-btn export-pdf" onclick="addCustomCriterion()" style="font-size:1rem;padding:6px 14px;">➕</button>
           </div>
