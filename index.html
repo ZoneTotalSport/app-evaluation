@@ -27,6 +27,8 @@
     <div class="header-center">
       <button class="export-btn export-pdf" onclick="exportPDF()">📄 PDF</button>
       <button class="export-btn export-csv" onclick="exportCSV()">📊 CSV</button>
+      <button class="export-btn" style="background:var(--green);color:#000;" onclick="openBackupModal()">💾 BACKUP</button>
+      <span id="save-indicator" class="save-indicator">💾 Sauvegarde auto</span>
     </div>
     <div class="header-right">
       <button class="zoom-btn" onclick="zoomOut()" title="Réduire">➖</button>
@@ -39,10 +41,13 @@
     </div>
   </header>
 
-  <!-- ===== MODE TABS (Aujourd'hui / Évaluation / Résumé) ===== -->
+  <!-- ===== MODE TABS ===== -->
   <nav class="mode-tabs" id="mode-tabs">
-    <button class="mtab active" data-mode="aujourdhui" onclick="switchMode('aujourdhui')">
-      ☑️ AUJOURD'HUI
+    <button class="mtab active" data-mode="presence" onclick="switchMode('presence')">
+      📸 PRÉSENCE
+    </button>
+    <button class="mtab" data-mode="aujourdhui" onclick="switchMode('aujourdhui')">
+      👁️ J'OBSERVE
     </button>
     <button class="mtab" data-mode="evaluation" onclick="switchMode('evaluation')">
       ⭐ ÉVALUATION
@@ -67,11 +72,11 @@
       <!-- CRITERIA BAR (top — for Évaluation mode) -->
       <div class="criteria-bar hidden" id="criteria-bar"></div>
 
-      <!-- TODAY TOOLBAR (for Aujourd'hui mode: choose what to observe) -->
+      <!-- TODAY TOOLBAR (for J'observe mode: choose what to observe) -->
       <div class="today-toolbar" id="today-toolbar">
-        <span class="today-label">Observer :</span>
-        <div class="today-checks" id="today-checks">
-          <!-- Filled by JS -->
+        <span class="today-label">J'observe</span>
+        <div class="observe-criteria-bar" id="observe-criteria-bar">
+          <!-- Filled by JS: styled pill buttons -->
         </div>
         <button class="today-add-btn" onclick="openCriteriaManager()" title="Gérer mes critères">📝 MES CRITÈRES</button>
       </div>
@@ -106,34 +111,44 @@
         <img src="img/bucheron-eval.png" alt="Bûcheron Évaluation" class="hero-mascot" />
         <div>
           <h1 class="hero-title">CARNET <span class="gradient-text">EPS</span></h1>
-          <p class="hero-subtitle">Le carnet de notes num&eacute;rique con&ccedil;u pour les enseignants d'&eacute;ducation physique en gymnase</p>
+          <p class="hero-subtitle">Ton carnet de notes num&eacute;rique 100% gratuit, con&ccedil;u pour les enseignants d'&eacute;ducation physique et &agrave; la sant&eacute;. Fonctionne sur tablette, t&eacute;l&eacute;phone ou ordinateur, directement dans ton navigateur. Aucun compte requis!</p>
         </div>
       </div>
 
+      <p class="hero-howto">Comment &ccedil;a marche? Cr&eacute;e un groupe, ajoute tes &eacute;l&egrave;ves, et commence &agrave; observer en gymnase!</p>
+
       <div class="hero-features">
         <div class="hero-feature">
-          <span class="hero-feature-icon">☑️</span>
-          <span><strong>Pr&eacute;sences &amp; v&eacute;rifications</strong> — Tenue, mat&eacute;riel, s&eacute;curit&eacute; en un clic</span>
+          <span class="hero-feature-icon">📸</span>
+          <span><strong>Prise de pr&eacute;sence visuelle</strong> — Les photos de tes &eacute;l&egrave;ves apparaissent en noir &amp; blanc. Un simple clic les passe en couleur pour indiquer qu'ils sont pr&eacute;sents. L'historique complet des absences est sauvegard&eacute; toute l'ann&eacute;e.</span>
+        </div>
+        <div class="hero-feature">
+          <span class="hero-feature-icon">👁️</span>
+          <span><strong>J'observe</strong> — Observe tes &eacute;l&egrave;ves en action! S&eacute;lectionne les crit&egrave;res &agrave; &eacute;valuer (tenue sportive, mat&eacute;riel, s&eacute;curit&eacute;, comportement, effort, participation, &eacute;coute, fair-play, autonomie) et note chaque &eacute;l&egrave;ve directement sur ta tablette.</span>
         </div>
         <div class="hero-feature">
           <span class="hero-feature-icon">⭐</span>
-          <span><strong>&Eacute;value avec tes crit&egrave;res</strong> — &Eacute;toiles, notes A-E, +/- comportement, oui/non</span>
+          <span><strong>&Eacute;valuation par crit&egrave;res PFEQ</strong> — Choisis parmi les 3 comp&eacute;tences du programme (Agir, Interagir, Sant&eacute;) et &eacute;value avec des &eacute;toiles, des notes A-E, des +/- ou oui/non. Ajoute aussi tes propres crit&egrave;res personnalis&eacute;s.</span>
         </div>
         <div class="hero-feature">
           <span class="hero-feature-icon">⏱️</span>
-          <span><strong>Chrono de groupe</strong> — Lance le temps pour tous, enregistre chaque tour</span>
+          <span><strong>Chrono de groupe</strong> — Lance un chronom&egrave;tre pour toute la classe et enregistre les tours individuels de chaque &eacute;l&egrave;ve. Parfait pour les courses, les circuits ou les d&eacute;fis chrono!</span>
         </div>
         <div class="hero-feature">
-          <span class="hero-feature-icon">📝</span>
-          <span><strong>Tes propres crit&egrave;res</strong> — Personnalise ce que tu observes en gymnase</span>
+          <span class="hero-feature-icon">🔢</span>
+          <span><strong>Compteur de r&eacute;ussites</strong> — Compte les scores, r&eacute;ussites et tentatives de chaque &eacute;l&egrave;ve avec des boutons +/- simples et rapides.</span>
+        </div>
+        <div class="hero-feature">
+          <span class="hero-feature-icon">🎲</span>
+          <span><strong>Outils de gymnase</strong> — Pige un &eacute;l&egrave;ve au hasard, g&eacute;n&egrave;re des &eacute;quipes &eacute;quilibr&eacute;es (avec gestion de conflits), lance le minuteur de calme, et f&eacute;licite la classe avec confettis!</span>
         </div>
         <div class="hero-feature">
           <span class="hero-feature-icon">📄</span>
-          <span><strong>Exporte en PDF &amp; CSV</strong> — Imprime, partage ou archive tes donn&eacute;es</span>
+          <span><strong>Exporte en PDF &amp; CSV</strong> — Imprime tes bilans ou exporte en tableur pour le bulletin. Toutes tes donn&eacute;es sont sauvegard&eacute;es localement sur ton appareil.</span>
         </div>
         <div class="hero-feature">
           <span class="hero-feature-icon">🎙️</span>
-          <span><strong>Notes vocales</strong> — Enregistre des commentaires pour chaque &eacute;l&egrave;ve</span>
+          <span><strong>Notes vocales &amp; textuelles</strong> — Enregistre un commentaire audio ou dicte une note pour chaque &eacute;l&egrave;ve directement en gymnase, les mains libres!</span>
         </div>
       </div>
 
@@ -141,10 +156,12 @@
         <button class="btn-primary" onclick="createGroup()">
           ➕ CR&Eacute;ER MON PREMIER GROUPE <span class="btn-arrow">→</span>
         </button>
+        <p class="hero-cta-hint">Tes donn&eacute;es restent sur ton appareil. Rien n'est envoy&eacute; sur internet.</p>
       </div>
 
       <div class="hero-footer">
         <img src="img/logo-zonetotalsport.png" alt="Zone Total Sport" class="hero-logo" />
+        <p class="hero-credits">Zone Total Sport &mdash; &Eacute;ducation physique et &agrave; la sant&eacute;</p>
       </div>
     </div>
   </section>
@@ -319,6 +336,66 @@
         <div class="modal-actions">
           <button class="export-btn export-pdf" onclick="saveColorMeanings()">💾 SAUVEGARDER</button>
           <button class="export-btn export-csv" onclick="closeColorSettings()">FERMER</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODAL: PRESENCE HISTORY ===== -->
+  <div id="history-modal" class="modal hidden">
+    <div class="modal-backdrop" onclick="closeHistoryModal()"></div>
+    <div class="modal-box modal-box-wide" style="max-width:800px;">
+      <div class="modal-header">
+        <h2>📅 HISTORIQUE DES PRÉSENCES</h2>
+        <button class="modal-close" onclick="closeHistoryModal()">✕</button>
+      </div>
+      <div class="modal-body" id="history-modal-body" style="max-height:70vh;overflow:auto;">
+        <!-- Filled by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODAL: BACKUP / RESTORE ===== -->
+  <div id="backup-modal" class="modal hidden">
+    <div class="modal-backdrop" onclick="closeBackupModal()"></div>
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2>💾 SAUVEGARDE & RESTAURATION</h2>
+        <button class="modal-close" onclick="closeBackupModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="margin-bottom:16px;line-height:1.5;">
+          Tes données sont sauvegardées <strong>automatiquement</strong> sur cet appareil.
+          Utilise ces options pour créer une copie de sécurité ou transférer tes données vers un autre appareil.
+        </p>
+
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div class="backup-option" onclick="exportAllData()" style="cursor:pointer;">
+            <div class="backup-option-icon">📥</div>
+            <div>
+              <strong style="font-family:Bangers;font-size:1.2rem;letter-spacing:1px;">EXPORTER MES DONNÉES</strong>
+              <p style="font-size:0.95rem;color:#666;margin-top:4px;">Télécharge un fichier JSON contenant tous tes groupes, élèves, photos, notes et historique. Garde-le en lieu sûr!</p>
+            </div>
+          </div>
+
+          <div class="backup-option" onclick="importAllData()" style="cursor:pointer;">
+            <div class="backup-option-icon">📤</div>
+            <div>
+              <strong style="font-family:Bangers;font-size:1.2rem;letter-spacing:1px;">RESTAURER MES DONNÉES</strong>
+              <p style="font-size:0.95rem;color:#666;margin-top:4px;">Charge un fichier de sauvegarde pour restaurer tes données. Utile pour changer d'appareil ou après un effacement du cache.</p>
+            </div>
+          </div>
+        </div>
+
+        <hr style="margin:18px 0;border:1px solid #ddd;" />
+        <div style="background:rgba(0,212,255,0.08);border-radius:12px;padding:12px 16px;border:2px solid rgba(0,212,255,0.2);">
+          <p style="font-size:0.95rem;color:#555;margin:0;">
+            <strong>🔒 Vie privée :</strong> Toutes tes données restent sur TON appareil. Rien n'est envoyé sur internet. Le fichier de sauvegarde te permet de garder une copie sur ton ordinateur, clé USB ou Google Drive.
+          </p>
+        </div>
+
+        <div class="modal-actions">
+          <button class="export-btn export-csv" onclick="closeBackupModal()">FERMER</button>
         </div>
       </div>
     </div>

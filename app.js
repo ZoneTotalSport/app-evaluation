@@ -82,7 +82,7 @@ var QUICK_CRITERIA = [
 // STATE
 // ═══════════════════════════════════
 var _groupId = null;
-var _mode = 'aujourdhui';
+var _mode = 'presence';
 var _sessionDate = todayStr();
 var _selectedColor = 'cyan';
 var _editingGroupId = null;
@@ -97,11 +97,72 @@ function esc(s) { var d=document.createElement('div');d.textContent=s;return d.i
 // STORAGE
 // ═══════════════════════════════════
 function getGroups(){try{return JSON.parse(localStorage.getItem('carneteps-groups')||'[]');}catch(e){return[];}}
-function setGroups(g){localStorage.setItem('carneteps-groups',JSON.stringify(g));}
+function setGroups(g){localStorage.setItem('carneteps-groups',JSON.stringify(g));showSaveIndicator();}
 function getData(){try{return JSON.parse(localStorage.getItem('carneteps-data')||'{}');}catch(e){return{};}}
-function setData(d){localStorage.setItem('carneteps-data',JSON.stringify(d));}
-function getPhotos(){try{return JSON.parse(localStorage.getItem('carneteps-photos')||'{}');}catch(e){return{};}}
-function setPhotos(p){localStorage.setItem('carneteps-photos',JSON.stringify(p));}
+function setData(d){localStorage.setItem('carneteps-data',JSON.stringify(d));showSaveIndicator();}
+// Photos: IndexedDB (large storage) with localStorage fallback
+var _photosCache={};
+var _photosReady=false;
+var _idb=null;
+
+function initPhotosDB(cb){
+  if(!window.indexedDB){_photosReady=true;_photosCache=JSON.parse(localStorage.getItem('carneteps-photos')||'{}');if(cb)cb();return;}
+  var req=indexedDB.open('carneteps-photos-db',1);
+  req.onupgradeneeded=function(e){e.target.result.createObjectStore('photos');};
+  req.onsuccess=function(e){
+    _idb=e.target.result;
+    // Load all photos into cache
+    var tx=_idb.transaction('photos','readonly');
+    var store=tx.objectStore('photos');
+    var getAll=store.getAll();
+    var getAllKeys=store.getAllKeys();
+    getAll.onsuccess=function(){
+      getAllKeys.onsuccess=function(){
+        for(var i=0;i<getAllKeys.result.length;i++){
+          _photosCache[getAllKeys.result[i]]=getAll.result[i];
+        }
+        // Migrate from localStorage if needed
+        try{
+          var old=JSON.parse(localStorage.getItem('carneteps-photos')||'{}');
+          var migrated=false;
+          Object.keys(old).forEach(function(k){
+            if(!_photosCache[k]){_photosCache[k]=old[k];savePhotoToDB(k,old[k]);migrated=true;}
+          });
+          if(migrated)localStorage.removeItem('carneteps-photos');
+        }catch(ex){}
+        _photosReady=true;
+        if(cb)cb();
+      };
+    };
+  };
+  req.onerror=function(){_photosReady=true;_photosCache=JSON.parse(localStorage.getItem('carneteps-photos')||'{}');if(cb)cb();};
+}
+
+function savePhotoToDB(key,val){
+  if(!_idb)return;
+  var tx=_idb.transaction('photos','readwrite');
+  tx.objectStore('photos').put(val,key);
+}
+function deletePhotoFromDB(key){
+  if(!_idb)return;
+  var tx=_idb.transaction('photos','readwrite');
+  tx.objectStore('photos').delete(key);
+}
+
+function getPhotos(){return _photosCache;}
+function setPhotos(p){
+  _photosCache=p;
+  if(_idb){
+    // Sync to IndexedDB
+    var tx=_idb.transaction('photos','readwrite');
+    var store=tx.objectStore('photos');
+    store.clear();
+    Object.keys(p).forEach(function(k){store.put(p[k],k);});
+  } else {
+    localStorage.setItem('carneteps-photos',JSON.stringify(p));
+  }
+  showSaveIndicator();
+}
 function getVoice(){try{return JSON.parse(localStorage.getItem('carneteps-voice')||'{}');}catch(e){return{};}}
 function setVoice(v){localStorage.setItem('carneteps-voice',JSON.stringify(v));}
 function getCustomCriteria(){try{return JSON.parse(localStorage.getItem('carneteps-custom')||'[]');}catch(e){return[];}}
@@ -134,7 +195,7 @@ function setVal(sid,key,val){
 // ═══════════════════════════════════
 document.addEventListener('DOMContentLoaded', function(){
   _groupId = localStorage.getItem('carneteps-lastgroup')||null;
-  _mode = localStorage.getItem('carneteps-mode')||'aujourdhui';
+  _mode = localStorage.getItem('carneteps-mode')||'presence';
   _zoomLevel = parseInt(localStorage.getItem('carneteps-zoom')||'100');
   applyZoom();
 
@@ -143,7 +204,8 @@ document.addEventListener('DOMContentLoaded', function(){
   if(saved&&t)t.textContent=saved;
   if(t)t.addEventListener('input',function(){localStorage.setItem('carneteps-title',t.textContent);});
 
-  renderAll();
+  // Init IndexedDB for photos, then render
+  initPhotosDB(function(){renderAll();});
 });
 
 // ═══════════════════════════════════
@@ -251,14 +313,211 @@ function renderContent(){
   // Show/hide toolbars
   toolbar.classList.toggle('hidden',_mode!=='aujourdhui');
   critbar.classList.toggle('hidden',_mode!=='evaluation');
+  // Hide killer toolbar in presence mode for cleaner look
+  var killerBar=document.getElementById('killer-toolbar');
+  if(killerBar)killerBar.classList.toggle('hidden',_mode==='presence');
 
   switch(_mode){
-    case 'aujourdhui': renderTodayToolbar(); renderTodayCards(area); break;
+    case 'presence': renderPresenceGrid(area); break;
+    case 'aujourdhui': renderObserveCriteriaBar(); renderTodayCards(area); break;
     case 'evaluation': renderCriteriaBar(); renderEvalTable(area); break;
     case 'chrono': renderChronoTable(area); break;
     case 'compteur': renderCounterTable(area); break;
     case 'resume': renderResume(area); break;
   }
+}
+
+// ═══════════════════════════════════
+// MODE 0: PRÉSENCE — PHOTO GRID
+// ═══════════════════════════════════
+function getAttendance(){try{return JSON.parse(localStorage.getItem('carneteps-attendance')||'{}');}catch(e){return{};}}
+function setAttendance(a){localStorage.setItem('carneteps-attendance',JSON.stringify(a));showSaveIndicator();}
+function getStudentAttendance(sid){
+  var a=getAttendance();
+  try{return a[_groupId]&&a[_groupId][_sessionDate]&&a[_groupId][_sessionDate][sid]||'absent';}catch(e){return'absent';}
+}
+function setStudentAttendance(sid,status){
+  var a=getAttendance();
+  if(!a[_groupId])a[_groupId]={};
+  if(!a[_groupId][_sessionDate])a[_groupId][_sessionDate]={};
+  a[_groupId][_sessionDate][sid]=status;
+  setAttendance(a);
+}
+
+function togglePresence(sid){
+  var cur=getStudentAttendance(sid);
+  setStudentAttendance(sid,cur==='present'?'absent':'present');
+  // Also sync with old presence data for resume/export compatibility
+  setVal(sid,'check_presence',getStudentAttendance(sid));
+  renderContent();
+}
+
+function setAllPresent(){
+  var group=getGroups().find(function(g){return g.id===_groupId;});
+  if(!group)return;
+  group.students.forEach(function(s){
+    setStudentAttendance(s.id,'present');
+    setVal(s.id,'check_presence','present');
+  });
+  toast('Tous présents!');
+  renderContent();
+}
+
+function renderPresenceGrid(area){
+  var group=getGroups().find(function(g){return g.id===_groupId;});
+  if(!group){area.innerHTML='';return;}
+
+  var photos=getPhotos();
+  var presentCount=0,absentCount=0;
+  group.students.forEach(function(s){
+    var status=getStudentAttendance(s.id);
+    if(status==='present')presentCount++;else absentCount++;
+  });
+
+  // Header bar with stats
+  var html='<div class="presence-header">';
+  html+='<div class="presence-stats">';
+  html+='<span class="presence-stat ps-present">✓ '+presentCount+'</span>';
+  html+='<span class="presence-stat ps-absent">✗ '+absentCount+'</span>';
+  html+='<span class="presence-stat ps-total">/ '+group.students.length+'</span>';
+  html+='</div>';
+  html+='<div style="display:flex;gap:8px;">';
+  html+='<button class="presence-all-btn" onclick="setAllPresent()">✓ TOUS PRÉSENTS</button>';
+  html+='<button class="presence-all-btn" onclick="setAllAbsent()">✗ RÉINITIALISER</button>';
+  html+='<button class="presence-history-btn" onclick="openHistoryModal()">📅 HISTORIQUE</button>';
+  html+='<button class="presence-history-btn" onclick="resetAllPhotos()" style="border-color:rgba(244,67,54,0.5);">🗑️ PHOTOS</button>';
+  html+='</div>';
+  html+='</div>';
+
+  // Photo grid — ONLY big square photos + name underneath
+  html+='<div class="presence-grid">';
+  group.students.forEach(function(s){
+    var status=getStudentAttendance(s.id);
+    var isPresent=status==='present';
+    var photoSrc=photos[s.id];
+
+    html+='<div class="presence-card '+(isPresent?'present':'absent')+'">';
+    html+='<div class="presence-photo" onclick="togglePresence(\''+s.id+'\')" title="Cliquer = présent/absent">';
+    if(photoSrc){
+      html+='<img src="'+photoSrc+'" />';
+    } else {
+      html+='<div class="presence-no-photo">👤</div>';
+    }
+    // Overlay check mark when present
+    if(isPresent) html+='<div class="presence-check">✓</div>';
+    html+='</div>';
+    html+='<div class="presence-name">'+esc(s.name)+'</div>';
+    // Small add photo button if no photo
+    if(!photoSrc) html+='<button class="presence-add-photo" onclick="event.stopPropagation();addPhoto(\''+s.id+'\')" title="Ajouter photo">📷 Photo</button>';
+    html+='</div>';
+  });
+  html+='</div>';
+  area.innerHTML=html;
+}
+
+function setAllAbsent(){
+  var group=getGroups().find(function(g){return g.id===_groupId;});
+  if(!group)return;
+  group.students.forEach(function(s){
+    setStudentAttendance(s.id,'absent');
+    setVal(s.id,'check_presence','absent');
+  });
+  toast('Réinitialisé!');
+  renderContent();
+}
+
+function resetAllPhotos(){
+  if(!confirm('Supprimer toutes les photos de ce groupe? Tu pourras les reprendre en meilleure qualité.'))return;
+  var group=getGroups().find(function(g){return g.id===_groupId;});
+  if(!group)return;
+  var photos=getPhotos();
+  group.students.forEach(function(s){delete photos[s.id];});
+  setPhotos(photos);
+  toast('Photos supprimées — reprends-les en haute qualité!');
+  renderContent();
+}
+
+// Presence History Modal
+function openHistoryModal(){
+  var group=getGroups().find(function(g){return g.id===_groupId;});
+  if(!group)return;
+  var body=document.getElementById('history-modal-body');
+  var attendance=getAttendance();
+  var gData=attendance[_groupId]||{};
+  // Also check old data format
+  var oldData=getData();
+  var gOld=oldData[_groupId]||{};
+
+  // Collect all dates that have attendance data
+  var allDates={};
+  Object.keys(gData).forEach(function(d){allDates[d]=true;});
+  Object.keys(gOld).forEach(function(d){
+    // Check if old data has presence info
+    var dayData=gOld[d];
+    if(dayData){
+      Object.keys(dayData).forEach(function(sid){
+        if(dayData[sid]&&dayData[sid].check_presence)allDates[d]=true;
+      });
+    }
+  });
+  var dates=Object.keys(allDates).sort().reverse();
+
+  if(!dates.length){
+    body.innerHTML='<p style="text-align:center;color:#999;padding:20px;">Aucune donnée de présence enregistrée.</p>';
+    document.getElementById('history-modal').classList.remove('hidden');
+    return;
+  }
+
+  var html='<table class="history-table"><thead><tr><th>ÉLÈVE</th>';
+  dates.forEach(function(d){
+    var lbl=d===todayStr()?"Auj.":d.slice(5); // MM-DD
+    html+='<th title="'+d+'">'+lbl+'</th>';
+  });
+  html+='<th>ABSENCES</th>';
+  html+='</tr></thead><tbody>';
+
+  group.students.forEach(function(s){
+    html+='<tr><td>'+esc(s.name)+'</td>';
+    var totalAbsent=0;
+    dates.forEach(function(d){
+      // Check new attendance system first, then fall back to old
+      var status='';
+      if(gData[d]&&gData[d][s.id]){
+        status=gData[d][s.id];
+      } else if(gOld[d]&&gOld[d][s.id]&&gOld[d][s.id].check_presence){
+        status=gOld[d][s.id].check_presence;
+      }
+      if(status==='present'){
+        html+='<td class="h-present">✓</td>';
+      } else if(status==='absent'){
+        html+='<td class="h-absent">✗</td>';
+        totalAbsent++;
+      } else if(status==='retard'){
+        html+='<td class="h-retard">R</td>';
+      } else {
+        html+='<td>—</td>';
+      }
+    });
+    html+='<td class="history-total" style="color:'+(totalAbsent>0?'var(--red)':'var(--green-dk)')+';">'+totalAbsent+'</td>';
+    html+='</tr>';
+  });
+  html+='</tbody></table>';
+  body.innerHTML=html;
+  document.getElementById('history-modal').classList.remove('hidden');
+}
+function closeHistoryModal(){document.getElementById('history-modal').classList.add('hidden');}
+
+// ═══════════════════════════════════
+// J'OBSERVE — CRITERIA PILL BAR
+// ═══════════════════════════════════
+function renderObserveCriteriaBar(){
+  var container=document.getElementById('observe-criteria-bar');if(!container)return;
+  var items=getActiveTodayItems();
+  var html='';
+  items.forEach(function(item){
+    html+='<button class="obs-pill'+(item.on?' on':'')+'" onclick="toggleTodayItem(\''+item.key+'\')">'+esc(item.label).toUpperCase()+'</button>';
+  });
+  container.innerHTML=html;
 }
 
 // ═══════════════════════════════════
@@ -291,17 +550,8 @@ function toggleTodayItem(key){
 }
 
 // ═══════════════════════════════════
-// TODAY TOOLBAR (what to observe)
+// TODAY TOOLBAR (what to observe) — now replaced by renderObserveCriteriaBar
 // ═══════════════════════════════════
-function renderTodayToolbar(){
-  var container=document.getElementById('today-checks');if(!container)return;
-  var items=getActiveTodayItems();
-  var html='';
-  items.forEach(function(item){
-    html+='<button class="today-chip'+(item.on?' on':'')+'" onclick="toggleTodayItem(\''+item.key+'\')">'+esc(item.label)+'</button>';
-  });
-  container.innerHTML=html;
-}
 
 // ═══════════════════════════════════
 // MODE 1: AUJOURD'HUI — CARD GRID
@@ -942,7 +1192,7 @@ function toggleVoiceNote(sid){
 // ═══════════════════════════════════
 function addPhoto(sid){
   var input=document.createElement('input');input.type='file';input.accept='image/*';input.capture='environment';
-  input.onchange=function(){var file=input.files[0];if(!file)return;var reader=new FileReader();reader.onload=function(e){var img=new Image();img.onload=function(){var c=document.createElement('canvas'),sz=120;c.width=sz;c.height=sz;var ctx=c.getContext('2d');var mn=Math.min(img.width,img.height);ctx.drawImage(img,(img.width-mn)/2,(img.height-mn)/2,mn,mn,0,0,sz,sz);var photos=getPhotos();photos[sid]=c.toDataURL('image/jpeg',0.7);setPhotos(photos);renderContent();};img.src=e.target.result;};reader.readAsDataURL(file);};
+  input.onchange=function(){var file=input.files[0];if(!file)return;var reader=new FileReader();reader.onload=function(e){var img=new Image();img.onload=function(){var c=document.createElement('canvas'),sz=400;c.width=sz;c.height=sz;var ctx=c.getContext('2d');var mn=Math.min(img.width,img.height);ctx.drawImage(img,(img.width-mn)/2,(img.height-mn)/2,mn,mn,0,0,sz,sz);var photos=getPhotos();photos[sid]=c.toDataURL('image/jpeg',0.85);setPhotos(photos);renderContent();};img.src=e.target.result;};reader.readAsDataURL(file);};
   input.click();
 }
 
@@ -1471,3 +1721,93 @@ function calcDayScore(data){
   });
   return count>0?total/count:0;
 }
+
+// ═══════════════════════════════════
+// SAVE INDICATOR
+// ═══════════════════════════════════
+var _saveTimeout=null;
+function showSaveIndicator(){
+  var el=document.getElementById('save-indicator');
+  if(!el)return;
+  el.textContent='💾 Sauvegardé!';
+  el.classList.remove('hidden');
+  el.classList.add('save-flash');
+  clearTimeout(_saveTimeout);
+  _saveTimeout=setTimeout(function(){
+    el.classList.remove('save-flash');
+    el.textContent='💾 Sauvegarde auto';
+  },2000);
+}
+
+// ═══════════════════════════════════
+// EXPORT / IMPORT (JSON backup)
+// ═══════════════════════════════════
+function exportAllData(){
+  var data={
+    version:1,
+    date:new Date().toISOString(),
+    groups:getGroups(),
+    data:getData(),
+    photos:getPhotos(),
+    voice:getVoice(),
+    customCriteria:getCustomCriteria(),
+    todayToggles:getTodayToggles(),
+    pfeqSelected:getPfeqSelected(),
+    evalLabels:getEvalLabels(),
+    attendance:getAttendance(),
+    title:localStorage.getItem('carneteps-title')||'CARNET EPS',
+    zoom:localStorage.getItem('carneteps-zoom')||'100',
+    colorMeanings:localStorage.getItem('carneteps-color-meanings')||null
+  };
+  var json=JSON.stringify(data);
+  var blob=new Blob([json],{type:'application/json'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;
+  a.download='carnet-eps-backup-'+todayStr()+'.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Sauvegarde exportée!');
+}
+
+function importAllData(){
+  var input=document.createElement('input');
+  input.type='file';input.accept='.json';
+  input.onchange=function(){
+    var file=input.files[0];if(!file)return;
+    var reader=new FileReader();
+    reader.onload=function(e){
+      try{
+        var data=JSON.parse(e.target.result);
+        if(!data.groups||!data.version){toast('Fichier invalide');return;}
+        if(!confirm('Restaurer cette sauvegarde du '+new Date(data.date).toLocaleDateString('fr-CA')+'? Cela remplacera toutes les données actuelles.'))return;
+
+        // Restore all data
+        setGroups(data.groups);
+        setData(data.data||{});
+        setPhotos(data.photos||{});
+        if(data.voice)setVoice(data.voice);
+        if(data.customCriteria)setCustomCriteria(data.customCriteria);
+        if(data.todayToggles)setTodayToggles(data.todayToggles);
+        if(data.pfeqSelected)setPfeqSelected(data.pfeqSelected);
+        if(data.evalLabels)setEvalLabels(data.evalLabels);
+        if(data.attendance)setAttendance(data.attendance);
+        if(data.title)localStorage.setItem('carneteps-title',data.title);
+        if(data.zoom)localStorage.setItem('carneteps-zoom',data.zoom);
+        if(data.colorMeanings)localStorage.setItem('carneteps-color-meanings',data.colorMeanings);
+
+        var t=document.getElementById('course-title');
+        if(t&&data.title)t.textContent=data.title;
+
+        _groupId=data.groups.length>0?data.groups[0].id:null;
+        toast('Données restaurées!');
+        renderAll();
+      }catch(ex){toast('Erreur: fichier invalide');console.error(ex);}
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+function openBackupModal(){document.getElementById('backup-modal').classList.remove('hidden');}
+function closeBackupModal(){document.getElementById('backup-modal').classList.add('hidden');}
