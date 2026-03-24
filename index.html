@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Barriecito&family=Boogaloo&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=20260324c" />
+  <link rel="stylesheet" href="style.css?v=20260324d" />
 </head>
 <body>
 
@@ -356,44 +356,87 @@
   <!-- ===== MODAL: BACKUP / RESTORE ===== -->
   <div id="backup-modal" class="modal hidden">
     <div class="modal-backdrop" onclick="closeBackupModal()"></div>
-    <div class="modal-box">
+    <div class="modal-box" style="max-width:700px;">
       <div class="modal-header">
         <h2>💾 SAUVEGARDE & RESTAURATION</h2>
         <button class="modal-close" onclick="closeBackupModal()">✕</button>
       </div>
-      <div class="modal-body">
-        <p style="margin-bottom:16px;line-height:1.5;">
-          Tes données sont sauvegardées <strong>automatiquement</strong> sur cet appareil.
-          Utilise ces options pour créer une copie de sécurité ou transférer tes données vers un autre appareil.
-        </p>
+      <div class="modal-body" style="font-size:1.1rem;">
 
-        <div style="display:flex;flex-direction:column;gap:12px;">
+        <!-- EXPLICATION -->
+        <div style="background:#FFF8E1;border:3px solid #FFD600;border-radius:14px;padding:16px 20px;margin-bottom:18px;">
+          <div style="font-family:Bangers;font-size:1.5rem;color:#000;margin-bottom:8px;">⚠️ IMPORTANT — LIS AVANT DE CONTINUER</div>
+          <p style="color:#333;line-height:1.6;margin-bottom:10px;">
+            Tes donn&eacute;es (groupes, &eacute;l&egrave;ves, photos, notes, pr&eacute;sences) sont sauvegard&eacute;es <strong>dans le navigateur de cet appareil uniquement</strong>. Elles peuvent &ecirc;tre <strong>perdues</strong> si :
+          </p>
+          <ul style="color:#333;line-height:1.8;padding-left:20px;margin-bottom:10px;">
+            <li>Tu vides le cache ou les donn&eacute;es de navigation</li>
+            <li>Tu changes de navigateur (ex: Chrome &rarr; Safari)</li>
+            <li>Tu changes d'ordinateur ou de tablette</li>
+            <li>Le navigateur supprime les donn&eacute;es automatiquement</li>
+          </ul>
+          <p style="color:#000;font-weight:bold;line-height:1.6;">
+            Pour ne rien perdre, fais une <strong>sauvegarde r&eacute;guli&egrave;re</strong> (un fichier sur ton ordinateur) et restaure-la quand tu en as besoin!
+          </p>
+        </div>
+
+        <!-- COMMENT FAIRE -->
+        <div style="background:rgba(0,230,118,0.08);border:3px solid var(--green);border-radius:14px;padding:16px 20px;margin-bottom:18px;">
+          <div style="font-family:Bangers;font-size:1.4rem;color:#000;margin-bottom:10px;">📋 COMMENT FAIRE EN 3 &Eacute;TAPES</div>
+
+          <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;">
+            <div style="font-family:Bangers;font-size:1.8rem;color:var(--green);flex-shrink:0;">1</div>
+            <div>
+              <strong style="font-family:Bangers;font-size:1.15rem;">SAUVEGARDER</strong>
+              <p style="color:#444;margin-top:2px;">Clique sur <strong>&laquo; Exporter mes donn&eacute;es &raquo;</strong> ci-dessous. Un fichier <code>.json</code> sera t&eacute;l&eacute;charg&eacute; sur ton ordinateur. Range-le dans un dossier facile &agrave; retrouver (ex: Bureau, Google Drive, cl&eacute; USB).</p>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;">
+            <div style="font-family:Bangers;font-size:1.8rem;color:var(--green);flex-shrink:0;">2</div>
+            <div>
+              <strong style="font-family:Bangers;font-size:1.15rem;">RESTAURER (LE LENDEMAIN OU PLUS TARD)</strong>
+              <p style="color:#444;margin-top:2px;">Reviens sur cette page, clique sur <strong>&laquo; Restaurer mes donn&eacute;es &raquo;</strong> et s&eacute;lectionne ton fichier <code>.json</code>. Tous tes groupes, &eacute;l&egrave;ves, photos et notes seront restaur&eacute;s instantan&eacute;ment!</p>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:flex-start;gap:12px;">
+            <div style="font-family:Bangers;font-size:1.8rem;color:var(--green);flex-shrink:0;">3</div>
+            <div>
+              <strong style="font-family:Bangers;font-size:1.15rem;">R&Eacute;P&Eacute;TER R&Eacute;GULI&Egrave;REMENT</strong>
+              <p style="color:#444;margin-top:2px;">Fais une nouvelle sauvegarde &agrave; chaque fin de journ&eacute;e ou de semaine. Le nouveau fichier contiendra <strong>toutes</strong> tes donn&eacute;es &agrave; jour.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- BOUTONS D'ACTION -->
+        <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:18px;">
           <div class="backup-option" onclick="exportAllData()" style="cursor:pointer;">
             <div class="backup-option-icon">📥</div>
             <div>
-              <strong style="font-family:Bangers;font-size:1.2rem;letter-spacing:1px;">EXPORTER MES DONNÉES</strong>
-              <p style="font-size:0.95rem;color:#666;margin-top:4px;">Télécharge un fichier JSON contenant tous tes groupes, élèves, photos, notes et historique. Garde-le en lieu sûr!</p>
+              <strong style="font-family:Bangers;font-size:1.4rem;letter-spacing:1px;">EXPORTER MES DONN&Eacute;ES</strong>
+              <p style="font-size:1.05rem;color:#666;margin-top:4px;">T&eacute;l&eacute;charge un fichier contenant TOUT : groupes, &eacute;l&egrave;ves, photos, notes, pr&eacute;sences, crit&egrave;res et historique complet.</p>
             </div>
           </div>
 
           <div class="backup-option" onclick="importAllData()" style="cursor:pointer;">
             <div class="backup-option-icon">📤</div>
             <div>
-              <strong style="font-family:Bangers;font-size:1.2rem;letter-spacing:1px;">RESTAURER MES DONNÉES</strong>
-              <p style="font-size:0.95rem;color:#666;margin-top:4px;">Charge un fichier de sauvegarde pour restaurer tes données. Utile pour changer d'appareil ou après un effacement du cache.</p>
+              <strong style="font-family:Bangers;font-size:1.4rem;letter-spacing:1px;">RESTAURER MES DONN&Eacute;ES</strong>
+              <p style="font-size:1.05rem;color:#666;margin-top:4px;">Charge un fichier de sauvegarde (.json) pour tout r&eacute;cup&eacute;rer. Tes donn&eacute;es actuelles seront remplac&eacute;es.</p>
             </div>
           </div>
         </div>
 
-        <hr style="margin:18px 0;border:1px solid #ddd;" />
-        <div style="background:rgba(0,212,255,0.08);border-radius:12px;padding:12px 16px;border:2px solid rgba(0,212,255,0.2);">
-          <p style="font-size:0.95rem;color:#555;margin:0;">
-            <strong>🔒 Vie privée :</strong> Toutes tes données restent sur TON appareil. Rien n'est envoyé sur internet. Le fichier de sauvegarde te permet de garder une copie sur ton ordinateur, clé USB ou Google Drive.
+        <!-- VIE PRIVÉE -->
+        <div style="background:rgba(0,212,255,0.08);border-radius:12px;padding:14px 18px;border:2px solid rgba(0,212,255,0.2);">
+          <p style="font-size:1.05rem;color:#555;margin:0;">
+            <strong>🔒 Vie priv&eacute;e :</strong> Rien n'est envoy&eacute; sur internet. Tes donn&eacute;es restent sur TON appareil. Le fichier de sauvegarde est stock&eacute; l&agrave; o&ugrave; TU le d&eacute;cides (ordinateur, cl&eacute; USB, Google Drive, etc.).
           </p>
         </div>
 
-        <div class="modal-actions">
-          <button class="export-btn export-csv" onclick="closeBackupModal()">FERMER</button>
+        <div class="modal-actions" style="margin-top:16px;">
+          <button class="export-btn export-csv" onclick="closeBackupModal()" style="font-size:1.1rem;padding:8px 20px;">FERMER</button>
         </div>
       </div>
     </div>
@@ -402,8 +445,8 @@
   <!-- TOAST -->
   <div id="toast" class="toast hidden"></div>
 
-  <script src="i18n.js?v=20260324c"></script>
-  <script src="lang/translations.js?v=20260324c"></script>
-  <script src="app.js?v=20260324c"></script>
+  <script src="i18n.js?v=20260324d"></script>
+  <script src="lang/translations.js?v=20260324d"></script>
+  <script src="app.js?v=20260324d"></script>
 </body>
 </html>
