@@ -313,16 +313,16 @@ function renderContent(){
   // Show/hide toolbars
   toolbar.classList.toggle('hidden',_mode!=='aujourdhui');
   critbar.classList.toggle('hidden',_mode!=='evaluation');
-  // Hide killer toolbar in presence mode for cleaner look
+  // Hide killer toolbar — now only shown inside DÉPANNEUR mode
   var killerBar=document.getElementById('killer-toolbar');
-  if(killerBar)killerBar.classList.toggle('hidden',_mode==='presence');
+  if(killerBar)killerBar.classList.add('hidden');
 
   switch(_mode){
     case 'presence': renderPresenceGrid(area); break;
     case 'aujourdhui': renderObserveCriteriaBar(); renderTodayCards(area); break;
     case 'evaluation': renderCriteriaBar(); renderEvalTable(area); break;
-    case 'chrono': renderChronoTable(area); break;
     case 'compteur': renderCounterTable(area); break;
+    case 'depanneur': renderDepanneur(area); break;
     case 'resume': renderResume(area); break;
   }
 }
@@ -682,14 +682,25 @@ function cycleGrade(sid,key){
 // ═══════════════════════════════════
 // MODE 2: ÉVALUATION — TABLE LIST
 // ═══════════════════════════════════
+// Eval tab colors storage: { groupId: { date: "#hex" } }
+function getEvalColors(){try{return JSON.parse(localStorage.getItem('carneteps-evalcolors')||'{}');}catch(e){return{};}}
+function setEvalColors(o){localStorage.setItem('carneteps-evalcolors',JSON.stringify(o));showSaveIndicator();}
+function getEvalColor(gid,date){var o=getEvalColors();return(o[gid]&&o[gid][date])||'';}
+function setEvalColor(gid,date,color){var o=getEvalColors();if(!o[gid])o[gid]={};o[gid][date]=color;setEvalColors(o);}
+
+var EVAL_TAB_COLORS=['#00D4FF','#00E676','#FF9100','#FFD600','#FF4081','#2979FF','#9C27B0','#E91E63','#795548','#607D8B'];
+
 function renderCriteriaBar(){
   var bar=document.getElementById('criteria-bar');if(!bar)return;
   var group=getGroups().find(function(g){return g.id===_groupId;});
 
-  // Ligne 1: nom du groupe centré + bouton critères
+  // Ligne 1: nom du groupe centré + boutons critères + chrono
   var html='<div class="crit-bar-top">';
   html+='<span class="crit-group-name">'+esc(group?group.name:'')+'</span>';
+  html+='<div style="display:flex;gap:6px;align-items:center;">';
   html+='<button class="today-add-btn" onclick="openCriteriaManager()">📝 CRITÈRES</button>';
+  html+='<button class="today-add-btn" onclick="toggleEvalChrono()" title="Chronomètre de groupe">⏱️ CHRONO</button>';
+  html+='</div>';
   html+='</div>';
 
   // Ligne 2: onglets des moyens d'action évalués (un par date avec données)
@@ -708,7 +719,10 @@ function renderCriteriaBar(){
   evalDates.forEach(function(ed){
     var isCurrent=ed.date===_sessionDate;
     var tabLabel=ed.label||ed.date;
-    html+='<button class="crit-tab'+(isCurrent?' crit-tab-active':'')+'" onclick="switchEvalDate(\''+ed.date+'\')" ondblclick="editEvalTab(\''+ed.date+'\')" title="'+ed.date+' — Double-cliquer pour renommer">';
+    var tabColor=getEvalColor(_groupId,ed.date);
+    var colorStyle=tabColor?'background:'+tabColor+';border-color:'+tabColor+';color:#fff;':'';
+    if(isCurrent&&tabColor)colorStyle='background:'+tabColor+';border-color:#000;color:#fff;box-shadow:0 2px 8px '+tabColor+'66;';
+    html+='<button class="crit-tab'+(isCurrent?' crit-tab-active':'')+'" style="'+(isCurrent?colorStyle:tabColor?'border-color:'+tabColor+';color:'+tabColor+';':'') +'" onclick="switchEvalDate(\''+ed.date+'\')" ondblclick="editEvalTab(\''+ed.date+'\')" title="'+ed.date+' — Double-cliquer pour renommer">';
     html+=esc(tabLabel);
     html+='</button>';
   });
@@ -718,7 +732,29 @@ function renderCriteriaBar(){
   }
   html+='</div>';
 
+  // Ligne 3: color picker for current eval tab
+  html+='<div class="crit-bar-colors">';
+  html+='<span style="font-family:Barriecito;font-size:0.9rem;color:#666;margin-right:6px;">Couleur :</span>';
+  var currentColor=getEvalColor(_groupId,_sessionDate);
+  EVAL_TAB_COLORS.forEach(function(c){
+    var active=currentColor===c?' eval-color-active':'';
+    html+='<button class="eval-color-dot'+active+'" style="background:'+c+';" onclick="pickEvalColor(\''+c+'\')" title="'+c+'"></button>';
+  });
+  if(currentColor) html+='<button class="eval-color-dot" style="background:#ddd;font-size:0.7rem;" onclick="pickEvalColor(\'\')" title="Aucune couleur">✕</button>';
+  html+='</div>';
+
   bar.innerHTML=html;
+}
+
+function pickEvalColor(color){
+  setEvalColor(_groupId,_sessionDate,color);
+  renderContent();
+}
+
+var _showEvalChrono=false;
+function toggleEvalChrono(){
+  _showEvalChrono=!_showEvalChrono;
+  renderContent();
 }
 
 function switchEvalDate(date){
@@ -863,7 +899,14 @@ function renderEvalTable(area){
   });
 
   html+='</tbody></table>';
+
+  // Chrono section (toggled via button in criteria bar)
+  if(_showEvalChrono){
+    html+=renderChronoSection(group);
+  }
+
   area.innerHTML=html;
+  if(_showEvalChrono)updateAllChronoDisplays();
 }
 
 // Column resize by dragging
@@ -954,11 +997,10 @@ function addEvalObs(sid,key,amount){
 }
 
 // ═══════════════════════════════════
-// MODE 3: CHRONO
+// CHRONO (reusable section)
 // ═══════════════════════════════════
-function renderChronoTable(area){
-  var group=getGroups().find(function(g){return g.id===_groupId;});
-  if(!group){area.innerHTML='';return;}
+function renderChronoSection(group){
+  if(!group)return '';
   var color=group.color||'cyan';
 
   // Global chrono display
@@ -966,7 +1008,7 @@ function renderChronoTable(area){
   var globalDisplay=formatTime(gc.running?(gc.elapsed+(Date.now()-gc.startTime)):gc.elapsed);
   var isRunning=gc.running;
 
-  var html='<div style="display:flex;align-items:center;justify-content:center;gap:12px;padding:10px;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);">';
+  var html='<div style="display:flex;align-items:center;justify-content:center;gap:12px;padding:10px;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);margin-top:8px;border-radius:12px;">';
   html+='<span style="font-family:Bangers;font-size:2.2rem;color:#fff;letter-spacing:2px;" id="chrono-_global">'+globalDisplay+'</span>';
   if(!isRunning){
     html+='<button class="chrono-btn c-start" onclick="chronoStartAll()" style="font-size:1.1rem;padding:8px 20px;">▶ START TOUS</button>';
@@ -1022,8 +1064,7 @@ function renderChronoTable(area){
     html+='</tr>';
   });
   html+='</tbody></table>';
-  area.innerHTML=html;
-  updateAllChronoDisplays();
+  return html;
 }
 
 // Global chrono for all students
@@ -1110,6 +1151,54 @@ function renderCounterTable(area){
   area.innerHTML=html;
 }
 function addNum(sid,key,amount){var v=getVal(sid,'num_'+key)||0;setVal(sid,'num_'+key,Math.max(0,v+amount));renderContent();}
+
+// ═══════════════════════════════════
+// MODE: DÉPANNEUR (outils de gymnase)
+// ═══════════════════════════════════
+function renderDepanneur(area){
+  var html='<div class="depanneur-wrap">';
+  html+='<h2 class="depanneur-title">🧰 DÉPANNEUR — OUTILS DE GYMNASE</h2>';
+  html+='<div class="depanneur-grid">';
+
+  html+='<div class="depanneur-card" onclick="openPicker()">';
+  html+='<div class="depanneur-icon">🎲</div>';
+  html+='<div class="depanneur-label">PIGER UN ÉLÈVE</div>';
+  html+='<div class="depanneur-desc">Pige un élève au hasard dans le groupe actif.</div>';
+  html+='</div>';
+
+  html+='<div class="depanneur-card" onclick="openTeamModal()">';
+  html+='<div class="depanneur-icon">👥</div>';
+  html+='<div class="depanneur-label">ÉQUIPES</div>';
+  html+='<div class="depanneur-desc">Génère des équipes équilibrées avec gestion de conflits.</div>';
+  html+='</div>';
+
+  html+='<div class="depanneur-card" onclick="showFelicitations()">';
+  html+='<div class="depanneur-icon">🏆</div>';
+  html+='<div class="depanneur-label">BRAVO!</div>';
+  html+='<div class="depanneur-desc">Félicite ta classe avec confettis et fanfare!</div>';
+  html+='</div>';
+
+  html+='<div class="depanneur-card" onclick="startCalme()">';
+  html+='<div class="depanneur-icon">🧘</div>';
+  html+='<div class="depanneur-label">CALME</div>';
+  html+='<div class="depanneur-desc">Minuteur de retour au calme avec animation de respiration.</div>';
+  html+='</div>';
+
+  html+='<div class="depanneur-card" onclick="openColorSettings()">';
+  html+='<div class="depanneur-icon">🎨</div>';
+  html+='<div class="depanneur-label">COULEURS</div>';
+  html+='<div class="depanneur-desc">Personnalise la signification des couleurs d\'évaluation.</div>';
+  html+='</div>';
+
+  html+='<div class="depanneur-card" onclick="openBackupModal()">';
+  html+='<div class="depanneur-icon">💾</div>';
+  html+='<div class="depanneur-label">SAUVEGARDE</div>';
+  html+='<div class="depanneur-desc">Exporte ou restaure toutes tes données (JSON).</div>';
+  html+='</div>';
+
+  html+='</div></div>';
+  area.innerHTML=html;
+}
 
 // ═══════════════════════════════════
 // MODE 5: RÉSUMÉ
@@ -1757,7 +1846,8 @@ function exportAllData(){
     attendance:getAttendance(),
     title:localStorage.getItem('carneteps-title')||'CARNET EPS',
     zoom:localStorage.getItem('carneteps-zoom')||'100',
-    colorMeanings:localStorage.getItem('carneteps-color-meanings')||null
+    colorMeanings:localStorage.getItem('carneteps-color-meanings')||null,
+    evalColors:getEvalColors()
   };
   var json=JSON.stringify(data);
   var blob=new Blob([json],{type:'application/json'});
@@ -1795,6 +1885,7 @@ function importAllData(){
         if(data.title)localStorage.setItem('carneteps-title',data.title);
         if(data.zoom)localStorage.setItem('carneteps-zoom',data.zoom);
         if(data.colorMeanings)localStorage.setItem('carneteps-color-meanings',data.colorMeanings);
+        if(data.evalColors)setEvalColors(data.evalColors);
 
         var t=document.getElementById('course-title');
         if(t&&data.title)t.textContent=data.title;

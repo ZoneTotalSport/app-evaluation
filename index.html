@@ -52,11 +52,11 @@
     <button class="mtab" data-mode="evaluation" onclick="switchMode('evaluation')">
       ⭐ ÉVALUATION
     </button>
-    <button class="mtab" data-mode="chrono" onclick="switchMode('chrono')">
-      ⏱️ CHRONO
-    </button>
     <button class="mtab" data-mode="compteur" onclick="switchMode('compteur')">
       🔢 COMPTEUR
+    </button>
+    <button class="mtab" data-mode="depanneur" onclick="switchMode('depanneur')">
+      🧰 DÉPANNEUR
     </button>
     <button class="mtab" data-mode="resume" onclick="switchMode('resume')">
       📋 RÉSUMÉ
@@ -81,14 +81,8 @@
         <button class="today-add-btn" onclick="openCriteriaManager()" title="Gérer mes critères">📝 MES CRITÈRES</button>
       </div>
 
-      <!-- KILLER FEATURES TOOLBAR -->
-      <div class="killer-toolbar" id="killer-toolbar">
-        <button class="killer-btn kb-picker" onclick="openPicker()" title="Piger un élève au hasard">🎲 PIGER</button>
-        <button class="killer-btn kb-teams" onclick="openTeamModal()" title="Générer des équipes">👥 ÉQUIPES</button>
-        <button class="killer-btn kb-felicitations" onclick="showFelicitations()" title="Félicitations!">🏆 BRAVO!</button>
-        <button class="killer-btn kb-calme" onclick="startCalme()" title="Minuteur de calme">🧘 CALME</button>
-        <button class="killer-btn kb-color-settings" onclick="openColorSettings()" title="Couleurs d'évaluation">🎨 COULEURS</button>
-      </div>
+      <!-- KILLER FEATURES TOOLBAR (hidden — now in DÉPANNEUR tab) -->
+      <div class="killer-toolbar hidden" id="killer-toolbar"></div>
 
       <!-- CONTENT AREA -->
       <div class="content-area" id="content-area">
