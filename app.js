@@ -428,6 +428,7 @@ function renderPresenceGrid(area){
   html+='<button class="presence-all-btn" onclick="setAllAbsent()">✗ RÉINITIALISER</button>';
   html+='<button class="presence-history-btn" onclick="openHistoryModal()">📅 HISTORIQUE</button>';
   html+='<button class="presence-history-btn" onclick="resetAllPhotos()" style="border-color:rgba(244,67,54,0.5);">🗑️ PHOTOS</button>';
+  html+='<button class="presence-history-btn" onclick="exportPresenceCSV()" style="border-color:rgba(255,214,0,0.6);">📊 CSV</button>';
   html+='</div>';
   html+='</div>';
 
@@ -448,7 +449,7 @@ function renderPresenceGrid(area){
     // Overlay check mark when present
     if(isPresent) html+='<div class="presence-check">✓</div>';
     html+='</div>';
-    html+='<div class="presence-name">'+esc(s.name)+'</div>';
+    html+='<input class="presence-name-input" value="'+esc(s.name)+'" data-sid="'+s.id+'" onchange="renameStudent(\''+s.id+'\',this.value)" placeholder="Nom de l\'élève" />';
     // Small add photo button if no photo
     if(!photoSrc) html+='<button class="presence-add-photo" onclick="event.stopPropagation();addPhoto(\''+s.id+'\')" title="Ajouter photo">📷 Photo</button>';
     html+='</div>';
@@ -466,6 +467,48 @@ function setAllAbsent(){
   });
   toast('Réinitialisé!');
   renderContent();
+}
+
+function renameStudent(sid,newName){
+  newName=newName.trim();
+  if(!newName)return;
+  var groups=getGroups();
+  var group=groups.find(function(g){return g.id===_groupId;});
+  if(!group)return;
+  var student=group.students.find(function(s){return s.id===sid;});
+  if(student){student.name=newName;setGroups(groups);showSaveIndicator();}
+}
+
+function exportPresenceCSV(){
+  var group=getGroups().find(function(g){return g.id===_groupId;});
+  if(!group){toast('Aucun groupe');return;}
+  var attendance=getAttendance();
+  var gData=attendance[_groupId]||{};
+  var allDates=Object.keys(gData).sort();
+  if(!allDates.length){toast('Aucune donnée de présence');return;}
+
+  // Header
+  var csv='Élève,'+allDates.join(',')+',Total Présent,Total Absent\n';
+  group.students.forEach(function(s){
+    var pres=0,abs=0;
+    var row='"'+s.name.replace(/"/g,'""')+'"';
+    allDates.forEach(function(d){
+      var status=(gData[d]&&gData[d][s.id])||'absent';
+      row+=','+(status==='present'?'P':'A');
+      if(status==='present')pres++;else abs++;
+    });
+    row+=','+pres+','+abs;
+    csv+=row+'\n';
+  });
+
+  var blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;
+  a.download='presences-'+group.name.replace(/\s+/g,'_')+'-'+todayStr()+'.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('CSV exporté!');
 }
 
 function resetAllPhotos(){

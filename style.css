@@ -615,10 +615,25 @@ button{cursor:pointer;border:none;background:none;font-family:'Bangers',sans-ser
 }
 @keyframes check-pop{from{transform:scale(0);}to{transform:scale(1);}}
 
-/* Name under photo */
-.presence-name{font-family:'Barriecito',cursive;font-size:1.05rem;text-align:center;line-height:1.2;max-width:100%;word-wrap:break-word;white-space:normal;padding:0 4px;}
-.presence-card.absent .presence-name{color:#888;}
-.presence-card.present .presence-name{color:var(--dark);}
+/* Editable name input under photo */
+.presence-name-input{
+  font-family:'Barriecito',cursive;font-size:1.05rem;
+  text-align:center;line-height:1.2;
+  width:100%;max-width:100%;
+  padding:4px 8px;
+  border:2px solid rgba(0,0,0,0.15);
+  border-radius:8px;
+  background:rgba(255,255,255,0.8);
+  color:var(--dark);
+  outline:none;
+  transition:border-color 0.2s,box-shadow 0.2s;
+}
+.presence-name-input:focus{
+  border-color:var(--cyan);
+  box-shadow:0 0 8px rgba(0,212,255,0.3);
+}
+.presence-card.absent .presence-name-input{color:#888;background:rgba(255,255,255,0.5);}
+.presence-card.present .presence-name-input{color:var(--dark);background:rgba(255,255,255,0.9);border-color:var(--green);}
 
 /* Add photo button */
 .presence-add-photo{font-family:'Barriecito',cursive;font-size:0.75rem;padding:2px 8px;border-radius:var(--r-sm);border:1px dashed #aaa;background:rgba(255,255,255,0.5);color:#888;cursor:pointer;transition:all 0.15s;}
