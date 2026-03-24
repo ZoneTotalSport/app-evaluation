@@ -764,9 +764,12 @@ function renderCriteriaBar(){
     var tabColor=getEvalColor(_groupId,ed.date);
     var colorStyle=tabColor?'background:'+tabColor+';border-color:'+tabColor+';color:#fff;':'';
     if(isCurrent&&tabColor)colorStyle='background:'+tabColor+';border-color:#000;color:#fff;box-shadow:0 2px 8px '+tabColor+'66;';
+    html+='<div class="crit-tab-wrap">';
     html+='<button class="crit-tab'+(isCurrent?' crit-tab-active':'')+'" style="'+(isCurrent?colorStyle:tabColor?'border-color:'+tabColor+';color:'+tabColor+';':'') +'" onclick="switchEvalDate(\''+ed.date+'\')" ondblclick="editEvalTab(\''+ed.date+'\')" title="'+ed.date+' — Double-cliquer pour renommer">';
     html+=esc(tabLabel);
     html+='</button>';
+    html+='<button class="crit-tab-delete" onclick="deleteEvalTab(\''+ed.date+'\')" title="Supprimer">✕</button>';
+    html+='</div>';
   });
   // New eval button
   if(!evalDates.find(function(ed){return ed.date===_sessionDate;})){
@@ -776,13 +779,13 @@ function renderCriteriaBar(){
 
   // Ligne 3: color picker for current eval tab
   html+='<div class="crit-bar-colors">';
-  html+='<span style="font-family:Barriecito;font-size:0.9rem;color:#666;margin-right:6px;">Couleur :</span>';
+  html+='<span style="font-family:Barriecito;font-size:0.95rem;color:#666;margin-right:6px;">🎨 Couleur :</span>';
   var currentColor=getEvalColor(_groupId,_sessionDate);
   EVAL_TAB_COLORS.forEach(function(c){
     var active=currentColor===c?' eval-color-active':'';
     html+='<button class="eval-color-dot'+active+'" style="background:'+c+';" onclick="pickEvalColor(\''+c+'\')" title="'+c+'"></button>';
   });
-  if(currentColor) html+='<button class="eval-color-dot" style="background:#ddd;font-size:0.7rem;" onclick="pickEvalColor(\'\')" title="Aucune couleur">✕</button>';
+  html+='<button class="eval-color-dot'+(currentColor?'':' eval-color-active')+'" style="background:#ddd;font-size:0.65rem;" onclick="pickEvalColor(\'\')" title="Aucune couleur">∅</button>';
   html+='</div>';
 
   bar.innerHTML=html;
@@ -790,6 +793,27 @@ function renderCriteriaBar(){
 
 function pickEvalColor(color){
   setEvalColor(_groupId,_sessionDate,color);
+  renderContent();
+}
+
+function deleteEvalTab(date){
+  if(!confirm('Supprimer cette évaluation ('+date+') et toutes ses données?'))return;
+  // Remove eval label
+  var labels=getEvalLabels();
+  if(labels[_groupId])delete labels[_groupId][date];
+  setEvalLabels(labels);
+  // Remove eval color
+  var colors=getEvalColors();
+  if(colors[_groupId])delete colors[_groupId][date];
+  setEvalColors(colors);
+  // Remove data for that date
+  var d=getData();
+  if(d[_groupId]&&d[_groupId][date])delete d[_groupId][date];
+  setData(d);
+  // Switch to today
+  _sessionDate=todayStr();
+  document.getElementById('date-select').value=_sessionDate;
+  toast('Évaluation supprimée!');
   renderContent();
 }
 
@@ -1978,3 +2002,21 @@ function importAllData(){
 
 function openBackupModal(){document.getElementById('backup-modal').classList.remove('hidden');}
 function closeBackupModal(){document.getElementById('backup-modal').classList.add('hidden');}
+
+function resetApp(){
+  if(!confirm('⚠️ ATTENTION: Cela va supprimer TOUTES les données (groupes, élèves, photos, notes, historique). Cette action est irréversible!\n\nVoulez-vous continuer?'))return;
+  if(!confirm('Dernière chance! Avez-vous fait une sauvegarde (💾 BACKUP) avant de réinitialiser?'))return;
+  // Clear all localStorage
+  var keys=['carneteps-groups','carneteps-data','carneteps-photos','carneteps-voice','carneteps-custom','carneteps-toggles','carneteps-pfeq','carneteps-evallabels','carneteps-evalcolors','carneteps-attendance','carneteps-title','carneteps-zoom','carneteps-color-meanings','carneteps-lastgroup','carneteps-mode'];
+  keys.forEach(function(k){localStorage.removeItem(k);});
+  // Clear IndexedDB photos
+  if(_idb){
+    var tx=_idb.transaction('photos','readwrite');
+    tx.objectStore('photos').clear();
+  }
+  _photosCache={};
+  _groupId=null;
+  _mode='presence';
+  toast('Application réinitialisée!');
+  renderAll();
+}

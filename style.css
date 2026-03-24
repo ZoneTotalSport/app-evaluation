@@ -715,6 +715,17 @@ button{cursor:pointer;border:none;background:none;font-family:'Bangers',sans-ser
    ======================================== */
 .crit-bar-colors{display:flex;align-items:center;gap:5px;padding:4px 12px;border-top:1px solid rgba(0,0,0,0.06);}
 .eval-color-dot{width:22px;height:22px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:all 0.15s;}
+/* Eval tab wrap with delete button */
+.crit-tab-wrap{display:flex;align-items:center;gap:0;position:relative;}
+.crit-tab-delete{
+  font-family:'Bangers';font-size:0.75rem;
+  width:20px;height:20px;border-radius:50%;
+  border:2px solid transparent;background:rgba(0,0,0,0.1);
+  color:#999;display:flex;align-items:center;justify-content:center;
+  margin-left:-6px;z-index:1;transition:all 0.15s;cursor:pointer;
+}
+.crit-tab-delete:hover{background:var(--red);color:#fff;border-color:var(--red);transform:scale(1.15);}
+
 .eval-color-dot:hover{transform:scale(1.2);border-color:#000;}
 .eval-color-dot.eval-color-active{border-color:#000;transform:scale(1.15);box-shadow:0 0 8px rgba(0,0,0,0.3);}
 
