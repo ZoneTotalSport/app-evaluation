@@ -1520,7 +1520,7 @@ function closeCriteriaManager(){document.getElementById('criteria-modal').classL
 function renderPfeqSections(){
   var container=document.getElementById('pfeq-sections');if(!container)return;
   var selected=getPfeqSelected();
-  var html='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;">';
+  var html='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">';
   PFEQ_COMPETENCES.forEach(function(comp){
     var colors={agir:'#2979FF',interagir:'#FF9100',sante:'#E91E63'};
     var color=colors[comp.key]||'#333';
@@ -1530,7 +1530,7 @@ function renderPfeqSections(){
     html+='<button class="tbtn tbtn-off" style="font-size:0.75rem;padding:2px 8px;" onclick="toggleAllPfeq(\''+comp.key+'\')">Tout cocher</button>';
     html+='</div>';
     html+='<div style="font-size:0.85rem;color:#666;margin-bottom:8px;">'+esc(comp.desc)+'</div>';
-    html+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:2px;">';
+    html+='<div style="display:flex;flex-direction:column;gap:1px;">';
     comp.items.forEach(function(item){
       var checked=selected.indexOf(item.key)>=0;
       html+='<label class="pfeq-check-label" style="display:flex;align-items:center;gap:8px;padding:4px 6px;cursor:pointer;font-size:0.95rem;border-radius:6px;transition:background 0.1s;'+(checked?'background:rgba(0,212,255,0.12);':'')+'">';
