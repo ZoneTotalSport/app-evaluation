@@ -1021,7 +1021,7 @@ function renderEvalTable(area){
 
   var items=getAllEvalCriteria();
   if(!items.length){
-    area.innerHTML='<div style="text-align:center;padding:40px 20px;"><div style="font-size:3rem;margin-bottom:12px;">📝</div><div style="font-family:Bangers;font-size:1.4rem;color:#666;letter-spacing:1px;">AUCUN CRITÈRE SÉLECTIONNÉ</div><div style="font-size:1rem;color:#999;margin:8px 0 16px;">Ajoute des critères PFEQ ou personnalisés pour commencer l\'évaluation.</div><button class="export-btn export-pdf" onclick="openCriteriaManager()" style="font-size:1.1rem;">📝 CHOISIR MES CRITÈRES</button></div>';
+    area.innerHTML='<div style="text-align:center;padding:60px 20px;"><div style="font-size:5rem;margin-bottom:16px;">📝</div><div style="font-family:Bangers;font-size:3rem;color:#000;letter-spacing:2px;">AUCUN CRITÈRE SÉLECTIONNÉ</div><div style="font-family:Barriecito,cursive;font-size:1.6rem;color:#000;margin:12px 0 24px;">Ajoute des critères PFEQ ou personnalisés pour commencer l\'évaluation.</div><button class="export-btn export-pdf" onclick="openCriteriaManager()" style="font-size:1.6rem;padding:12px 28px;">📝 CHOISIR MES CRITÈRES</button></div>';
     return;
   }
   var voice=getVoice();
