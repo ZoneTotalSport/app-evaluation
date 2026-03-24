@@ -428,7 +428,8 @@ function renderPresenceGrid(area){
   html+='<button class="presence-all-btn" onclick="setAllAbsent()">✗ RÉINITIALISER</button>';
   html+='<button class="presence-history-btn" onclick="openHistoryModal()">📅 HISTORIQUE</button>';
   html+='<button class="presence-history-btn" onclick="resetAllPhotos()" style="border-color:rgba(244,67,54,0.5);">🗑️ PHOTOS</button>';
-  html+='<button class="presence-history-btn" onclick="exportPresenceCSV()" style="border-color:rgba(255,214,0,0.6);">📊 CSV</button>';
+  html+='<button class="presence-history-btn" onclick="exportPresenceCSV()" style="border-color:rgba(255,214,0,0.6);">📥 EXPORTER CSV</button>';
+  html+='<button class="presence-history-btn" onclick="importPresenceCSV()" style="border-color:rgba(0,230,118,0.6);">📤 IMPORTER CSV</button>';
   html+='</div>';
   html+='</div>';
 
@@ -488,7 +489,7 @@ function exportPresenceCSV(){
   if(!allDates.length){toast('Aucune donnée de présence');return;}
 
   // Header
-  var csv='Élève,'+allDates.join(',')+',Total Présent,Total Absent\n';
+  var csv='Nom,'+allDates.join(',')+',Total Présent,Total Absent\n';
   group.students.forEach(function(s){
     var pres=0,abs=0;
     var row='"'+s.name.replace(/"/g,'""')+'"';
@@ -509,6 +510,100 @@ function exportPresenceCSV(){
   a.click();
   URL.revokeObjectURL(url);
   toast('CSV exporté!');
+}
+
+function importPresenceCSV(){
+  var input=document.createElement('input');input.type='file';input.accept='.csv';
+  input.onchange=function(){
+    var file=input.files[0];if(!file)return;
+    var reader=new FileReader();
+    reader.onload=function(e){
+      var lines=e.target.result.split('\n').map(function(l){return l.trim();}).filter(function(l){return l.length>0;});
+      if(lines.length<2){toast('Fichier CSV vide');return;}
+
+      // Parse header to find columns
+      var header=lines[0].split(',').map(function(h){return h.trim().toLowerCase().replace(/"/g,'');});
+      var nameCol=header.indexOf('nom');
+      if(nameCol<0)nameCol=header.indexOf('élève');
+      if(nameCol<0)nameCol=header.indexOf('eleve');
+      if(nameCol<0)nameCol=header.indexOf('name');
+      if(nameCol<0)nameCol=0; // Default to first column
+
+      var photoCol=header.indexOf('photo');
+      if(photoCol<0)photoCol=header.indexOf('image');
+
+      var groups=getGroups();
+      var group=groups.find(function(g){return g.id===_groupId;});
+      if(!group){toast('Aucun groupe sélectionné');return;}
+
+      var photos=getPhotos();
+      var newStudents=[];
+      var photoUrls=[];
+
+      for(var i=1;i<lines.length;i++){
+        // Simple CSV parse (handles quoted values)
+        var cols=[];
+        var line=lines[i];
+        var inQuote=false,current='';
+        for(var j=0;j<line.length;j++){
+          var ch=line[j];
+          if(ch==='"'){inQuote=!inQuote;}
+          else if(ch===','&&!inQuote){cols.push(current.trim());current='';}
+          else{current+=ch;}
+        }
+        cols.push(current.trim());
+
+        var name=cols[nameCol]||'';
+        name=name.replace(/^"|"$/g,'').trim();
+        if(!name)continue;
+
+        // Check if student already exists
+        var existing=group.students.find(function(s){return s.name.toLowerCase()===name.toLowerCase();});
+        var sid=existing?existing.id:'st-'+Date.now()+'-'+Math.random().toString(36).substr(2,5);
+        if(!existing)newStudents.push({id:sid,name:name});
+
+        // Handle photo column (base64 or URL)
+        if(photoCol>=0&&cols[photoCol]){
+          var photoVal=cols[photoCol].replace(/^"|"$/g,'').trim();
+          if(photoVal.indexOf('data:')===0){
+            photos[sid]=photoVal;
+          } else if(photoVal){
+            photoUrls.push({sid:sid,url:photoVal});
+          }
+        }
+      }
+
+      // Add new students to group
+      if(newStudents.length>0){
+        group.students=group.students.concat(newStudents);
+        setGroups(groups);
+      }
+      setPhotos(photos);
+
+      // Load photo URLs (if any)
+      if(photoUrls.length>0){
+        var loaded=0;
+        photoUrls.forEach(function(pu){
+          var img=new Image();img.crossOrigin='anonymous';
+          img.onload=function(){
+            var c=document.createElement('canvas'),sz=400;c.width=sz;c.height=sz;
+            var ctx=c.getContext('2d');var mn=Math.min(img.width,img.height);
+            ctx.drawImage(img,(img.width-mn)/2,(img.height-mn)/2,mn,mn,0,0,sz,sz);
+            photos[pu.sid]=c.toDataURL('image/jpeg',0.85);
+            loaded++;
+            if(loaded>=photoUrls.length){setPhotos(photos);renderContent();}
+          };
+          img.onerror=function(){loaded++;if(loaded>=photoUrls.length){setPhotos(photos);renderContent();}};
+          img.src=pu.url;
+        });
+      }
+
+      toast(newStudents.length+' élèves importés!');
+      renderContent();
+    };
+    reader.readAsText(file);
+  };
+  input.click();
 }
 
 function resetAllPhotos(){
