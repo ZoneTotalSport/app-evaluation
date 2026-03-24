@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Barriecito&family=Boogaloo&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=20260324d" />
+  <link rel="stylesheet" href="style.css?v=20260324e" />
 </head>
 <body>
 
@@ -27,7 +27,8 @@
     <div class="header-center">
       <button class="export-btn export-pdf" onclick="exportPDF()">📄 PDF</button>
       <button class="export-btn export-csv" onclick="exportCSV()">📊 CSV</button>
-      <button class="export-btn" style="background:var(--green);color:#000;" onclick="openBackupModal()">💾 BACKUP</button>
+      <button class="export-btn" style="background:var(--green);color:#000;font-size:1.1rem;padding:8px 16px;" onclick="exportAllData()">💾 SAUVEGARDER</button>
+      <button class="export-btn" style="background:var(--green);color:#000;" onclick="openBackupModal()">📋 BACKUP</button>
       <button class="export-btn" style="background:var(--red);color:#fff;" onclick="resetApp()">🔄 RÉINITIALISER</button>
       <span id="save-indicator" class="save-indicator">💾 Sauvegarde auto</span>
     </div>
@@ -445,8 +446,8 @@
   <!-- TOAST -->
   <div id="toast" class="toast hidden"></div>
 
-  <script src="i18n.js?v=20260324d"></script>
-  <script src="lang/translations.js?v=20260324d"></script>
-  <script src="app.js?v=20260324d"></script>
+  <script src="i18n.js?v=20260324e"></script>
+  <script src="lang/translations.js?v=20260324e"></script>
+  <script src="app.js?v=20260324e"></script>
 </body>
 </html>
