@@ -1517,30 +1517,55 @@ function zoomOut(){_zoomLevel=Math.max(60,_zoomLevel-10);localStorage.setItem('c
 function openCriteriaManager(){renderPfeqSections();renderCriteriaList();renderQuickCriteria();document.getElementById('criteria-modal').classList.remove('hidden');document.getElementById('new-criterion-input').focus();}
 function closeCriteriaManager(){document.getElementById('criteria-modal').classList.add('hidden');renderContent();}
 
+var _pfeqTab='agir';
+
 function renderPfeqSections(){
   var container=document.getElementById('pfeq-sections');if(!container)return;
   var selected=getPfeqSelected();
-  var html='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">';
+  var colors={agir:'#2979FF',interagir:'#FF9100',sante:'#E91E63'};
+
+  // 3 big buttons
+  var html='<div style="display:flex;gap:10px;margin-bottom:16px;">';
   PFEQ_COMPETENCES.forEach(function(comp){
-    var colors={agir:'#2979FF',interagir:'#FF9100',sante:'#E91E63'};
     var color=colors[comp.key]||'#333';
-    html+='<div class="pfeq-section" style="border-left:5px solid '+color+';padding:12px 16px;background:rgba(255,255,255,0.6);border-radius:10px;">';
-    html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">';
-    html+='<div class="pfeq-section-title" style="font-family:Bangers;font-size:1.4rem;color:'+color+';letter-spacing:1px;">'+comp.label+' <span style="font-size:0.8rem;color:#999;">('+comp.items.length+')</span></div>';
-    html+='<button class="tbtn tbtn-off" style="font-size:0.75rem;padding:2px 8px;" onclick="toggleAllPfeq(\''+comp.key+'\')">Tout cocher</button>';
+    var isActive=_pfeqTab===comp.key;
+    var count=comp.items.filter(function(it){return selected.indexOf(it.key)>=0;}).length;
+    html+='<button onclick="_pfeqTab=\''+comp.key+'\';renderPfeqSections()" style="';
+    html+='flex:1;font-family:Bangers;font-size:1.6rem;letter-spacing:2px;padding:14px 10px;';
+    html+='border-radius:14px;border:4px solid '+(isActive?'#000':color)+';cursor:pointer;transition:all 0.15s;';
+    html+='background:'+(isActive?color:'rgba(255,255,255,0.6)')+';';
+    html+='color:'+(isActive?'#fff':color)+';';
+    html+='box-shadow:'+(isActive?'0 4px 16px '+color+'66':'none')+';';
+    html+='">';
+    html+=comp.label;
+    if(count>0) html+=' <span style="font-size:1rem;background:rgba(255,255,255,0.3);padding:2px 8px;border-radius:10px;">'+count+'</span>';
+    html+='</button>';
+  });
+  html+='</div>';
+
+  // Show criteria for selected tab
+  var comp=PFEQ_COMPETENCES.find(function(c){return c.key===_pfeqTab;});
+  if(comp){
+    var color=colors[comp.key]||'#333';
+    html+='<div style="background:rgba(255,255,255,0.7);border:3px solid '+color+';border-radius:14px;padding:16px 20px;">';
+    html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">';
+    html+='<div style="font-family:Barriecito;font-size:1.15rem;color:#555;">'+esc(comp.desc)+'</div>';
+    html+='<button class="export-btn export-pdf" style="font-size:1rem;padding:6px 16px;" onclick="toggleAllPfeq(\''+comp.key+'\')">✓ TOUT COCHER</button>';
     html+='</div>';
-    html+='<div style="font-size:0.85rem;color:#666;margin-bottom:8px;">'+esc(comp.desc)+'</div>';
-    html+='<div style="display:flex;flex-direction:column;gap:1px;">';
+
+    // Criteria grid — 3 columns on wide screens
+    html+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:6px;">';
     comp.items.forEach(function(item){
       var checked=selected.indexOf(item.key)>=0;
-      html+='<label class="pfeq-check-label" style="display:flex;align-items:center;gap:8px;padding:4px 6px;cursor:pointer;font-size:0.95rem;border-radius:6px;transition:background 0.1s;'+(checked?'background:rgba(0,212,255,0.12);':'')+'">';
-      html+='<input type="checkbox" class="pfeq-check" data-key="'+item.key+'" '+(checked?'checked':'')+' onchange="togglePfeqItem(\''+item.key+'\')" style="width:18px;height:18px;" />';
+      html+='<label style="display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;font-family:Barriecito,cursive;font-size:1.15rem;border-radius:10px;border:2px solid '+(checked?color:'rgba(0,0,0,0.08)')+';background:'+(checked?color+'18':'#fff')+';transition:all 0.12s;">';
+      html+='<input type="checkbox" '+(checked?'checked':'')+' onchange="togglePfeqItem(\''+item.key+'\')" style="width:22px;height:22px;accent-color:'+color+';" />';
       html+='<span>'+esc(item.label)+'</span>';
       html+='</label>';
     });
-    html+='</div></div>';
-  });
-  html+='</div>';
+    html+='</div>';
+    html+='</div>';
+  }
+
   container.innerHTML=html;
 }
 
