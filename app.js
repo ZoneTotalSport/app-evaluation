@@ -760,7 +760,7 @@ function renderTodayCards(area){
     html+='<div class="scard-avatar" onclick="addPhoto(\''+s.id+'\')">';
     html+=(photoSrc?'<img src="'+photoSrc+'" />':'👤');
     html+='</div>';
-    html+='<div class="scard-name">'+esc(s.name)+renderSparkline(s.id)+'</div>';
+    html+='<div class="scard-name">'+esc(s.name)+'</div>';
     html+='<div class="scard-num">'+(i+1)+'</div>';
     html+='</div>';
 
@@ -1063,7 +1063,7 @@ function renderEvalTable(area){
     if(colorEv)html+='<span class="spark-dot sd-'+colorEv+'" style="flex-shrink:0;" title="'+esc(getColorMeanings()[colorEv])+'"></span>';
     html+='<span class="sid-photo" title="Photo">👤</span>';
     html+='<span class="sid-name">'+esc(s.name)+'</span>';
-    html+=renderSparkline(s.id);
+
     html+='</div></td>';
 
     items.forEach(function(c){
