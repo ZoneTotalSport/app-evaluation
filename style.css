@@ -677,7 +677,7 @@ button{cursor:pointer;border:none;background:none;font-family:'Bangers',sans-ser
    ======================================== */
 .save-indicator{
   font-family:'Schoolbell',cursive;
-  font-size:3rem;
+  font-size:0.85rem;
   color:rgba(255,255,255,0.5);
   padding:3px 10px;
   border-radius:12px;
