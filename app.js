@@ -917,7 +917,7 @@ function renderCriteriaBar(){
 
   // Ligne 3: color picker for current eval tab
   html+='<div class="crit-bar-colors">';
-  html+='<span style="font-family:Barriecito;font-size:0.95rem;color:#666;margin-right:6px;">🎨 Couleur :</span>';
+  html+='<span style="font-family:Schoolbell;font-size:0.95rem;color:#666;margin-right:6px;">🎨 Couleur :</span>';
   var currentColor=getEvalColor(_groupId,_sessionDate);
   EVAL_TAB_COLORS.forEach(function(c){
     var active=currentColor===c?' eval-color-active':'';
@@ -1021,7 +1021,7 @@ function renderEvalTable(area){
 
   var items=getAllEvalCriteria();
   if(!items.length){
-    area.innerHTML='<div style="text-align:center;padding:60px 20px;"><div style="font-size:5rem;margin-bottom:16px;">📝</div><div style="font-family:Bangers;font-size:3rem;color:#000;letter-spacing:2px;">AUCUN CRITÈRE SÉLECTIONNÉ</div><div style="font-family:Barriecito,cursive;font-size:1.6rem;color:#000;margin:12px 0 24px;">Ajoute des critères PFEQ ou personnalisés pour commencer l\'évaluation.</div><button class="export-btn export-pdf" onclick="openCriteriaManager()" style="font-size:1.6rem;padding:12px 28px;">📝 CHOISIR MES CRITÈRES</button></div>';
+    area.innerHTML='<div style="text-align:center;padding:60px 20px;"><div style="font-size:5rem;margin-bottom:16px;">📝</div><div style="font-family:Bangers;font-size:3rem;color:#000;letter-spacing:2px;">AUCUN CRITÈRE SÉLECTIONNÉ</div><div style="font-family:Schoolbell,cursive;font-size:1.6rem;color:#000;margin:12px 0 24px;">Ajoute des critères PFEQ ou personnalisés pour commencer l\'évaluation.</div><button class="export-btn export-pdf" onclick="openCriteriaManager()" style="font-size:1.6rem;padding:12px 28px;">📝 CHOISIR MES CRITÈRES</button></div>';
     return;
   }
   var voice=getVoice();
@@ -1549,7 +1549,7 @@ function renderPfeqSections(){
     var color=colors[comp.key]||'#333';
     html+='<div style="background:rgba(255,255,255,0.7);border:3px solid '+color+';border-radius:14px;padding:16px 20px;">';
     html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">';
-    html+='<div style="font-family:Barriecito;font-size:1.15rem;color:#555;">'+esc(comp.desc)+'</div>';
+    html+='<div style="font-family:Schoolbell;font-size:1.15rem;color:#555;">'+esc(comp.desc)+'</div>';
     html+='<button class="export-btn export-pdf" style="font-size:1rem;padding:6px 16px;" onclick="toggleAllPfeq(\''+comp.key+'\')">✓ TOUT COCHER</button>';
     html+='</div>';
 
@@ -1557,7 +1557,7 @@ function renderPfeqSections(){
     html+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:6px;">';
     comp.items.forEach(function(item){
       var checked=selected.indexOf(item.key)>=0;
-      html+='<label style="display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;font-family:Barriecito,cursive;font-size:1.15rem;border-radius:10px;border:2px solid '+(checked?color:'rgba(0,0,0,0.08)')+';background:'+(checked?color+'18':'#fff')+';transition:all 0.12s;">';
+      html+='<label style="display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;font-family:Schoolbell,cursive;font-size:1.15rem;border-radius:10px;border:2px solid '+(checked?color:'rgba(0,0,0,0.08)')+';background:'+(checked?color+'18':'#fff')+';transition:all 0.12s;">';
       html+='<input type="checkbox" '+(checked?'checked':'')+' onchange="togglePfeqItem(\''+item.key+'\')" style="width:22px;height:22px;accent-color:'+color+';" />';
       html+='<span>'+esc(item.label)+'</span>';
       html+='</label>';
