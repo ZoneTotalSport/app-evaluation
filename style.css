@@ -28,7 +28,7 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html{font-size:15px;}
 body{background:#c8b99a;color:var(--dark);font-family:'Schoolbell',cursive,'Boogaloo',system-ui,sans-serif;font-weight:700;height:100vh;overflow:hidden;-webkit-font-smoothing:antialiased;font-size:1.5rem;}
-button{cursor:pointer;border:none;background:none;font-family:'Bangers',sans-serif;}
+button{cursor:pointer;border:none;background:none;font-family:'Luckiest Guy',sans-serif;}
 .hidden{display:none!important;}
 
 /* GYM BG */
@@ -38,20 +38,20 @@ button{cursor:pointer;border:none;background:none;font-family:'Bangers',sans-ser
 .top-header{position:relative;z-index:20;display:flex;align-items:center;justify-content:space-between;height:56px;padding:0 16px;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);border-bottom:4px solid var(--cyan);}
 .header-left{display:flex;align-items:center;gap:10px;}
 .header-mascot{width:44px;height:44px;object-fit:contain;filter:drop-shadow(2px 2px 0 #000);}
-.header-title{font-family:'Bangers';font-size:2.2rem;color:#fff;text-shadow:2px 2px 0 #000;letter-spacing:2px;outline:none;min-width:140px;}
+.header-title{font-family:'Luckiest Guy';font-size:2.2rem;color:#fff;text-shadow:2px 2px 0 #000;letter-spacing:2px;outline:none;min-width:140px;}
 .header-center{display:flex;align-items:center;gap:8px;}
 .header-right{display:flex;align-items:center;gap:5px;}
-.header-select{font-family:'Bangers';font-size:1rem;padding:5px 10px;border-radius:var(--r-sm);border:var(--border);background:#fff;color:var(--dark);}
+.header-select{font-family:'Luckiest Guy';font-size:1rem;padding:5px 10px;border-radius:var(--r-sm);border:var(--border);background:#fff;color:var(--dark);}
 .date-sel{min-width:120px;}
 .date-arrow{font-size:1.1rem;width:32px;height:32px;border-radius:var(--r-sm);border:2px solid rgba(255,255,255,0.4);background:rgba(255,255,255,0.15);color:#fff;display:flex;align-items:center;justify-content:center;}
 .date-arrow:hover{background:rgba(255,255,255,0.3);}
 .header-sep{width:1px;height:24px;background:rgba(255,255,255,0.25);margin:0 3px;}
 .zoom-btn{font-size:1rem;width:30px;height:30px;border-radius:var(--r-sm);border:2px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.12);color:#fff;display:flex;align-items:center;justify-content:center;}
 .zoom-btn:hover{background:rgba(255,255,255,0.25);}
-.zoom-level{font-family:'Bangers';font-size:0.85rem;color:#fff;min-width:36px;text-align:center;}
+.zoom-level{font-family:'Luckiest Guy';font-size:0.85rem;color:#fff;min-width:36px;text-align:center;}
 
 /* Export buttons */
-.export-btn{font-family:'Bangers';font-size:1rem;padding:6px 14px;border-radius:var(--r-md);border:var(--border);letter-spacing:1px;box-shadow:var(--shadow);transition:transform 0.1s;}
+.export-btn{font-family:'Luckiest Guy';font-size:1rem;padding:6px 14px;border-radius:var(--r-md);border:var(--border);letter-spacing:1px;box-shadow:var(--shadow);transition:transform 0.1s;}
 .export-btn:hover{transform:translateY(-1px) scale(1.03);}
 .export-btn:active{transform:translateY(1px);}
 .export-pdf{background:var(--cyan);color:#000;}
@@ -76,9 +76,9 @@ button{cursor:pointer;border:none;background:none;font-family:'Bangers',sans-ser
 
 /* ========== TODAY TOOLBAR ========== */
 .today-toolbar{display:flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(255,255,255,0.7);backdrop-filter:blur(3px);border-bottom:2px solid rgba(0,0,0,0.1);flex-shrink:0;overflow-x:auto;flex-wrap:wrap;}
-.today-label{font-family:'Bangers';font-size:1.1rem;color:#333;white-space:nowrap;letter-spacing:1px;}
+.today-label{font-family:'Luckiest Guy';font-size:1.1rem;color:#333;white-space:nowrap;letter-spacing:1px;}
 .today-checks{display:flex;gap:4px;flex-wrap:wrap;}
-.today-chip{font-family:'Bangers';font-size:1.15rem;padding:6px 14px;border-radius:var(--r-sm);border:2px solid #999;background:#eee;color:#666;letter-spacing:0.5px;transition:all 0.1s;}
+.today-chip{font-family:'Luckiest Guy';font-size:1.15rem;padding:6px 14px;border-radius:var(--r-sm);border:2px solid #999;background:#eee;color:#666;letter-spacing:0.5px;transition:all 0.1s;}
 .today-chip.on{border-color:#000;background:var(--cyan);color:#000;}
 .today-chip:hover{transform:scale(1.05);}
 .today-add-btn{font-size:1.15rem;padding:6px 14px;border-radius:var(--r-sm);border:2px dashed #999;background:transparent;color:#666;margin-left:auto;white-space:nowrap;}
@@ -87,9 +87,9 @@ button{cursor:pointer;border:none;background:none;font-family:'Bangers',sans-ser
 /* ========== CRITERIA BAR (Évaluation mode) ========== */
 .criteria-bar{display:flex;flex-direction:column;background:rgba(255,255,255,0.7);backdrop-filter:blur(3px);border-bottom:2px solid rgba(0,0,0,0.1);flex-shrink:0;}
 .crit-bar-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 14px;}
-.crit-group-name{font-family:'Bangers';font-size:1.5rem;letter-spacing:2px;color:var(--dark);background:var(--cyan);padding:6px 20px;border-radius:var(--r-sm);border:2px solid #000;box-shadow:1px 1px 0 rgba(0,0,0,0.1);}
+.crit-group-name{font-family:'Luckiest Guy';font-size:1.5rem;letter-spacing:2px;color:var(--dark);background:var(--cyan);padding:6px 20px;border-radius:var(--r-sm);border:2px solid #000;box-shadow:1px 1px 0 rgba(0,0,0,0.1);}
 .crit-bar-tabs{display:flex;align-items:center;gap:6px;padding:6px 14px;overflow-x:auto;border-top:1px solid rgba(0,0,0,0.06);}
-.crit-tab{font-family:'Bangers';font-size:1.1rem;padding:6px 16px;border-radius:var(--r-md);border:2px solid #999;background:#fff;color:var(--dark);white-space:nowrap;cursor:pointer;box-shadow:1px 1px 0 rgba(0,0,0,0.05);transition:all 0.15s;}
+.crit-tab{font-family:'Luckiest Guy';font-size:1.1rem;padding:6px 16px;border-radius:var(--r-md);border:2px solid #999;background:#fff;color:var(--dark);white-space:nowrap;cursor:pointer;box-shadow:1px 1px 0 rgba(0,0,0,0.05);transition:all 0.15s;}
 .crit-tab:hover{border-color:#000;background:rgba(0,212,255,0.15);}
 .crit-tab-active{border-color:#000;background:var(--cyan);font-size:1.2rem;box-shadow:2px 2px 0 rgba(0,0,0,0.1);}
 /* (date line removed — info in tabs now) */
@@ -113,7 +113,7 @@ button{cursor:pointer;border:none;background:none;font-family:'Bangers',sans-ser
 .scard-avatar{width:38px;height:38px;border-radius:8px;border:2px solid #000;background:var(--cyan);display:flex;align-items:center;justify-content:center;font-size:1rem;overflow:hidden;flex-shrink:0;cursor:pointer;}
 .scard-avatar img{width:100%;height:100%;object-fit:cover;}
 .scard-name{font-family:'Schoolbell',cursive;font-size:1.5rem;line-height:1.1;}
-.scard-num{font-family:'Bangers';font-size:0.8rem;color:#fff;background:var(--dark);border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-left:auto;}
+.scard-num{font-family:'Luckiest Guy';font-size:0.8rem;color:#fff;background:var(--dark);border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-left:auto;}
 .scard-voice{position:absolute;top:6px;right:6px;font-size:1rem;width:28px;height:28px;border-radius:50%;border:2px solid rgba(0,0,0,0.15);background:rgba(255,255,255,0.7);display:flex;align-items:center;justify-content:center;z-index:2;}
 .scard-voice:hover{background:var(--cyan);}
 .scard-voice.recording{background:var(--red);animation:pulse-rec 0.8s infinite;}
@@ -126,7 +126,7 @@ button{cursor:pointer;border:none;background:none;font-family:'Bangers',sans-ser
 .scard-btns{display:flex;gap:3px;}
 
 /* Card toggle buttons */
-.tbtn{font-family:'Bangers';font-size:1.1rem;padding:6px 14px;border-radius:var(--r-sm);border:2px solid #000;letter-spacing:0.5px;transition:all 0.1s;box-shadow:1px 1px 0 rgba(0,0,0,0.1);}
+.tbtn{font-family:'Luckiest Guy';font-size:1.1rem;padding:6px 14px;border-radius:var(--r-sm);border:2px solid #000;letter-spacing:0.5px;transition:all 0.1s;box-shadow:1px 1px 0 rgba(0,0,0,0.1);}
 .tbtn:active{transform:scale(0.92);}
 .tbtn-off{background:#ddd;color:#888;border-color:#aaa;}
 .tbtn-p{background:var(--green);color:#000;}
@@ -143,14 +143,14 @@ button{cursor:pointer;border:none;background:none;font-family:'Bangers',sans-ser
 
 /* Card +/- observer */
 .scard-obs{display:flex;align-items:center;gap:4px;}
-.obs-btn{font-family:'Bangers';font-size:1rem;width:34px;height:34px;border-radius:var(--r-sm);border:2px solid #000;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 rgba(0,0,0,0.1);}
+.obs-btn{font-family:'Luckiest Guy';font-size:1rem;width:34px;height:34px;border-radius:var(--r-sm);border:2px solid #000;display:flex;align-items:center;justify-content:center;box-shadow:1px 1px 0 rgba(0,0,0,0.1);}
 .obs-btn:active{transform:scale(0.88);}
 .obs-plus{background:var(--green);color:#000;}
 .obs-minus{background:var(--orange);color:#000;}
-.obs-val{font-family:'Bangers';font-size:1.1rem;min-width:28px;text-align:center;}
+.obs-val{font-family:'Luckiest Guy';font-size:1.1rem;min-width:28px;text-align:center;}
 
 /* Card grade badge */
-.grade-btn{font-family:'Bangers';font-size:1rem;width:34px;height:34px;border-radius:var(--r-sm);border:2px solid #000;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:1px 1px 0 rgba(0,0,0,0.1);}
+.grade-btn{font-family:'Luckiest Guy';font-size:1rem;width:34px;height:34px;border-radius:var(--r-sm);border:2px solid #000;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:1px 1px 0 rgba(0,0,0,0.1);}
 .grade-btn:active{transform:scale(0.9);}
 .g-A{background:#2E7D32;color:#fff;}.g-B{background:#66BB6A;color:#000;}.g-C{background:var(--yellow);color:#000;}.g-D{background:var(--orange);color:#000;}.g-E{background:var(--red);color:#fff;}.g-empty{background:#ddd;color:#999;}
 
@@ -169,7 +169,7 @@ button{cursor:pointer;border:none;background:none;font-family:'Bangers',sans-ser
 .eval-table colgroup .col-eleve{width:200px;}
 .eval-table colgroup .col-crit{width:auto;}
 .eval-table colgroup .col-actions{width:60px;}
-.eval-table thead th{font-family:'Bangers';font-size:1.05rem;padding:6px 8px;text-align:center;color:#fff;background:rgba(0,0,0,0.7);border:2px solid #000;letter-spacing:0.5px;position:sticky;top:0;z-index:5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:relative;}
+.eval-table thead th{font-family:'Luckiest Guy';font-size:1.05rem;padding:6px 8px;text-align:center;color:#fff;background:rgba(0,0,0,0.7);border:2px solid #000;letter-spacing:0.5px;position:sticky;top:0;z-index:5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:relative;}
 .eval-table thead th:first-child{border-radius:var(--r-sm) 0 0 0;text-align:left;padding-left:10px;}
 .eval-table thead th:last-child{border-radius:0 var(--r-sm) 0 0;}
 
@@ -181,7 +181,7 @@ button{cursor:pointer;border:none;background:none;font-family:'Bangers',sans-ser
 .th-resize-handle:hover{background:var(--cyan);}
 
 /* + button in header */
-.th-add-btn{font-family:'Bangers';font-size:1rem;width:24px;height:24px;border-radius:50%;border:2px solid rgba(255,255,255,0.4);background:none;color:#fff;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;margin-right:4px;transition:all 0.15s;}
+.th-add-btn{font-family:'Luckiest Guy';font-size:1rem;width:24px;height:24px;border-radius:50%;border:2px solid rgba(255,255,255,0.4);background:none;color:#fff;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;margin-right:4px;transition:all 0.15s;}
 .th-add-btn:hover{background:var(--cyan);border-color:var(--cyan);color:#000;}
 
 .th-crit{display:flex;align-items:center;gap:4px;justify-content:center;}
@@ -192,7 +192,7 @@ button{cursor:pointer;border:none;background:none;font-family:'Bangers',sans-ser
 .eval-table tbody td:first-child{border-left:4px solid rgba(0,0,0,0.1);border-radius:var(--r-sm) 0 0 var(--r-sm);text-align:left;}
 .eval-table tbody td:last-child{border-right:2px solid rgba(0,0,0,0.1);border-radius:0 var(--r-sm) var(--r-sm) 0;}
 .eval-table .sid-cell{display:flex;align-items:center;gap:6px;}
-.eval-table .sid-num{font-family:'Bangers';font-size:0.8rem;color:#fff;background:var(--dark);border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.eval-table .sid-num{font-family:'Luckiest Guy';font-size:0.8rem;color:#fff;background:var(--dark);border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .eval-table .sid-photo{font-size:1rem;flex-shrink:0;opacity:0.5;}
 .eval-table .sid-name{font-family:'Schoolbell',cursive;font-size:1.5rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .eval-table .stars-cell{display:flex;gap:2px;justify-content:center;}
@@ -212,7 +212,7 @@ button{cursor:pointer;border:none;background:none;font-family:'Bangers',sans-ser
    CHRONO CELLS
    ======================================== */
 .chrono-cell{display:flex;flex-direction:column;align-items:center;gap:3px;}
-.chrono-time{font-family:'Bangers';font-size:1.4rem;letter-spacing:1px;background:rgba(0,0,0,0.05);border-radius:var(--r-sm);padding:3px 10px;border:2px solid rgba(0,0,0,0.1);}
+.chrono-time{font-family:'Luckiest Guy';font-size:1.4rem;letter-spacing:1px;background:rgba(0,0,0,0.05);border-radius:var(--r-sm);padding:3px 10px;border:2px solid rgba(0,0,0,0.1);}
 .chrono-btns{display:flex;gap:3px;}
 .chrono-btn{font-size:0.8rem;padding:3px 8px;border-radius:var(--r-sm);border:2px solid #000;box-shadow:1px 1px 0 rgba(0,0,0,0.08);}
 .chrono-btn:active{transform:scale(0.92);}
@@ -221,17 +221,17 @@ button{cursor:pointer;border:none;background:none;font-family:'Bangers',sans-ser
 
 /* Counter cells */
 .counter-cell{display:flex;align-items:center;gap:6px;justify-content:center;}
-.ctr-btn{font-family:'Bangers';font-size:1.3rem;width:38px;height:38px;border-radius:var(--r-md);border:var(--border);display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow);}
+.ctr-btn{font-family:'Luckiest Guy';font-size:1.3rem;width:38px;height:38px;border-radius:var(--r-md);border:var(--border);display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow);}
 .ctr-btn:active{transform:scale(0.88);}
 .ctr-minus{background:var(--red);color:#fff;}.ctr-plus{background:var(--green);color:#000;}
-.ctr-val{font-family:'Bangers';font-size:1.6rem;min-width:36px;text-align:center;}
+.ctr-val{font-family:'Luckiest Guy';font-size:1.6rem;min-width:36px;text-align:center;}
 
 /* ========================================
    GROUP TABS (RIGHT)
    ======================================== */
 .group-tabs-col{width:var(--group-w);display:flex;flex-direction:column;align-items:flex-end;padding-top:16px;flex-shrink:0;z-index:12;}
 .group-tabs{display:flex;flex-direction:column;gap:4px;}
-.group-tab{writing-mode:vertical-rl;text-orientation:mixed;font-family:'Bangers';font-size:1.1rem;padding:14px 8px;border-radius:var(--r-md) 0 0 var(--r-md);border:3px solid #000;border-right:none;background:rgba(255,255,255,0.6);color:var(--dark);letter-spacing:1.5px;cursor:pointer;transition:all 0.12s;box-shadow:-2px 2px 0 rgba(0,0,0,0.1);white-space:nowrap;max-height:120px;overflow:hidden;position:relative;}
+.group-tab{writing-mode:vertical-rl;text-orientation:mixed;font-family:'Luckiest Guy';font-size:1.1rem;padding:14px 8px;border-radius:var(--r-md) 0 0 var(--r-md);border:3px solid #000;border-right:none;background:rgba(255,255,255,0.6);color:var(--dark);letter-spacing:1.5px;cursor:pointer;transition:all 0.12s;box-shadow:-2px 2px 0 rgba(0,0,0,0.1);white-space:nowrap;max-height:120px;overflow:hidden;position:relative;}
 .group-tab:hover{transform:translateX(-4px);background:rgba(255,255,255,0.85);}
 .group-tab.active{transform:translateX(-8px);background:#fff;font-size:1.2rem;box-shadow:-4px 2px 0 rgba(0,0,0,0.15);z-index:2;}
 .group-tab.gt-cyan{border-color:var(--cyan);}.group-tab.gt-cyan.active{background:var(--cyan);}
@@ -241,7 +241,7 @@ button{cursor:pointer;border:none;background:none;font-family:'Bangers',sans-ser
 .group-tab.gt-pink{border-color:var(--pink);}.group-tab.gt-pink.active{background:var(--pink);}
 .group-tab.gt-blue{border-color:var(--blue);}.group-tab.gt-blue.active{background:var(--blue);color:#fff;}
 .group-tab .gt-edit{writing-mode:horizontal-tb;font-size:0.75rem;display:block;margin-top:4px;}
-.group-tab-add{font-family:'Bangers';font-size:1.4rem;width:38px;height:38px;border-radius:var(--r-md) 0 0 var(--r-md);border:2px dashed #000;border-right:none;background:rgba(255,255,255,0.4);color:var(--dark);margin-top:6px;transition:all 0.12s;}
+.group-tab-add{font-family:'Luckiest Guy';font-size:1.4rem;width:38px;height:38px;border-radius:var(--r-md) 0 0 var(--r-md);border:2px dashed #000;border-right:none;background:rgba(255,255,255,0.4);color:var(--dark);margin-top:6px;transition:all 0.12s;}
 .group-tab-add:hover{background:var(--green);transform:translateX(-3px);}
 
 /* ========================================
@@ -276,7 +276,7 @@ button{cursor:pointer;border:none;background:none;font-family:'Bangers',sans-ser
 }
 .hero-badge{
   display:inline-flex;align-items:center;gap:8px;
-  font-family:'Bangers';font-size:0.9rem;
+  font-family:'Luckiest Guy';font-size:0.9rem;
   padding:6px 18px;border-radius:20px;
   background:rgba(0,212,255,0.15);
   border:2px solid var(--cyan);
@@ -300,7 +300,7 @@ button{cursor:pointer;border:none;background:none;font-family:'Bangers',sans-ser
   flex-shrink:0;
 }
 .hero-title{
-  font-family:'Bangers';
+  font-family:'Luckiest Guy';
   font-size:clamp(2.8rem,7vw,5rem);
   color:var(--dark);
   letter-spacing:4px;
@@ -369,12 +369,12 @@ button{cursor:pointer;border:none;background:none;font-family:'Bangers',sans-ser
   border-color:rgba(0,212,255,0.3);
 }
 .hero-feature-icon{font-size:1.4rem;flex-shrink:0;}
-.hero-feature strong{color:var(--dark);font-family:'Bangers',sans-serif;letter-spacing:0.5px;}
+.hero-feature strong{color:var(--dark);font-family:'Luckiest Guy',sans-serif;letter-spacing:0.5px;}
 .hero-feature span{font-family:'Schoolbell',cursive;font-size:1.5rem;line-height:1.35;}
 
 .hero-cta{margin-bottom:20px;}
 .btn-primary{
-  font-family:'Bangers';
+  font-family:'Luckiest Guy';
   font-size:1.4rem;
   padding:14px 32px;
   border-radius:16px;
@@ -411,13 +411,13 @@ button{cursor:pointer;border:none;background:none;font-family:'Bangers',sans-ser
 .modal-backdrop{position:absolute;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);}
 .modal-box{position:relative;z-index:1;background:#fff;border:var(--border-thick);border-radius:var(--r-xl);box-shadow:6px 6px 0 rgba(0,0,0,0.25);max-width:520px;width:95%;max-height:90vh;overflow-y:auto;}
 .modal-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:3px solid var(--cyan);}
-.modal-header h2{font-family:'Bangers';font-size:1.5rem;letter-spacing:2px;}
+.modal-header h2{font-family:'Luckiest Guy';font-size:1.5rem;letter-spacing:2px;}
 .modal-close{font-size:1.5rem;width:36px;height:36px;border-radius:50%;border:var(--border);background:#eee;display:flex;align-items:center;justify-content:center;}
 .modal-close:hover{background:var(--red);color:#fff;}
 .modal-body{padding:16px;font-family:'Schoolbell',cursive;font-size:1.5rem;}
 .modal-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
 .form-field{margin-bottom:12px;}
-.form-field label{font-family:'Bangers';font-size:1rem;letter-spacing:0.5px;display:block;margin-bottom:3px;}
+.form-field label{font-family:'Luckiest Guy';font-size:1rem;letter-spacing:0.5px;display:block;margin-bottom:3px;}
 .form-input,.form-textarea{width:100%;font-family:'Schoolbell',cursive;font-size:1.5rem;padding:7px 10px;border-radius:var(--r-sm);border:var(--border);background:#fafafa;}
 .form-textarea{resize:vertical;}
 .color-picker{display:flex;gap:6px;}
@@ -440,14 +440,14 @@ button{cursor:pointer;border:none;background:none;font-family:'Bangers',sans-ser
 /* Resume view */
 .resume-wrap{padding:14px;}
 .resume-section{background:var(--card-bg);border:2px solid rgba(0,0,0,0.12);border-radius:var(--r-lg);padding:14px;margin-bottom:10px;}
-.resume-section h3{font-family:'Bangers';font-size:1.1rem;letter-spacing:0.5px;margin-bottom:8px;padding-bottom:4px;border-bottom:2px solid var(--cyan);}
+.resume-section h3{font-family:'Luckiest Guy';font-size:1.1rem;letter-spacing:0.5px;margin-bottom:8px;padding-bottom:4px;border-bottom:2px solid var(--cyan);}
 .resume-list{list-style:none;padding:0;}
 .resume-list li{padding:3px 0;font-family:'Schoolbell',cursive;font-size:1.5rem;display:flex;align-items:center;gap:6px;border-bottom:1px solid rgba(0,0,0,0.04);}
 .resume-list li:last-child{border-bottom:none;}
-.resume-badge{font-family:'Bangers';font-size:0.8rem;padding:1px 8px;border-radius:var(--r-sm);border:2px solid #000;display:inline-block;min-width:24px;text-align:center;}
+.resume-badge{font-family:'Luckiest Guy';font-size:0.8rem;padding:1px 8px;border-radius:var(--r-sm);border:2px solid #000;display:inline-block;min-width:24px;text-align:center;}
 
 /* ========== TOAST ========== */
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);font-family:'Bangers';font-size:1.1rem;padding:10px 24px;border-radius:var(--r-lg);border:var(--border-thick);background:var(--green);color:#000;box-shadow:var(--shadow);z-index:200;letter-spacing:1px;animation:toast-in 0.3s ease;}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);font-family:'Luckiest Guy';font-size:1.1rem;padding:10px 24px;border-radius:var(--r-lg);border:var(--border-thick);background:var(--green);color:#000;box-shadow:var(--shadow);z-index:200;letter-spacing:1px;animation:toast-in 0.3s ease;}
 @keyframes toast-in{from{opacity:0;transform:translateX(-50%) translateY(16px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
 
 /* ========== RESPONSIVE ========== */
@@ -483,7 +483,7 @@ button{cursor:pointer;border:none;background:none;font-family:'Bangers',sans-ser
 
 /* ========== LANG SELECTOR ========== */
 .lang-selector{margin-left:8px;}
-.lang-select{font-family:'Bangers';font-size:0.8rem;padding:2px 6px;border-radius:6px;border:2px solid rgba(255,255,255,0.3);background:rgba(0,0,0,0.3);color:#fff;cursor:pointer;}
+.lang-select{font-family:'Luckiest Guy';font-size:0.8rem;padding:2px 6px;border-radius:6px;border:2px solid rgba(255,255,255,0.3);background:rgba(0,0,0,0.3);color:#fff;cursor:pointer;}
 
 /* ========================================
    KILLER FEATURES
@@ -491,7 +491,7 @@ button{cursor:pointer;border:none;background:none;font-family:'Bangers',sans-ser
 
 /* KILLER TOOLBAR */
 .killer-toolbar{display:flex;align-items:center;gap:6px;padding:5px 12px;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);border-bottom:2px solid rgba(255,255,255,0.1);flex-shrink:0;overflow-x:auto;}
-.killer-btn{font-family:'Bangers';font-size:0.95rem;padding:6px 14px;border-radius:var(--r-md);border:2px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.15);color:#fff;letter-spacing:0.5px;white-space:nowrap;transition:all 0.15s;box-shadow:1px 1px 0 rgba(0,0,0,0.1);}
+.killer-btn{font-family:'Luckiest Guy';font-size:0.95rem;padding:6px 14px;border-radius:var(--r-md);border:2px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.15);color:#fff;letter-spacing:0.5px;white-space:nowrap;transition:all 0.15s;box-shadow:1px 1px 0 rgba(0,0,0,0.1);}
 .killer-btn:hover{transform:translateY(-2px);background:rgba(255,255,255,0.25);}
 .kb-picker:hover{background:var(--cyan);color:#000;border-color:var(--cyan);}
 .kb-teams:hover{background:var(--blue);border-color:var(--blue);}
@@ -518,11 +518,11 @@ button{cursor:pointer;border:none;background:none;font-family:'Bangers',sans-ser
 .scard-color-strip.strip-purple{background:#9C27B0;}
 
 /* ===== 2. RANDOM PICKER ===== */
-.picker-overlay{position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.8);backdrop-filter:blur(6px);}
+.picker-overlay{position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;background:rgba(255, 255, 255, 0.75);backdrop-filter:blur(6px);}
 .picker-card{position:relative;background:#fff;border:6px solid var(--cyan);border-radius:var(--r-xl);padding:40px 60px;text-align:center;box-shadow:0 0 60px rgba(0,212,255,0.5);animation:picker-pop 0.4s ease;}
 @keyframes picker-pop{from{transform:scale(0.5) rotate(-10deg);opacity:0;}to{transform:scale(1) rotate(0);opacity:1;}}
-.picker-title{font-family:'Bangers';font-size:1.4rem;color:#666;letter-spacing:2px;margin-bottom:12px;}
-.picker-name{font-family:'Bangers';font-size:3.5rem;color:var(--dark);letter-spacing:3px;min-width:200px;animation:picker-glow 1s ease infinite alternate;}
+.picker-title{font-family:'Luckiest Guy';font-size:1.4rem;color:#666;letter-spacing:2px;margin-bottom:12px;}
+.picker-name{font-family:'Luckiest Guy';font-size:3.5rem;color:var(--dark);letter-spacing:3px;min-width:200px;animation:picker-glow 1s ease infinite alternate;}
 @keyframes picker-glow{from{text-shadow:0 0 10px rgba(0,212,255,0.3);}to{text-shadow:0 0 30px rgba(0,212,255,0.8),0 0 60px rgba(0,212,255,0.4);}}
 .picker-close{position:absolute;top:10px;right:14px;font-size:1.5rem;width:36px;height:36px;border-radius:50%;border:var(--border);background:#eee;display:flex;align-items:center;justify-content:center;}
 .picker-close:hover{background:var(--red);color:#fff;}
@@ -534,7 +534,7 @@ button{cursor:pointer;border:none;background:none;font-family:'Bangers',sans-ser
 .conflict-tag button{font-size:0.8rem;width:20px;height:20px;border-radius:50%;border:1px solid var(--red);background:none;color:var(--red);cursor:pointer;display:flex;align-items:center;justify-content:center;}
 .conflict-tag button:hover{background:var(--red);color:#fff;}
 .team-result-card{background:var(--card-bg);border:var(--border);border-radius:var(--r-lg);padding:10px;margin-bottom:8px;box-shadow:var(--shadow);}
-.team-result-card h4{font-family:'Bangers';font-size:1.1rem;margin-bottom:6px;padding-bottom:4px;border-bottom:2px dashed rgba(0,0,0,0.1);}
+.team-result-card h4{font-family:'Luckiest Guy';font-size:1.1rem;margin-bottom:6px;padding-bottom:4px;border-bottom:2px dashed rgba(0,0,0,0.1);}
 .team-result-card ul{list-style:none;padding:0;}
 .team-result-card li{padding:2px 0;font-size:0.95rem;}
 
@@ -544,7 +544,7 @@ button{cursor:pointer;border:none;background:none;font-family:'Bangers',sans-ser
 .felicitations-content{text-align:center;animation:felicitations-bounce 0.6s ease;}
 @keyframes felicitations-bounce{0%{transform:scale(0);}60%{transform:scale(1.2);}100%{transform:scale(1);}}
 .felicitations-emoji{font-size:5rem;margin-bottom:10px;}
-.felicitations-text{font-family:'Bangers';font-size:4rem;color:#FFD600;letter-spacing:6px;text-shadow:4px 4px 0 #000,-2px -2px 0 #FF9100;animation:felicitations-pulse 0.5s ease infinite alternate;}
+.felicitations-text{font-family:'Luckiest Guy';font-size:4rem;color:#FFD600;letter-spacing:6px;text-shadow:4px 4px 0 #000,-2px -2px 0 #FF9100;animation:felicitations-pulse 0.5s ease infinite alternate;}
 @keyframes felicitations-pulse{from{transform:scale(1);}to{transform:scale(1.08);}}
 .confetti-container{position:fixed;inset:0;pointer-events:none;overflow:hidden;}
 .confetti{position:absolute;width:10px;height:10px;border-radius:2px;animation:confetti-fall linear forwards;}
@@ -555,8 +555,8 @@ button{cursor:pointer;border:none;background:none;font-family:'Bangers',sans-ser
 .calme-content{text-align:center;}
 .calme-circle{width:200px;height:200px;border-radius:50%;border:8px solid var(--cyan);background:rgba(0,212,255,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:calme-breathe 4s ease-in-out infinite;box-shadow:0 0 40px rgba(0,212,255,0.3);}
 @keyframes calme-breathe{0%,100%{transform:scale(1);border-color:var(--cyan);}50%{transform:scale(1.1);border-color:var(--green);}}
-.calme-number{font-family:'Bangers';font-size:6rem;color:#fff;text-shadow:0 0 20px rgba(0,212,255,0.5);}
-.calme-text{font-family:'Bangers';font-size:1.5rem;color:rgba(255,255,255,0.8);letter-spacing:4px;}
+.calme-number{font-family:'Luckiest Guy';font-size:6rem;color:#fff;text-shadow:0 0 20px rgba(0,212,255,0.5);}
+.calme-text{font-family:'Luckiest Guy';font-size:1.5rem;color:rgba(255,255,255,0.8);letter-spacing:4px;}
 
 /* ===== 6. SPARKLINE DOTS ===== */
 .sparkline-dots{display:flex;gap:3px;align-items:center;margin-top:2px;}
@@ -609,7 +609,7 @@ button{cursor:pointer;border:none;background:none;font-family:'Bangers',sans-ser
   width:36px;height:36px;border-radius:50%;
   background:var(--green);border:3px solid #fff;
   display:flex;align-items:center;justify-content:center;
-  font-family:'Bangers';font-size:1.3rem;color:#fff;
+  font-family:'Luckiest Guy';font-size:1.3rem;color:#fff;
   box-shadow:0 2px 8px rgba(0,0,0,0.3);
   animation:check-pop 0.3s ease;
 }
@@ -644,30 +644,30 @@ button{cursor:pointer;border:none;background:none;font-family:'Bangers',sans-ser
 /* Presence header bar */
 .presence-header{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);flex-shrink:0;}
 .presence-stats{display:flex;gap:10px;align-items:center;}
-.presence-stat{font-family:'Bangers';font-size:1rem;padding:4px 12px;border-radius:var(--r-sm);border:2px solid #000;color:#000;letter-spacing:0.5px;}
+.presence-stat{font-family:'Luckiest Guy';font-size:1rem;padding:4px 12px;border-radius:var(--r-sm);border:2px solid #000;color:#000;letter-spacing:0.5px;}
 .ps-present{background:var(--green);}
 .ps-absent{background:var(--red);color:#fff;}
 .ps-total{background:#fff;}
-.presence-history-btn{font-family:'Bangers';font-size:0.95rem;padding:6px 14px;border-radius:var(--r-md);border:2px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.15);color:#fff;letter-spacing:0.5px;transition:all 0.15s;}
+.presence-history-btn{font-family:'Luckiest Guy';font-size:0.95rem;padding:6px 14px;border-radius:var(--r-md);border:2px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.15);color:#fff;letter-spacing:0.5px;transition:all 0.15s;}
 .presence-history-btn:hover{background:var(--cyan);color:#000;border-color:var(--cyan);}
-.presence-all-btn{font-family:'Bangers';font-size:0.95rem;padding:6px 14px;border-radius:var(--r-md);border:2px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.15);color:#fff;letter-spacing:0.5px;transition:all 0.15s;}
+.presence-all-btn{font-family:'Luckiest Guy';font-size:0.95rem;padding:6px 14px;border-radius:var(--r-md);border:2px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.15);color:#fff;letter-spacing:0.5px;transition:all 0.15s;}
 .presence-all-btn:hover{background:var(--green);color:#000;border-color:var(--green);}
 
 /* Presence history modal */
 .history-table{width:100%;border-collapse:collapse;font-size:0.85rem;}
 .history-table th,.history-table td{padding:6px 8px;border:1px solid #ddd;text-align:center;}
-.history-table th{background:rgba(0,0,0,0.7);color:#fff;font-family:'Bangers';letter-spacing:0.5px;position:sticky;top:0;}
+.history-table th{background:rgba(0,0,0,0.7);color:#fff;font-family:'Luckiest Guy';letter-spacing:0.5px;position:sticky;top:0;}
 .history-table td:first-child{text-align:left;font-family:'Schoolbell',cursive;font-size:1.5rem;}
 .history-table .h-present{background:rgba(0,230,118,0.2);color:var(--green-dk);}
 .history-table .h-absent{background:rgba(244,67,54,0.15);color:var(--red);font-weight:bold;}
 .history-table .h-retard{background:rgba(255,145,0,0.15);color:var(--orange);}
-.history-total{font-family:'Bangers';font-size:0.85rem;}
+.history-total{font-family:'Luckiest Guy';font-size:0.85rem;}
 
 /* ========================================
    J'OBSERVE — CRITERIA BAR (pill buttons)
    ======================================== */
 .observe-criteria-bar{display:flex;gap:5px;flex-wrap:wrap;align-items:center;}
-.obs-pill{font-family:'Bangers';font-size:0.85rem;padding:5px 14px;border-radius:20px;border:2px solid #999;background:#e8e8e8;color:#666;letter-spacing:0.5px;transition:all 0.15s;white-space:nowrap;}
+.obs-pill{font-family:'Luckiest Guy';font-size:0.85rem;padding:5px 14px;border-radius:20px;border:2px solid #999;background:#e8e8e8;color:#666;letter-spacing:0.5px;transition:all 0.15s;white-space:nowrap;}
 .obs-pill:hover{transform:scale(1.05);}
 .obs-pill.on{border-color:#0088cc;background:linear-gradient(135deg,#4fc3f7,#29b6f6);color:#000;box-shadow:0 2px 8px rgba(41,182,246,0.3);}
 .obs-pill.on:hover{background:linear-gradient(135deg,#29b6f6,#039be5);}
@@ -713,7 +713,7 @@ button{cursor:pointer;border:none;background:none;font-family:'Bangers',sans-ser
    DÉPANNEUR MODE
    ======================================== */
 .depanneur-wrap{padding:20px;overflow-y:auto;}
-.depanneur-title{font-family:'Bangers';font-size:1.8rem;text-align:center;letter-spacing:2px;margin-bottom:20px;color:var(--dark);}
+.depanneur-title{font-family:'Luckiest Guy';font-size:1.8rem;text-align:center;letter-spacing:2px;margin-bottom:20px;color:var(--dark);}
 .depanneur-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;max-width:800px;margin:0 auto;}
 .depanneur-card{
   background:var(--card-bg);border:3px solid rgba(0,0,0,0.1);border-radius:18px;
@@ -722,7 +722,7 @@ button{cursor:pointer;border:none;background:none;font-family:'Bangers',sans-ser
 }
 .depanneur-card:hover{transform:translateY(-4px);border-color:var(--cyan);box-shadow:0 8px 24px rgba(0,212,255,0.2);}
 .depanneur-icon{font-size:3rem;margin-bottom:8px;}
-.depanneur-label{font-family:'Bangers';font-size:1.3rem;letter-spacing:1px;margin-bottom:6px;}
+.depanneur-label{font-family:'Luckiest Guy';font-size:1.3rem;letter-spacing:1px;margin-bottom:6px;}
 .depanneur-desc{font-family:'Schoolbell',cursive;font-size:1.5rem;color:#666;line-height:1.3;}
 
 .mtab[data-mode="depanneur"].active{background:var(--orange);}
@@ -735,7 +735,7 @@ button{cursor:pointer;border:none;background:none;font-family:'Bangers',sans-ser
 /* Eval tab wrap with delete button */
 .crit-tab-wrap{display:flex;align-items:center;gap:0;position:relative;}
 .crit-tab-delete{
-  font-family:'Bangers';font-size:0.75rem;
+  font-family:'Luckiest Guy';font-size:0.75rem;
   width:20px;height:20px;border-radius:50%;
   border:2px solid transparent;background:rgba(0,0,0,0.1);
   color:#999;display:flex;align-items:center;justify-content:center;
@@ -748,7 +748,7 @@ button{cursor:pointer;border:none;background:none;font-family:'Bangers',sans-ser
 
 /* Number/percent input in eval table */
 .eval-number-input{
-  font-family:'Bangers';font-size:1.1rem;
+  font-family:'Luckiest Guy';font-size:1.1rem;
   width:50px;text-align:center;
   padding:4px 6px;border-radius:var(--r-sm);
   border:2px solid #999;background:#fff;
