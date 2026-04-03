@@ -1663,7 +1663,7 @@ function deleteCurrentGroup(){if(!confirm('Supprimer ce groupe?'))return;var gro
 function exportPDF(){
   var group=getGroups().find(function(g){return g.id===_groupId;});if(!group)return;
   var title=document.getElementById('course-title').textContent||'Carnet EPS';
-  var css='body{font-family:Arial;margin:20px;color:#1a1a1a;}h1{font-size:24px;text-align:center;margin-bottom:4px;}h2{font-size:14px;text-align:center;color:#666;margin-bottom:10px;}h3{font-size:13px;margin:12px 0 4px;border-bottom:2px solid #00D4FF;padding-bottom:3px;}table{width:100%;border-collapse:collapse;margin-bottom:10px;}th,td{border:1px solid #333;padding:4px 6px;text-align:center;font-size:11px;}th{background:#00D4FF;font-weight:bold;}tr:nth-child(even){background:#f5f5f5;}.footer{text-align:center;margin-top:16px;font-size:10px;color:#888;}';
+  var css='body{font-family:'Schoolbell',cursive;margin:20px;color:#1a1a1a;}h1{font-size:24px;text-align:center;margin-bottom:4px;}h2{font-size:14px;text-align:center;color:#666;margin-bottom:10px;}h3{font-size:13px;margin:12px 0 4px;border-bottom:2px solid #00D4FF;padding-bottom:3px;}table{width:100%;border-collapse:collapse;margin-bottom:10px;}th,td{border:1px solid #333;padding:4px 6px;text-align:center;font-size:11px;}th{background:#00D4FF;font-weight:bold;}tr:nth-child(even){background:#f5f5f5;}.footer{text-align:center;margin-top:16px;font-size:10px;color:#888;}';
 
   var html='<html><head><style>'+css+'</style></head><body>';
   html+='<h1>'+esc(title)+'</h1><h2>'+esc(group.name)+' — '+_sessionDate+'</h2>';

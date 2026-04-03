@@ -1,7 +1,7 @@
 /* ============================================
    Carnet EPS — Dual Mode (Aujourd'hui + Évaluation)
    Onglets groupes à DROITE
-   Bangers + Boogaloo · Comic Book Style
+   Luckiest Guy + Bangers + Schoolbell · Comic Book Style
    zonetotalsport.ca
    ============================================ */
 
@@ -27,7 +27,7 @@
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html{font-size:15px;}
-body{background:#c8b99a;color:var(--dark);font-family:'Schoolbell',cursive,'Boogaloo',system-ui,sans-serif;font-weight:700;height:100vh;overflow:hidden;-webkit-font-smoothing:antialiased;font-size:1.5rem;}
+body{background:#c8b99a;color:var(--dark);font-family:'Schoolbell',cursive;font-weight:700;height:100vh;overflow:hidden;-webkit-font-smoothing:antialiased;font-size:1.5rem;}
 button{cursor:pointer;border:none;background:none;font-family:'Luckiest Guy',sans-serif;}
 .hidden{display:none!important;}
 
