@@ -268,6 +268,9 @@ function renderAll(){
     return;
   }
   if(emptyEl)emptyEl.classList.add('hidden');
+  var heroL=document.getElementById('heroLanding');
+  if(heroL)heroL.style.display='none';
+  document.body.classList.add('app-mode');
   if(nb)nb.style.display='';
   if(mt)mt.style.display='';
   if(hdr)hdr.style.display='';

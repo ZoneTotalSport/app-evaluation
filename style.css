@@ -27,7 +27,8 @@
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html{font-size:15px;}
-body{background:#c8b99a;color:var(--dark);font-family:'Schoolbell',cursive;font-weight:700;height:100vh;overflow:hidden;-webkit-font-smoothing:antialiased;font-size:1.5rem;}
+body{background:#c8b99a;color:var(--dark);font-family:'Schoolbell',cursive;font-weight:700;height:100vh;overflow:auto;-webkit-font-smoothing:antialiased;font-size:1.5rem;}
+body.app-mode{overflow:hidden;}
 button{cursor:pointer;border:none;background:none;font-family:'Luckiest Guy',sans-serif;}
 .hidden{display:none!important;}
 
